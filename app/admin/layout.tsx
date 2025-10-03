@@ -1,0 +1,54 @@
+import { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
+import { getUserRolesAndPermissions } from "@/lib/auth/roleService";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { AdminHeader } from "@/components/admin/AdminHeader";
+import { ThemeProvider } from "@/components/providers/theme-provider";
+
+export const metadata: Metadata = {
+  title: "Admin Dashboard | Administration",
+  description: "Manage users, roles, and applications",
+};
+
+export default async function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    redirect("/auth/login");
+  }
+
+  // Get user roles and applications
+  const userRolesAndPermissions = await getUserRolesAndPermissions(session.user.id);
+
+  // Check if user has admin role
+  const hasAdminAccess = userRolesAndPermissions.roles.some(
+    (role) => role.name === "admin" || role.name === "super-admin"
+  );
+
+  // If not admin, redirect to no-access page
+  if (!hasAdminAccess) {
+    redirect("/no-access");
+  }
+
+  return (
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      disableTransitionOnChange
+    >
+      <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
+        <AdminSidebar applications={userRolesAndPermissions.applications} />
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <AdminHeader user={session.user} />
+          <main className="flex-1 overflow-y-auto p-4">{children}</main>
+        </div>
+      </div>
+    </ThemeProvider>
+  );
+}

@@ -1,0 +1,424 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  /// 使用者的唯一標識符
+  id                    String                 @id @default(cuid())
+  /// 使用者名稱
+  name                  String?
+  /// 使用者的電子郵件地址，必須唯一
+  email                 String                 @unique
+  /// 電子郵件驗證時間戳
+  emailVerified         DateTime?
+  /// 使用者的頭像 URL
+  image                 String?
+  /// 使用者的密碼
+  password              String?
+  /// 使用者的狀態
+  status                UserStatus             @default(pending)
+  /// 是否啟用兩步驗證
+  isTwoFactorEnabled    Boolean                @default(false)
+  /// 登入嘗試次數
+  loginAttempts         Int                    @default(0)
+  /// 最後一次登入嘗試時間
+  lastLoginAttempt      DateTime?
+  /// 最後一次成功登入時間
+  lastSuccessfulLogin   DateTime?
+  /// 登入嘗試重置時間
+  loginAttemptsResetAt  DateTime?
+  /// 使用者的創建時間
+  createdAt             DateTime               @default(now())
+  /// 使用者的最後更新時間
+  updatedAt             DateTime               @updatedAt
+  accounts              Account[]
+  auditLogs             AuditLog[]
+  loginMethods          LoginMethod[]
+  resetTokens           PasswordResetToken[]
+  sessions              Session[]
+  twoFactorConfirmation TwoFactorConfirmation?
+  twoFactorTokens       TwoFactorToken[]
+  userRoles             UserRole[]              // 使用者到角色的關聯
+  verificationTokens    VerificationToken[]     // 電子郵件驗證令牌
+}
+
+model Account {
+  /// 使用者標識符
+  userId            String
+  /// 帳號類型
+  type              String
+  /// 帳號提供者 (例如：Google, Facebook)
+  provider          String
+  /// 提供者特定的帳號標識符
+  providerAccountId String
+  /// 刷新令牌 (可選) - 建議加密存儲
+  refresh_token     String?   @db.Text
+  /// 訪問令牌 - 建議加密存儲
+  access_token      String?   @db.Text
+  /// 訪問令牌的過期時間
+  expires_at        Int?
+  /// 令牌類型
+  token_type        String?
+  /// 令牌的範圍
+  scope             String?
+  /// 帳號的 ID 令牌 (可選) - 建議加密存儲
+  id_token          String?   @db.Text
+  /// 會話狀態
+  session_state     String?
+  /// 帳號的創建時間
+  createdAt         DateTime  @default(now())
+  /// 帳號的最後更新時間 - 自動更新
+  updatedAt         DateTime  @updatedAt
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  /// 會話的唯一標識符
+  id           String   @id @default(cuid())
+  /// 會話令牌 - 用於識別會話
+  sessionToken String   @unique
+  /// 使用者標識符
+  userId       String
+  /// 會話過期時間
+  expires      DateTime
+  /// 最後活動時間 - 用於追蹤使用者活躍度
+  lastActivity DateTime @default(now())
+  /// 用戶代理 - 瀏覽器或設備資訊
+  userAgent    String?
+  /// IP 地址 - 用於安全追蹤
+  ipAddress    String?
+  /// 會話創建時間
+  createdAt    DateTime @default(now())
+  /// 會話最後更新時間 - 自動更新
+  updatedAt    DateTime @updatedAt
+  /// 設備識別符 - 用於多設備管理
+  deviceId     String?
+  /// 會話類型 (web, mobile, api)
+  sessionType  String   @default("web")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([deviceId])
+  @@index([expires])      // 用於定期清理過期會話
+  @@index([lastActivity]) // 用於活動追蹤查詢
+}
+
+model TwoFactorConfirmation {
+  /// 兩步驗證確認的唯一標識符
+  id        String   @id @default(cuid())
+  /// 使用者標識符
+  userId    String   @unique
+  /// 創建時間
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LoginMethod {
+  /// 登入方法的唯一標識符
+  id        String   @id @default(cuid())
+  /// 使用者標識符
+  userId    String
+  /// 登入方法類型（例如："password", "google", "github"）
+  method    String
+  /// 登入方法的創建時間
+  createdAt DateTime @default(now())
+  /// 登入方法的最後更新時間
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, method])  // 防止同一使用者有重複的登入方法
+  @@index([userId])
+}
+
+model VerificationToken {
+  /// 驗證令牌的唯一標識符
+  id      String   @id @default(cuid())
+  /// 待驗證的電子郵件地址
+  email   String
+  /// 驗證令牌值
+  token   String   @unique
+  /// 令牌過期時間
+  expires DateTime
+  /// 關聯的使用者 ID (可選，用於追蹤和級聯刪除)
+  userId  String?
+  /// 關聯的使用者
+  user    User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([email, token])
+  @@index([userId])   // 用於使用者相關查詢
+  @@index([expires])  // 用於定期清理過期令牌
+}
+
+model PasswordResetToken {
+  /// 令牌的唯一標識符
+  id      String   @id @default(cuid())
+  /// 關聯的電子郵件地址
+  email   String
+  /// 重置令牌值
+  token   String   @unique
+  /// 令牌過期時間
+  expires DateTime
+  /// 關聯的使用者 ID
+  userId  String?
+  /// 關聯的使用者
+  user    User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@index([userId])   // 用於使用者相關查詢
+  @@index([expires])  // 用於定期清理過期令牌
+}
+
+model TwoFactorToken {
+  /// 兩步驗證令牌的唯一標識符
+  id        String   @id @default(cuid())
+  /// 使用者標識符
+  userId    String
+  /// 兩步驗證令牌值
+  token     String   @unique
+  /// 令牌的過期時間
+  expires   DateTime
+  /// 是否已使用 - 防止重複使用
+  used      Boolean  @default(false)
+  /// 創建時間
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, token])
+  @@index([userId])
+  @@index([expires])  // 用於定期清理過期令牌
+}
+
+model AuditLog {
+  /// 審計日誌的唯一標識符
+  id           String   @id @default(cuid())
+  /// 相關使用者的標識符（可為空，表示系統操作）
+  userId       String?
+  /// 審計操作類型（例如：CREATE, UPDATE, DELETE）
+  action       String
+  /// 操作狀態（例如：SUCCESS, FAILED）
+  status       String
+  /// 操作時間戳
+  timestamp    DateTime @default(now())
+  /// IP 地址 - 用於安全追蹤
+  ipAddress    String?
+  /// 用戶代理 - 絬覽器或設備資訊
+  userAgent    String?
+  /// 目標使用者標識符（如果適用）
+  targetUserId String?
+  /// 資源標識符（如果適用）
+  resourceId   String?
+  /// 資源類型（如果適用，例如：User, Role, Permission）
+  resourceType String?
+  /// 舊值（JSON 字串，如果適用）
+  oldValue     String?  @db.Text
+  /// 新值（JSON 字串，如果適用）
+  newValue     String?  @db.Text
+  /// 操作原因或備註
+  reason       String?
+  /// 額外元數據（JSON 格式）
+  metadata     Json?
+  /// 日誌優先級 (low, medium, high, critical)
+  priority     String   @default("low")
+  /// 相關的會話 ID（如果適用）
+  sessionId    String?
+  /// 關聯的使用者（當使用者刪除時設為 null 以保留歷史記錄）
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([timestamp])
+  @@index([targetUserId])
+  @@index([priority])
+  @@index([resourceType])           // 用於按資源類型查詢
+  @@index([sessionId])              // 用於追蹤會話相關日誌
+  @@index([userId, timestamp])      // 複合索引：使用者的時間序列查詢
+  @@index([action, timestamp])      // 複合索引：操作類型的時間序列查詢
+}
+
+model Role {
+  /// 角色的唯一標識符
+  id          String         @id @default(cuid())
+  /// 角色名稱
+  name        String         @unique
+  /// 角色描述
+  description String?
+  /// 創建時間
+  createdAt   DateTime       @default(now())
+  /// 更新時間
+  updatedAt   DateTime       @updatedAt
+  /// 與此角色關聯的使用者
+  users       UserRole[]
+  /// 與此角色關聯的權限
+  permissions RolePermission[]
+  /// 與此角色關聯的應用程式
+  applications RoleApplication[]
+}
+
+model Permission {
+  /// 權限的唯一標識符
+  id          String         @id @default(cuid())
+  /// 權限名稱
+  name        String         @unique
+  /// 權限描述
+  description String?
+  /// 創建時間
+  createdAt   DateTime       @default(now())
+  /// 更新時間
+  updatedAt   DateTime       @updatedAt
+  /// 與此權限關聯的角色
+  roles       RolePermission[]
+}
+
+model UserRole {
+  /// 使用者角色關聯的唯一標識符
+  id        String   @id @default(cuid())
+  /// 使用者標識符
+  userId    String
+  /// 角色標識符
+  roleId    String
+  /// 創建時間
+  createdAt DateTime @default(now())
+  /// 更新時間
+  updatedAt DateTime @updatedAt
+  /// 關聯的使用者
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// 關聯的角色
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+  @@index([userId, roleId])  // 複合索引：用於權限檢查查詢
+}
+
+model RolePermission {
+  /// 角色權限關聯的唯一標識符
+  id           String     @id @default(cuid())
+  /// 角色標識符
+  roleId       String
+  /// 權限標識符
+  permissionId String
+  /// 創建時間
+  createdAt    DateTime   @default(now())
+  /// 更新時間
+  updatedAt    DateTime   @updatedAt
+  /// 關聯的角色
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  /// 關聯的權限
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+  @@index([roleId, permissionId])  // 複合索引：用於權限檢查查詢
+}
+
+model Application {
+  /// 應用程式的唯一標識符
+  id          String             @id @default(cuid())
+  /// 應用程式名稱
+  name        String             @unique
+  /// 應用程式顯示名稱
+  displayName String
+  /// 應用程式描述
+  description String?
+  /// 是否啟用
+  isActive    Boolean            @default(true)
+  /// 應用程式路徑
+  path        String             @unique
+  /// 應用程式圖標
+  icon        String?
+  /// 排序順序
+  order       Int                @default(0)
+  /// 創建時間
+  createdAt   DateTime           @default(now())
+  /// 更新時間
+  updatedAt   DateTime           @updatedAt
+  /// 與此應用程式關聯的角色
+  roles       RoleApplication[]
+  /// 與此應用程式關聯的選單項目
+  menuItems   MenuItem[]
+}
+
+model RoleApplication {
+  /// 角色應用程式關聯的唯一標識符
+  id            String      @id @default(cuid())
+  /// 角色標識符
+  roleId        String
+  /// 應用程式標識符
+  applicationId String
+  /// 創建時間
+  createdAt     DateTime    @default(now())
+  /// 更新時間
+  updatedAt     DateTime    @updatedAt
+  /// 關聯的角色
+  role          Role        @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  /// 關聯的應用程式
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, applicationId])
+  @@index([roleId])
+  @@index([applicationId])
+  @@index([roleId, applicationId])  // 複合索引：用於應用程式存取檢查
+}
+
+model MenuItem {
+  /// 選單項目的唯一標識符
+  id            String      @id @default(cuid())
+  /// 選單項目名稱（內部使用）
+  name          String
+  /// 顯示名稱（使用者介面顯示）
+  displayName   String
+  /// 選單項目路徑（URL 路徑）
+  path          String
+  /// 選單項目圖標（圖標名稱或 URL）
+  icon          String?
+  /// 父選單項目標識符（用於階層式選單）
+  parentId      String?
+  /// 應用程式標識符
+  applicationId String
+  /// 排序順序（同層級內的排序）
+  order         Int         @default(0)
+  /// 是否顯示（控制選單項目的可見性）
+  isVisible     Boolean     @default(true)
+  /// 創建時間
+  createdAt     DateTime    @default(now())
+  /// 更新時間
+  updatedAt     DateTime    @updatedAt
+  /// 關聯的應用程式
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  /// 父選單項目
+  parent        MenuItem?   @relation("MenuItemToMenuItem", fields: [parentId], references: [id], onDelete: SetNull)
+  /// 子選單項目列表
+  children      MenuItem[]  @relation("MenuItemToMenuItem")
+
+  @@unique([applicationId, name])  // 確保應用程式內選單名稱唯一
+  @@unique([applicationId, path])  // 確保應用程式內路徑唯一
+  @@index([applicationId])
+  @@index([parentId])
+  @@index([parentId, order])       // 用於同層級排序查詢
+}
+
+/// 預設角色列舉
+enum DefaultRole {
+  user   // 一般使用者
+  admin  // 管理員
+}
+
+/// 使用者狀態列舉
+enum UserStatus {
+  pending   // 待驗證
+  active    // 啟用
+  suspended // 暫停
+  banned    // 封禁
+  deleted   // 已刪除
+  inactive  // 未啟用
+}

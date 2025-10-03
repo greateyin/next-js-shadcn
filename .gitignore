@@ -1,0 +1,62 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.*
+
+# Build output
+.next/
+.next-build/
+out/
+dist/
+build/
+.output/
+
+# TypeScript
+*.tsbuildinfo
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+logs/
+*.log
+
+# Testing & coverage
+coverage/
+.nyc_output/
+
+# Local env files
+.env
+.env.*
+!.env.example
+
+# Database files
+prisma/dev.db
+prisma/dev.db-journal
+
+# IDEs & editors
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.sw?
+
+# Framework specific
+.vercel/
+components.json
+
+# Cache
+.eslintcache
+.prettiercache
+.stylelintcache
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+.cache/

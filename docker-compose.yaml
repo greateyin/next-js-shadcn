@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Test Database
+  postgres_test:
+    image: postgres:17-alpine
+    container_name: shadcn_template_test_db
+    env_file:
+      - .env.test
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - '${POSTGRES_PORT:-5433}:5432' # Using 5433 as default external port
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # PgAdmin for database management (optional)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: shadcn_template_pgadmin
+    env_file:
+      - .env.test
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - '5050:80'
+    depends_on:
+      - postgres_test
+
+  # Test Service with Node.js
+  test_service:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+      args:
+        NODE_ENV: test
+    container_name: shadcn_template_test_service
+    env_file:
+      - .env.test
+    environment:
+      # Auth
+      AUTH_SECRET: ${AUTH_SECRET}
+      AUTH_URL: ${AUTH_URL}
+      DEFAULT_LOGIN_REDIRECT: ${DEFAULT_LOGIN_REDIRECT}
+
+      # OAuth
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+
+      # Database
+      DATABASE_URL: ${DATABASE_URL}
+
+      # Email
+      RESEND_API_KEY: ${RESEND_API_KEY}
+
+      # Development
+      NODE_ENV: ${NODE_ENV}
+
+      # Logging
+      ELASTICSEARCH_URL: ${ELASTICSEARCH_URL}
+      APP_VERSION: ${APP_VERSION}
+      LOG_LEVEL: ${LOG_LEVEL}
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      postgres_test:
+        condition: service_healthy
+    command: yarn test
+
+volumes:
+  postgres_test_data:
+    driver: local

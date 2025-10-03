@@ -1,0 +1,26 @@
+Always keeps in mind
+
+### Core Technologies
+
+- **Framework**: Next.js 15+
+- **UI Library**: shadcn/ui 0.9.4+
+- **Database**: PostgreSQL 17+ with Prisma ORM 6.2+
+- **Authentication**: Auth.js (Beta)
+- **Language**: TypeScript
+- **Package Manager**: pnpm
+
+### Frontend Technologies
+
+- **UI Framework**: React 18+
+- **Styling**: Tailwind CSS
+- **Components**: shadcn/ui
+- **Type Safety**: TypeScript
+
+### Backend Technologies
+
+- **ORM**: Prisma 6.2+
+- **Database**: PostgreSQL 17+
+- **API**: Next.js Route Handlers
+- **Authentication**: Auth.js (Beta)
+
+### Never ever use 'bcryptjs' package or any other package that may have edge runtime performance issue
