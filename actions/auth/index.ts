@@ -4,6 +4,13 @@
  * @description 統一匯出所有認證相關的 Server Actions
  */
 
+// 登入/登出相關
+export {
+  loginAction,
+  loginWithRedirectAction,
+  logoutAction,
+} from "./login";
+
 // 使用者註冊相關
 export {
   registerAction,

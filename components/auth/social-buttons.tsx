@@ -1,8 +1,12 @@
 /**
- * @fileoverview Social authentication buttons component
+ * @fileoverview Social authentication buttons component - Auth.js V5 Best Practices
  * @module components/auth/social-buttons
  * @description Provides buttons for OAuth authentication with
- * various social providers like Google and GitHub
+ * various social providers following Auth.js V5 patterns
+ * 
+ * Note: For OAuth providers, client-side signIn is acceptable and recommended
+ * because OAuth requires browser redirects. This is different from credentials
+ * authentication which should use Server Actions.
  */
 
 "use client";
@@ -12,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
 import { useState } from "react";
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
+import { useSearchParams } from "next/navigation";
 
 /**
  * OAuth provider type
@@ -23,11 +28,11 @@ type OAuthProvider = "google" | "github";
 /**
  * SocialButtons component for OAuth authentication
  * @component
- * @description A component that:
- * - Provides buttons for social login providers
- * - Handles OAuth authentication flow
+ * @description A component that follows Auth.js V5 best practices:
+ * - Uses client-side signIn for OAuth (required for browser redirects)
+ * - Handles OAuth authentication flow automatically
  * - Shows loading states during authentication
- * - Manages error states
+ * - Respects callbackUrl from query params
  * - Supports multiple providers (Google, GitHub)
  * 
  * @example
@@ -51,6 +56,9 @@ type OAuthProvider = "google" | "github";
  * ```
  */
 export function SocialButtons() {
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || DEFAULT_LOGIN_REDIRECT;
+
   /**
    * State to track the loading status of each OAuth provider
    * @type {Record<OAuthProvider, boolean>}
@@ -65,33 +73,26 @@ export function SocialButtons() {
    * @async
    * @function
    * @param {OAuthProvider} provider - The OAuth provider to use
-   * @description Initiates the OAuth flow with the selected provider,
-   * handles loading states and redirects to the callback URL
+   * @description Initiates the OAuth flow with the selected provider.
+   * 
+   * Note: OAuth providers MUST use client-side signIn because:
+   * 1. OAuth requires browser redirects to the provider's site
+   * 2. The provider needs to redirect back to our callback URL
+   * 3. This is different from credentials auth which uses Server Actions
+   * 
+   * This is the Auth.js V5 recommended approach for OAuth providers.
    */
   const handleOAuthSignIn = async (provider: OAuthProvider) => {
     try {
-      /**
-       * Update the loading state for the selected provider
-       */
       setIsLoading((prev) => ({ ...prev, [provider]: true }));
       
-      /**
-       * Initiate the OAuth sign-in process with the selected provider
-       * Note: For OAuth providers, we can safely use redirect:true as they 
-       * don't cause the NEXT_REDIRECT issue in API route handlers
-       */
+      // OAuth sign-in with automatic redirect
+      // Auth.js will handle the entire OAuth flow
       await signIn(provider, {
-        callbackUrl: DEFAULT_LOGIN_REDIRECT,
+        callbackUrl,
       });
     } catch (error) {
-      /**
-       * Log any errors that occur during the OAuth sign-in process
-       */
       console.error("OAuth sign in error:", error);
-    } finally {
-      /**
-       * Reset the loading state for the selected provider
-       */
       setIsLoading((prev) => ({ ...prev, [provider]: false }));
     }
   };

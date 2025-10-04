@@ -1,34 +1,45 @@
 /**
- * @fileoverview Login form component
+ * @fileoverview Login form component - Auth.js V5 Best Practices
  * @module components/auth/login-form
  * @description Provides a form for user authentication with
- * email/password and social login options
+ * email/password and social login options using Server Actions
  */
 
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react"; // Use client-side signIn
+import { useEffect, useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { loginWithRedirectAction } from "@/actions/auth";
 import { FormError } from "@/components/auth/common/FormError";
 import { FormSuccess } from "@/components/auth/common/FormSuccess";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SocialButtons } from "@/components/auth/social-buttons";
-import { Separator } from "@/components/ui/separator";
 import { useSearchParams } from "next/navigation";
-import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
+
+/**
+ * Submit button component with loading state
+ * Uses useFormStatus hook to track form submission
+ */
+function SubmitButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button type="submit" className="w-full" disabled={pending}>
+      {pending ? "Logging in..." : "Login"}
+    </Button>
+  );
+}
 
 /**
  * LoginForm component for user authentication
  * @component
- * @description A form component that:
- * - Handles email/password authentication
- * - Provides social login options
- * - Shows loading states during authentication
- * - Displays success/error messages
- * - Redirects after successful login
+ * @description A form component that follows Auth.js V5 best practices:
+ * - Uses Server Actions instead of client-side signIn()
+ * - Automatic redirect handling by Auth.js
+ * - Better security (credentials never exposed to client)
+ * - Works seamlessly with middleware redirects
  * 
  * @example
  * ```tsx
@@ -47,74 +58,30 @@ import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
  * ```
  */
 export function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || DEFAULT_LOGIN_REDIRECT;
-  const [error, setError] = useState<string | undefined>();
-  const [success, setSuccess] = useState<string | undefined>();
-  const [isPending, setIsPending] = useState(false);
+  const callbackUrl = searchParams.get("callbackUrl");
 
-  /**
-   * Handles form submission for login
-   * @async
-   * @function
-   * @param {React.FormEvent<HTMLFormElement>} e - Form submit event
-   */
-  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    try {
-      setError(undefined);
-      setSuccess(undefined);
-      setIsPending(true);
-
-      const formData = new FormData(e.currentTarget);
-      const email = formData.get("email") as string;
-      const password = formData.get("password") as string;
-
-      const response = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-        callbackUrl,
-      });
-
-      if (process.env.NODE_ENV !== "production") {
-        console.log("credentials signIn response", response);
-      }
-
-      if (response?.error) {
-        setError(response.error || "Authentication failed");
-        toast.error("Login failed: " + (response.error || "Unknown error"));
-        return;
-      }
-
-      setSuccess("Login successful!");
-      toast.success("Login successful!");
-
-      const nextUrl = response?.url || callbackUrl || DEFAULT_LOGIN_REDIRECT;
-
-      // Ensure navigation works for both relative and absolute callback URLs.
-      if (nextUrl.startsWith("/")) {
-        router.push(nextUrl);
-        router.refresh();
-      } else {
-        if (typeof window !== "undefined") {
-          window.location.href = nextUrl;
-        }
-      }
-
-    } catch (error) {
-      console.error("Login error:", error);
-      setError("Something went wrong!");
-      toast.error("Error during login");
-    } finally {
-      setIsPending(false);
+  // Create a wrapper action that includes the callbackUrl
+  const loginActionWithUrl = async (prevState: any, formData: FormData) => {
+    if (callbackUrl) {
+      formData.append("redirectTo", callbackUrl);
     }
+    return loginWithRedirectAction(formData, callbackUrl || undefined);
   };
+
+  const [state, formAction] = useActionState(loginActionWithUrl, undefined);
+
+  // Show error or success toast when state changes
+  useEffect(() => {
+    if (state?.error) {
+      toast.error(state.error);
+    }
+  }, [state]);
 
   return (
     <div className="space-y-6">
       <SocialButtons />
+      
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t" />
@@ -125,30 +92,28 @@ export function LoginForm() {
           </span>
         </div>
       </div>
-      <form onSubmit={onSubmit} className="space-y-6">
+
+      <form action={formAction} className="space-y-6">
         <div className="space-y-4">
           <Input
             name="email"
             type="email"
             placeholder="Email"
-            disabled={isPending}
+            required
+            autoComplete="email"
           />
           <Input
             name="password"
             type="password"
             placeholder="Password"
-            disabled={isPending}
+            required
+            autoComplete="current-password"
           />
         </div>
-        <FormError message={error} />
-        <FormSuccess message={success} />
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={isPending}
-        >
-          {isPending ? "Loading..." : "Login"}
-        </Button>
+
+        {state?.error && <FormError message={state.error} />}
+
+        <SubmitButton />
       </form>
     </div>
   );

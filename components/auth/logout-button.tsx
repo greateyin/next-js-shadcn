@@ -1,43 +1,51 @@
 /**
- * @fileoverview Logout button component
+ * @fileoverview Logout button component - Auth.js V5 Best Practices
  * @module components/auth/logout-button
  * @description Provides a button component for user logout functionality
- * with loading state and error handling
+ * using Server Actions following Auth.js V5 best practices
  */
 
 "use client";
 
-import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useTransition } from "react";
+import { logoutAction } from "@/actions/auth";
 
 /**
  * Props for the LogoutButton component
  * @interface
  * @property {React.ReactNode} [children] - Content to render inside the button
+ * @property {string} [redirectTo] - Optional redirect URL after logout
  */
 interface LogoutButtonProps {
   children?: React.ReactNode;
+  redirectTo?: string;
 }
 
 /**
  * LogoutButton component for user logout
  * @component
- * @description A button component that:
- * - Handles user logout process
+ * @description A button component that follows Auth.js V5 best practices:
+ * - Uses Server Actions instead of client-side signOut
+ * - Automatic redirect handling by Auth.js
+ * - Better security (server-side session invalidation)
  * - Shows loading state during logout
- * - Handles errors gracefully
- * - Redirects to home page after logout
- * - Supports custom button content
+ * - Supports custom button content and redirect URL
  * 
  * @param {LogoutButtonProps} props - Component props
  * @param {React.ReactNode} [props.children] - Button content
+ * @param {string} [props.redirectTo="/"] - Redirect URL after logout
  * 
  * @example
  * ```tsx
  * // Basic usage
  * <LogoutButton>
+ *   Sign out
+ * </LogoutButton>
+ * 
+ * // With custom redirect
+ * <LogoutButton redirectTo="/auth/login">
  *   Sign out
  * </LogoutButton>
  * 
@@ -55,36 +63,20 @@ interface LogoutButtonProps {
  *     </LogoutButton>
  *   </DropdownMenuItem>
  * </DropdownMenu>
- * 
- * // With custom styling
- * <LogoutButton>
- *   <div className="flex items-center">
- *     <LogoutIcon className="mr-2" />
- *     <span>Sign out</span>
- *   </div>
- * </LogoutButton>
  * ```
  */
-export function LogoutButton({ children }: LogoutButtonProps) {
-  const [isPending, setIsPending] = useState(false);
+export function LogoutButton({ children, redirectTo = "/" }: LogoutButtonProps) {
+  const [isPending, startTransition] = useTransition();
 
   /**
-   * Handles the logout process
-   * @async
+   * Handles the logout process using Server Action
    * @function
-   * @description Signs out the user and handles loading state
+   * @description Calls the logout Server Action with automatic redirect
    */
-  const handleLogout = async () => {
-    try {
-      setIsPending(true);
-      await signOut({
-        callbackUrl: "/",
-      });
-    } catch (error) {
-      console.error("Error during logout:", error);
-    } finally {
-      setIsPending(false);
-    }
+  const handleLogout = () => {
+    startTransition(async () => {
+      await logoutAction(redirectTo);
+    });
   };
 
   return (
