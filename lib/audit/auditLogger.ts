@@ -35,6 +35,13 @@ export async function createAuditLog(options: AuditLogOptions) {
   });
 }
 
+/**
+ * Audit logger utility
+ */
+export const auditLogger = {
+  log: createAuditLog,
+};
+
 export async function queryAuditLogs(filters: {
   userId?: string;
   action?: string;

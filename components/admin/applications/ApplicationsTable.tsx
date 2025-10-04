@@ -12,11 +12,7 @@ import {
   ColumnFiltersState,
   getFilteredRowModel,
 } from "@tanstack/react-table"
-// Create a placeholder toast function until we create the real component
-const useToast = () => ({
-  toast: ({ title, description, variant }: any) => {
-  }
-});
+import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
 import {
   Table,
@@ -28,7 +24,16 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ChevronDown, MoreHorizontal, PlusCircle } from "lucide-react"
+import { 
+  MoreHorizontal, 
+  PlusCircle, 
+  Edit, 
+  Power, 
+  Shield, 
+  Menu, 
+  Trash2,
+  Loader2
+} from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,6 +42,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { ApplicationFormDialog } from "./ApplicationFormDialog"
+import { ManageRolesDialog } from "./ManageRolesDialog"
+import { toggleApplicationStatus, deleteApplication } from "@/actions/application"
 
 interface Application {
   id: string
@@ -44,8 +62,15 @@ interface Application {
   displayName: string
   description: string
   path: string
+  icon: string | null
   isActive: boolean
-  roles: string
+  roles: Array<{
+    role: {
+      id: string
+      name: string
+      description: string | null
+    }
+  }>
   menuItemCount: number
   order: number
   createdAt: string
@@ -53,12 +78,22 @@ interface Application {
 
 interface ApplicationsTableProps {
   applications: Application[]
+  availableRoles: Array<{
+    id: string
+    name: string
+    description: string | null
+  }>
+  onRefresh: () => void
 }
 
-export function ApplicationsTable({ applications }: ApplicationsTableProps) {
+export function ApplicationsTable({ applications, availableRoles, onRefresh }: ApplicationsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const { toast } = useToast()
+  const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
+  const [isRolesDialogOpen, setIsRolesDialogOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const columns: ColumnDef<Application>[] = [
     {
@@ -94,7 +129,15 @@ export function ApplicationsTable({ applications }: ApplicationsTableProps) {
     {
       accessorKey: "roles",
       header: "Roles",
-      cell: ({ row }) => <div>{row.getValue("roles")}</div>,
+      cell: ({ row }) => {
+        const app = row.original
+        const roleNames = app.roles.map((ra) => ra.role.name).join(", ")
+        return (
+          <div className="max-w-[200px] truncate" title={roleNames}>
+            {roleNames || "No roles"}
+          </div>
+        )
+      },
     },
     {
       accessorKey: "menuItemCount",
@@ -125,47 +168,49 @@ export function ApplicationsTable({ applications }: ApplicationsTableProps) {
               <DropdownMenuItem
                 className="rounded-lg cursor-pointer hover:bg-gray-100 focus:bg-gray-100 px-3 py-2"
                 onClick={() => {
-                  toast({
-                    title: "Edit Application",
-                    description: `You are editing ${app.displayName}`,
-                  })
+                  setSelectedApplication(app)
+                  setIsFormDialogOpen(true)
                 }}
               >
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
-                className="rounded-lg cursor-pointer hover:bg-gray-100 focus:bg-gray-100 px-3 py-2"
-                onClick={() => {
-                  toast({
-                    title: app.isActive ? "Disable Application" : "Enable Application",
-                    description: `${app.isActive ? "Disabling" : "Enabling"} ${app.displayName}`,
+                className="rounded-lg cursor-pointer hover:bg-green-50 focus:bg-green-50 px-3 py-2"
+                onClick={async () => {
+                  const result = await toggleApplicationStatus({
+                    id: app.id,
+                    isActive: !app.isActive,
                   })
+                  if (result.error) {
+                    toast.error(result.error)
+                  } else if (result.success) {
+                    toast.success(result.success)
+                    onRefresh()
+                  }
                 }}
               >
+                <Power className="mr-2 h-4 w-4" />
                 {app.isActive ? "Disable" : "Enable"}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="rounded-lg cursor-pointer hover:bg-purple-50 focus:bg-purple-50 px-3 py-2"
+                onClick={() => {
+                  setSelectedApplication(app)
+                  setIsRolesDialogOpen(true)
+                }}
+              >
+                <Shield className="mr-2 h-4 w-4" />
+                Manage Role Access
               </DropdownMenuItem>
               <DropdownMenuSeparator className="bg-gray-200/50 my-2" />
               <DropdownMenuItem
-                className="rounded-lg cursor-pointer hover:bg-gray-100 focus:bg-gray-100 px-3 py-2"
+                className="rounded-lg cursor-pointer hover:bg-red-50 focus:bg-red-50 px-3 py-2 text-red-600"
                 onClick={() => {
-                  toast({
-                    title: "Manage Menu Items",
-                    description: `Managing menu items for ${app.displayName}`,
-                  })
+                  setSelectedApplication(app)
+                  setIsDeleteDialogOpen(true)
                 }}
               >
-                Manage Menu Items
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="rounded-lg cursor-pointer hover:bg-gray-100 focus:bg-gray-100 px-3 py-2"
-                onClick={() => {
-                  toast({
-                    title: "Manage Role Access",
-                    description: `Managing role access for ${app.displayName}`,
-                  })
-                }}
-              >
-                Manage Role Access
+                Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -189,22 +234,51 @@ export function ApplicationsTable({ applications }: ApplicationsTableProps) {
     },
   })
 
+  const handleDelete = async () => {
+    if (!selectedApplication) return
+
+    setIsDeleting(true)
+    try {
+      const result = await deleteApplication({ id: selectedApplication.id })
+      if (result.error) {
+        toast.error(result.error)
+      } else if (result.success) {
+        toast.success(result.success)
+        setIsDeleteDialogOpen(false)
+        setSelectedApplication(null)
+        onRefresh()
+      }
+    } catch (error) {
+      console.error("[DELETE_APPLICATION]", error)
+      toast.error("刪除應用程式時發生錯誤")
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   return (
-    <div>
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6">
-        <Input
-          placeholder="Filter by application name..."
-          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("name")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm border-gray-300 focus:border-blue-500"
-        />
-        <Button className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-sm">
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add Application
-        </Button>
-      </div>
+    <>
+      <div>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6">
+          <Input
+            placeholder="Filter by application name..."
+            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+            onChange={(event) =>
+              table.getColumn("name")?.setFilterValue(event.target.value)
+            }
+            className="max-w-sm border-gray-300 focus:border-blue-500"
+          />
+          <Button 
+            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-sm"
+            onClick={() => {
+              setSelectedApplication(null)
+              setIsFormDialogOpen(true)
+            }}
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Application
+          </Button>
+        </div>
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
@@ -242,7 +316,7 @@ export function ApplicationsTable({ applications }: ApplicationsTableProps) {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
+                <TableCell colSpan={columns.length} className="h-32 text-center text-gray-500">
                   No applications found.
                 </TableCell>
               </TableRow>
@@ -275,6 +349,69 @@ export function ApplicationsTable({ applications }: ApplicationsTableProps) {
           </Button>
         </div>
       </div>
-    </div>
+      </div>
+
+      {/* 新增/編輯應用程式對話框 */}
+      <ApplicationFormDialog
+        open={isFormDialogOpen}
+        onOpenChange={setIsFormDialogOpen}
+        application={selectedApplication ? {
+          id: selectedApplication.id,
+          name: selectedApplication.name,
+          displayName: selectedApplication.displayName,
+          description: selectedApplication.description,
+          path: selectedApplication.path,
+          icon: selectedApplication.icon,
+          order: selectedApplication.order,
+          isActive: selectedApplication.isActive,
+        } : undefined}
+        onSuccess={onRefresh}
+      />
+
+      {/* 管理角色存取對話框 */}
+      {selectedApplication && (
+        <ManageRolesDialog
+          open={isRolesDialogOpen}
+          onOpenChange={setIsRolesDialogOpen}
+          applicationId={selectedApplication.id}
+          applicationName={selectedApplication.displayName}
+          currentRoleIds={selectedApplication.roles.map((ra) => ra.role.id)}
+          availableRoles={availableRoles}
+          onSuccess={onRefresh}
+        />
+      )}
+
+      {/* 刪除確認對話框 */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Delete Application</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{selectedApplication?.displayName}"? This action cannot be undone.
+              {selectedApplication && (
+                <>
+                  {selectedApplication.menuItemCount > 0 && (
+                    <div className="mt-2 text-red-600">
+                      Warning: This application has {selectedApplication.menuItemCount} associated menu items.
+                    </div>
+                  )}
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }
