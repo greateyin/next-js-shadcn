@@ -54,6 +54,6 @@ export const apiAuthRoutePaths = {
     providers: "/api/auth/providers",
 } as const;
 
-export const DEFAULT_LOGIN_REDIRECT = "/profile";
-export const ADMIN_LOGIN_REDIRECT = "/dashboard";
+export const DEFAULT_LOGIN_REDIRECT = "/dashboard";
+export const ADMIN_LOGIN_REDIRECT = "/admin";
 export const DEFAULT_UNAUTHORIZED_REDIRECT = "/auth/unauthorized";

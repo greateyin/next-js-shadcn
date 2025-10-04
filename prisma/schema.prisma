@@ -245,21 +245,23 @@ model AuditLog {
 
 model Role {
   /// 角色的唯一標識符
-  id          String         @id @default(cuid())
+  id           String            @id @default(cuid())
   /// 角色名稱
-  name        String         @unique
+  name         String            @unique
   /// 角色描述
-  description String?
+  description  String?
   /// 創建時間
-  createdAt   DateTime       @default(now())
+  createdAt    DateTime          @default(now())
   /// 更新時間
-  updatedAt   DateTime       @updatedAt
+  updatedAt    DateTime          @updatedAt
   /// 與此角色關聯的使用者
-  users       UserRole[]
+  users        UserRole[]
   /// 與此角色關聯的權限
-  permissions RolePermission[]
+  permissions  RolePermission[]
   /// 與此角色關聯的應用程式
   applications RoleApplication[]
+  /// 與此角色關聯的選單項目
+  menuItems    MenuItemRole[]
 }
 
 model Permission {
@@ -372,39 +374,84 @@ model RoleApplication {
 
 model MenuItem {
   /// 選單項目的唯一標識符
-  id            String      @id @default(cuid())
+  id            String          @id @default(cuid())
   /// 選單項目名稱（內部使用）
   name          String
   /// 顯示名稱（使用者介面顯示）
   displayName   String
+  /// 選單項目描述（提示文字）
+  description   String?
   /// 選單項目路徑（URL 路徑）
   path          String
-  /// 選單項目圖標（圖標名稱或 URL）
+  /// 選單項目圖標（Lucide 圖標名稱，例如：LayoutDashboard, Users, Settings）
   icon          String?
+  /// 選單項目類型
+  type          MenuItemType    @default(LINK)
   /// 父選單項目標識符（用於階層式選單）
   parentId      String?
   /// 應用程式標識符
   applicationId String
   /// 排序順序（同層級內的排序）
-  order         Int         @default(0)
+  order         Int             @default(0)
   /// 是否顯示（控制選單項目的可見性）
-  isVisible     Boolean     @default(true)
+  isVisible     Boolean         @default(true)
+  /// 是否禁用
+  isDisabled    Boolean         @default(false)
   /// 創建時間
-  createdAt     DateTime    @default(now())
+  createdAt     DateTime        @default(now())
   /// 更新時間
-  updatedAt     DateTime    @updatedAt
+  updatedAt     DateTime        @updatedAt
   /// 關聯的應用程式
-  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  application   Application     @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   /// 父選單項目
-  parent        MenuItem?   @relation("MenuItemToMenuItem", fields: [parentId], references: [id], onDelete: SetNull)
+  parent        MenuItem?       @relation("MenuItemToMenuItem", fields: [parentId], references: [id], onDelete: SetNull)
   /// 子選單項目列表
-  children      MenuItem[]  @relation("MenuItemToMenuItem")
+  children      MenuItem[]      @relation("MenuItemToMenuItem")
+  /// 選單項目的角色存取權限
+  roleAccess    MenuItemRole[]
 
   @@unique([applicationId, name])  // 確保應用程式內選單名稱唯一
   @@unique([applicationId, path])  // 確保應用程式內路徑唯一
   @@index([applicationId])
   @@index([parentId])
   @@index([parentId, order])       // 用於同層級排序查詢
+  @@index([isVisible, order])      // 用於查詢可見選單並排序
+  @@index([type])                  // 用於按類型篩選
+}
+
+model MenuItemRole {
+  /// 選單項目角色關聯的唯一標識符
+  id         String   @id @default(cuid())
+  /// 選單項目標識符
+  menuItemId String
+  /// 角色標識符
+  roleId     String
+  /// 是否可查看（在選單中顯示）
+  canView    Boolean  @default(true)
+  /// 是否可存取（可以點擊進入）
+  canAccess  Boolean  @default(true)
+  /// 創建時間
+  createdAt  DateTime @default(now())
+  /// 更新時間
+  updatedAt  DateTime @updatedAt
+  /// 關聯的選單項目
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  /// 關聯的角色
+  role       Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([menuItemId, roleId])     // 確保選單項目與角色的組合唯一
+  @@index([menuItemId])
+  @@index([roleId])
+  @@index([roleId, canView])         // 用於查詢角色可見的選單
+  @@index([menuItemId, canView])     // 用於查詢選單項目的可見角色
+}
+
+/// 選單項目類型列舉
+enum MenuItemType {
+  LINK       // 普通連結
+  GROUP      // 分組標題（不可點擊）
+  DIVIDER    // 分隔線
+  EXTERNAL   // 外部連結
 }
 
 /// 預設角色列舉

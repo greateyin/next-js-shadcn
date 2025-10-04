@@ -56,8 +56,12 @@ export function DashboardNav() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <a href="/dashboard/profile" className="cursor-pointer">Profile</a>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <a href="/settings" className="cursor-pointer">Settings</a>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <LogoutButton>Log out</LogoutButton>

@@ -22,8 +22,15 @@ export default async function AdminLayout({
     redirect("/auth/login");
   }
 
-  // Get user roles and applications
-  const userRolesAndPermissions = await getUserRolesAndPermissions(session.user.id);
+  // Get user roles and applications with error handling
+  let userRolesAndPermissions;
+  try {
+    userRolesAndPermissions = await getUserRolesAndPermissions(session.user.id);
+  } catch (error) {
+    console.error("Error fetching user roles:", error);
+    // User not found in database, clear session and redirect to login
+    redirect("/auth/login?error=UserNotFound");
+  }
 
   // Check if user has admin role
   const hasAdminAccess = userRolesAndPermissions.roles.some(
