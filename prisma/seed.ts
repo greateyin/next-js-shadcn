@@ -326,10 +326,10 @@ async function main() {
     console.log('\n🔑 Step 10: Creating login methods...')
     await prisma.loginMethod.createMany({
       data: [
-        { userId: adminUser.id, method: 'password' },
-        { userId: regularUser.id, method: 'password' },
-        { userId: moderatorUser.id, method: 'password' },
-        { userId: testUser.id, method: 'password' },
+        { userId: adminUser.id, method: 'credentials' },
+        { userId: regularUser.id, method: 'credentials' },
+        { userId: moderatorUser.id, method: 'credentials' },
+        { userId: testUser.id, method: 'credentials' },
       ],
       skipDuplicates: true
     })

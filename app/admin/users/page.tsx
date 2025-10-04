@@ -28,6 +28,10 @@ export default async function UsersPage() {
     status: user.status,
     roles: user.userRoles.map((userRole) => userRole.role.name).join(", ") || "No roles",
     createdAt: user.createdAt.toISOString(),
+    image: user.image,
+    isTwoFactorEnabled: user.isTwoFactorEnabled,
+    emailVerified: user.emailVerified?.toISOString() || null,
+    loginAttempts: user.loginAttempts,
   }));
 
   return (

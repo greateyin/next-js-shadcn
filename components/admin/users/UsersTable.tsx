@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import {
   ColumnDef,
   flexRender,
@@ -12,11 +13,7 @@ import {
   ColumnFiltersState,
   getFilteredRowModel,
 } from "@tanstack/react-table"
-// Create a placeholder toast function until we create the real component
-const useToast = () => ({
-  toast: ({ title, description, variant }: any) => {
-  }
-});
+import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
 import {
   Table,
@@ -28,7 +25,7 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ChevronDown, MoreHorizontal, PlusCircle } from "lucide-react"
+import { MoreHorizontal, PlusCircle } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,6 +34,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { EditUserDialog } from "./EditUserDialog"
+import { AddUserDialog } from "./AddUserDialog"
+import { DeleteUserDialog } from "./DeleteUserDialog"
 
 interface User {
   id: string
@@ -51,10 +51,106 @@ interface UsersTableProps {
   users: User[]
 }
 
-export function UsersTable({ users }: UsersTableProps) {
+export function UsersTable({ users: initialUsers }: UsersTableProps) {
+  const router = useRouter()
+  const [users, setUsers] = useState(initialUsers)
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const { toast } = useToast()
+  
+  // Update users when initialUsers changes
+  useEffect(() => {
+    setUsers(initialUsers)
+  }, [initialUsers])
+  
+  // Dialog states
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [addDialogOpen, setAddDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  
+  // API handlers
+  const handleEdit = async (userId: string, data: { 
+    name: string
+    email: string
+    status: string
+    image?: string
+    isTwoFactorEnabled: boolean
+    emailVerified: boolean
+    loginAttempts: number
+  }) => {
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      })
+      
+      if (!res.ok) throw new Error("Failed to update user")
+      
+      // Update user in the list
+      setUsers(users.map(u => 
+        u.id === userId 
+          ? { ...u, name: data.name, email: data.email, status: data.status }
+          : u
+      ))
+      
+      toast.success("User updated successfully")
+      router.refresh()
+    } catch (error) {
+      toast.error("Failed to update user")
+    }
+  }
+  
+  const handleAdd = async (data: { name: string; email: string; password: string; status: string }) => {
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      })
+      
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.message || "Failed to create user")
+      }
+      
+      const { user } = await res.json()
+      
+      // Add new user to the list
+      const formattedUser = {
+        id: user.id,
+        name: user.name || '',
+        email: user.email,
+        status: user.status,
+        roles: user.userRoles?.map((ur: any) => ur.role.name).join(', ') || 'No roles',
+        createdAt: new Date(user.createdAt).toISOString()
+      }
+      
+      setUsers([formattedUser, ...users])
+      toast.success("User created successfully")
+      router.refresh()
+    } catch (error: any) {
+      toast.error(error.message || "Failed to create user")
+    }
+  }
+  
+  const handleDelete = async (userId: string) => {
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: "DELETE"
+      })
+      
+      if (!res.ok) throw new Error("Failed to delete user")
+      
+      // Remove user from the list
+      setUsers(users.filter(u => u.id !== userId))
+      
+      toast.success("User deleted successfully")
+      router.refresh()
+    } catch (error) {
+      toast.error("Failed to delete user")
+    }
+  }
 
   const columns: ColumnDef<User>[] = [
     {
@@ -119,7 +215,8 @@ export function UsersTable({ users }: UsersTableProps) {
       accessorKey: "createdAt",
       header: "Created At",
       cell: ({ row }) => {
-        return new Date(row.getValue("createdAt")).toLocaleDateString()
+        const date = new Date(row.getValue("createdAt"))
+        return date.toISOString().split('T')[0]
       },
     },
     {
@@ -138,48 +235,21 @@ export function UsersTable({ users }: UsersTableProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48 rounded-xl border-gray-200/50 shadow-xl bg-white/95 backdrop-blur-xl p-2">
               <DropdownMenuLabel className="px-3 py-2 font-semibold text-gray-900">Actions</DropdownMenuLabel>
-              <DropdownMenuItem className="rounded-lg cursor-pointer hover:bg-gray-100 focus:bg-gray-100 px-3 py-2"
+              <DropdownMenuItem 
+                className="rounded-lg cursor-pointer hover:bg-gray-100 focus:bg-gray-100 px-3 py-2"
                 onClick={() => {
-                  toast({
-                    title: "Edit User",
-                    description: `You are editing ${user.name}`,
-                  })
+                  setSelectedUser(user)
+                  setEditDialogOpen(true)
                 }}
               >
                 Edit
               </DropdownMenuItem>
               <DropdownMenuSeparator className="bg-gray-200/50 my-2" />
               <DropdownMenuItem
-                className="rounded-lg cursor-pointer hover:bg-gray-100 focus:bg-gray-100 px-3 py-2"
-                onClick={() => {
-                  toast({
-                    title: "Change Password",
-                    description: `Changing password for ${user.name}`,
-                  })
-                }}
-              >
-                Change Password
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="rounded-lg cursor-pointer hover:bg-gray-100 focus:bg-gray-100 px-3 py-2"
-                onClick={() => {
-                  toast({
-                    title: "Manage Roles",
-                    description: `Managing roles for ${user.name}`,
-                  })
-                }}
-              >
-                Manage Roles
-              </DropdownMenuItem>
-              <DropdownMenuSeparator className="bg-gray-200/50 my-2" />
-              <DropdownMenuItem
                 className="rounded-lg cursor-pointer hover:bg-red-50 focus:bg-red-50 px-3 py-2 text-red-600"
                 onClick={() => {
-                  toast({
-                    title: "Delete User",
-                    description: `Are you sure you want to delete ${user.name}?`,
-                    variant: "destructive",
-                  })
+                  setSelectedUser(user)
+                  setDeleteDialogOpen(true)
                 }}
               >
                 Delete
@@ -217,7 +287,10 @@ export function UsersTable({ users }: UsersTableProps) {
           }
           className="max-w-sm border-gray-300 focus:border-blue-500"
         />
-        <Button className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-sm">
+        <Button 
+          onClick={() => setAddDialogOpen(true)}
+          className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-sm"
+        >
           <PlusCircle className="mr-2 h-4 w-4" />
           Add User
         </Button>
@@ -292,6 +365,27 @@ export function UsersTable({ users }: UsersTableProps) {
           </Button>
         </div>
       </div>
+      
+      {/* Dialogs */}
+      <EditUserDialog
+        user={selectedUser}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onSave={handleEdit}
+      />
+      
+      <AddUserDialog
+        open={addDialogOpen}
+        onOpenChange={setAddDialogOpen}
+        onAdd={handleAdd}
+      />
+      
+      <DeleteUserDialog
+        user={selectedUser}
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onDelete={handleDelete}
+      />
     </div>
   )
 }
