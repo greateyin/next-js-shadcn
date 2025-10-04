@@ -1,90 +1,85 @@
+/**
+ * @fileoverview Forgot Password Page - Auth.js V5 Best Practices
+ * @module app/auth/forgot-password/page
+ * @description Password reset request page using Server Actions
+ */
+
 "use client";
 
-import React, { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { ResetPasswordSchema } from "@/schemas/authSchemas";
+import { useEffect, useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import { AuthCardWrapper } from "@/components/auth/common/AuthCardWrapper";
 import { FormError } from "@/components/auth/common/FormError";
 import { FormSuccess } from "@/components/auth/common/FormSuccess";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { resetPassword } from "@/actions/auth";
+import { Label } from "@/components/ui/label";
+import { requestPasswordResetAction } from "@/actions/auth/password-reset";
+import { toast } from "sonner";
 
+/**
+ * Submit button component with loading state
+ */
+function SubmitButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button type="submit" className="w-full" disabled={pending}>
+      {pending ? "發送中..." : "發送重置連結"}
+    </Button>
+  );
+}
+
+/**
+ * Forgot Password Page Component
+ * @component
+ * @description Allows users to request a password reset link via email
+ * Following Auth.js V5 best practices with Server Actions
+ */
 export default function ForgotPasswordPage() {
-  const [error, setError] = useState<string | undefined>();
-  const [success, setSuccess] = useState<string | undefined>();
-  const [isPending, setIsPending] = useState(false);
+  const [state, formAction] = useActionState(requestPasswordResetAction, undefined);
 
-  const form = useForm({
-    resolver: zodResolver(ResetPasswordSchema),
-    defaultValues: {
-      email: "",
-    },
-  });
-
-  const onSubmit = async (values: any) => {
-    setError(undefined);
-    setSuccess(undefined);
-    setIsPending(true);
-
-    try {
-      await resetPassword(values.email);
-      setSuccess("Reset link sent to your email!");
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Something went wrong");
-    } finally {
-      setIsPending(false);
+  // Show toast notifications
+  useEffect(() => {
+    if (state?.error) {
+      toast.error(state.error);
+    } else if (state?.success) {
+      toast.success(state.success);
     }
-  };
+  }, [state]);
 
   return (
     <AuthCardWrapper
-      headerLabel="Forgot your password?"
-      backButtonLabel="Back to login"
+      headerLabel="忘記密碼？"
+      backButtonLabel="返回登入"
       backButtonHref="/auth/login"
     >
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground text-center">
+          輸入您的電子郵件地址，我們將發送密碼重置連結給您。
+        </p>
+        
+        <form action={formAction} className="space-y-6">
           <div className="space-y-4">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      disabled={isPending}
-                      placeholder="john.doe@example.com"
-                      type="email"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="space-y-2">
+              <Label htmlFor="email">電子郵件</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="john.doe@example.com"
+                required
+                autoComplete="email"
+              />
+            </div>
           </div>
-          <FormError message={error} />
-          <FormSuccess message={success} />
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={isPending}
-          >
-            {isPending ? "Sending..." : "Send reset link"}
-          </Button>
+
+          {state?.error && <FormError message={state.error} />}
+          {state?.success && <FormSuccess message={state.success} />}
+
+          <SubmitButton />
         </form>
-      </Form>
+      </div>
     </AuthCardWrapper>
   );
 }

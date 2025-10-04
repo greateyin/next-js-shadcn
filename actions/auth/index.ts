@@ -19,6 +19,10 @@ export {
 
 // 密碼重置相關
 export {
+  // 新版本 - 使用 Server Actions (推薦)
+  requestPasswordResetAction,
+  resetPasswordWithTokenAction,
+  // 舊版本 - 向後兼容
   resetPassword,
   newPasswordAction,
 } from "./password-reset";

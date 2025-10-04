@@ -135,7 +135,54 @@ export const authConfig: NextAuthConfig = {
     })
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    /**
+     * Called when a user signs in via OAuth provider
+     * Handles automatic account creation and role assignment for OAuth users
+     */
+    async signIn({ user, account, profile }) {
+      // For OAuth providers, ensure user has active status and default role
+      if (account?.provider !== "credentials") {
+        try {
+          const existingUser = await db.user.findUnique({
+            where: { email: user.email! },
+            include: { userRoles: true }
+          });
+
+          // If user was just created via OAuth (no roles assigned)
+          if (existingUser && existingUser.userRoles.length === 0) {
+            // Set user status to active (OAuth emails are pre-verified)
+            await db.user.update({
+              where: { id: existingUser.id },
+              data: { 
+                status: "active",
+                emailVerified: new Date() // OAuth emails are verified
+              }
+            });
+
+            // Assign default "user" role
+            const userRole = await db.role.findUnique({
+              where: { name: "user" }
+            });
+
+            if (userRole) {
+              await db.userRole.create({
+                data: {
+                  userId: existingUser.id,
+                  roleId: userRole.id
+                }
+              });
+            }
+          }
+        } catch (error) {
+          console.error("Error in OAuth signIn callback:", error);
+          // Continue with sign in even if role assignment fails
+        }
+      }
+      
+      return true;
+    },
+    
+    async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
         token.status = user.status;
@@ -168,6 +215,7 @@ export const authConfig: NextAuthConfig = {
       }
       return token;
     },
+    
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string;

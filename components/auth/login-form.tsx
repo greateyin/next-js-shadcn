@@ -102,13 +102,23 @@ export function LoginForm() {
             required
             autoComplete="email"
           />
-          <Input
-            name="password"
-            type="password"
-            placeholder="Password"
-            required
-            autoComplete="current-password"
-          />
+          <div className="space-y-2">
+            <Input
+              name="password"
+              type="password"
+              placeholder="Password"
+              required
+              autoComplete="current-password"
+            />
+            <div className="flex justify-end">
+              <a
+                href="/auth/forgot-password"
+                className="text-sm text-primary hover:underline"
+              >
+                忘記密碼？
+              </a>
+            </div>
+          </div>
         </div>
 
         {state?.error && <FormError message={state.error} />}
