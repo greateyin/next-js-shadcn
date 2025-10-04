@@ -6,30 +6,30 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 /**
- * Home component - Marketing style landing page inspired by Expert Secrets
+ * Home component - Apple-style landing page
  */
 export default function Home() {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="min-h-screen bg-white">
       <main className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[620px] bg-gradient-to-b from-emerald-500/20 via-slate-900/40 to-slate-950" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[620px] bg-gradient-to-b from-blue-50 via-white to-gray-50" />
 
-        {/* Hero */}
-        <section className="border-b border-white/10">
+        {/* Hero - Apple Style */}
+        <section className="border-b border-gray-100">
           <div className="container mx-auto grid gap-12 px-6 py-20 lg:grid-cols-[1.2fr_1fr] lg:items-center">
             <div>
-              <Badge className="bg-emerald-500/20 text-emerald-300">New live masterclass</Badge>
-              <h1 className="mt-6 text-4xl font-bold tracking-tight text-white md:text-6xl">
+              <Badge className="bg-blue-50 text-blue-600 border-0">New live masterclass</Badge>
+              <h1 className="mt-6 text-4xl font-semibold tracking-tight text-gray-900 md:text-6xl">
                 Turn Your Expertise Into An Irresistible Movement
               </h1>
-              <p className="mt-6 text-lg text-slate-200">
+              <p className="mt-6 text-lg text-gray-600">
                 Discover the conversion framework inspired by Expert Secrets that empowers coaches, creators, and consultants to craft a captivating message, build loyal communities, and launch offers people can&apos;t ignore.
               </p>
 
               <div className="mt-8 flex flex-wrap gap-4">
                 <Button
                   size="lg"
-                  className="bg-emerald-400 px-8 text-slate-950 transition hover:bg-emerald-300"
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 px-8 text-white shadow-lg shadow-blue-500/30"
                   asChild
                 >
                   <Link href="#reserve">
@@ -40,48 +40,48 @@ export default function Home() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border border-emerald-400/60 bg-transparent px-8 text-emerald-200 transition hover:bg-emerald-400/10"
+                  className="border-gray-300 bg-white px-8 text-gray-700 hover:bg-gray-50"
                   asChild
                 >
                   <Link href="#curriculum">View the curriculum</Link>
                 </Button>
               </div>
 
-              <div className="mt-10 flex flex-wrap items-center gap-6 text-sm text-slate-300">
+              <div className="mt-10 flex flex-wrap items-center gap-6 text-sm text-gray-600">
                 <div className="flex -space-x-4">
                   {[
-                    { initials: "AC", gradient: "from-emerald-400/70 to-emerald-500/60" },
-                    { initials: "DR", gradient: "from-cyan-400/70 to-emerald-400/60" },
-                    { initials: "MA", gradient: "from-white/40 to-emerald-400/60" }
+                    { initials: "AC", gradient: "from-blue-400 to-blue-500" },
+                    { initials: "DR", gradient: "from-blue-500 to-blue-600" },
+                    { initials: "MA", gradient: "from-gray-400 to-gray-500" }
                   ].map((member) => (
                     <div
                       key={member.initials}
-                      className={`flex h-12 w-12 items-center justify-center rounded-full border border-slate-800 bg-gradient-to-br ${member.gradient} text-sm font-semibold text-slate-900`}
+                      className={`flex h-12 w-12 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br ${member.gradient} text-sm font-semibold text-white shadow-md`}
                     >
                       {member.initials}
                     </div>
                   ))}
                 </div>
                 <p>
-                  <span className="font-semibold text-white">227,000+</span> experts have implemented this blueprint
+                  <span className="font-semibold text-gray-900">227,000+</span> experts have implemented this blueprint
                 </p>
               </div>
             </div>
 
-            <Card className="border-white/10 bg-slate-900/60 backdrop-blur">
+            <Card className="border-gray-200/50 bg-white/80 backdrop-blur-xl shadow-xl">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white">
-                  <Sparkles className="h-5 w-5 text-emerald-400" /> Inside this free training
+                <CardTitle className="flex items-center gap-2 text-gray-900">
+                  <Sparkles className="h-5 w-5 text-blue-500" /> Inside this free training
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4 text-sm text-slate-200">
+              <CardContent className="space-y-4 text-sm text-gray-700">
                 {[
                   "Engineer a story-driven hook that attracts your dream audience",
                   "Stack irresistible offers the Expert Secrets way",
                   "Design a follow-up engine that turns curious visitors into high-ticket clients"
                 ].map((item) => (
                   <div key={item} className="flex items-start gap-3">
-                    <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-400" />
+                    <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-500" />
                     <span>{item}</span>
                   </div>
                 ))}
@@ -90,13 +90,13 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Social proof */}
-        <section className="border-b border-white/5 bg-slate-950/40">
+        {/* Social proof - Apple Style */}
+        <section className="border-b border-gray-100 bg-gray-50">
           <div className="container mx-auto px-6 py-12">
-            <p className="text-center text-xs uppercase tracking-[0.4em] text-slate-500">
+            <p className="text-center text-xs uppercase tracking-[0.4em] text-gray-500">
               Trusted by leaders from
             </p>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-14 gap-y-6 text-sm font-semibold uppercase tracking-[0.3em] text-white/40">
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-14 gap-y-6 text-sm font-semibold uppercase tracking-[0.3em] text-gray-400">
               {['foundr', 'clickfunnels', 'impact theory', 'gohighlevel', 'kajabi'].map((brand) => (
                 <span key={brand} className="whitespace-nowrap">{brand}</span>
               ))}
@@ -104,15 +104,15 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Curriculum preview */}
-        <section id="curriculum" className="border-b border-white/5 bg-slate-950">
+        {/* Curriculum preview - Apple Style */}
+        <section id="curriculum" className="border-b border-gray-100 bg-white">
           <div className="container mx-auto px-6 py-20">
             <div className="mx-auto max-w-3xl text-center">
-              <Badge className="bg-white/10 text-emerald-200">What you&apos;ll master</Badge>
-              <h2 className="mt-4 text-3xl font-semibold text-white md:text-4xl">
+              <Badge className="bg-blue-50 text-blue-600 border-0">What you&apos;ll master</Badge>
+              <h2 className="mt-4 text-3xl font-semibold text-gray-900 md:text-4xl">
                 A proven 3-phase roadmap to launch, scale, and amplify your movement
               </h2>
-              <p className="mt-4 text-slate-300">
+              <p className="mt-4 text-gray-600">
                 Walk through messaging foundations, high-converting offer architecture, and launch campaigns designed to create unstoppable momentum.
               </p>
             </div>
@@ -132,23 +132,23 @@ export default function Home() {
                   description: "Deploy follow-up funnels, automate nurture, and move prospects seamlessly into premium programs.",
                 }
               ].map((item) => (
-                <Card key={item.title} className="border-white/5 bg-slate-900/80 backdrop-blur">
+                <Card key={item.title} className="border-gray-200/50 bg-white/80 backdrop-blur-sm shadow-sm">
                   <CardHeader>
-                    <CardTitle className="text-lg text-white">{item.title}</CardTitle>
+                    <CardTitle className="text-lg text-gray-900">{item.title}</CardTitle>
                   </CardHeader>
-                  <CardContent className="text-sm text-slate-300">{item.description}</CardContent>
+                  <CardContent className="text-sm text-gray-600">{item.description}</CardContent>
                 </Card>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Testimonials */}
-        <section className="border-b border-white/5 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+        {/* Testimonials - Apple Style */}
+        <section className="border-b border-gray-100 bg-gradient-to-b from-gray-50 via-white to-gray-50">
           <div className="container mx-auto px-6 py-20">
             <div className="mx-auto max-w-3xl text-center">
-              <Badge className="bg-emerald-500/20 text-emerald-200">Proof of impact</Badge>
-              <h2 className="mt-4 text-3xl font-semibold text-white md:text-4xl">
+              <Badge className="bg-green-50 text-green-600 border-0">Proof of impact</Badge>
+              <h2 className="mt-4 text-3xl font-semibold text-gray-900 md:text-4xl">
                 Creators who trusted the framework
               </h2>
             </div>
@@ -171,14 +171,14 @@ export default function Home() {
                   quote: "Expert Secrets always felt abstract. This broke it down into actionable modules and done-for-you templates.",
                 }
               ].map((testimonial) => (
-                <Card key={testimonial.name} className="border-white/5 bg-slate-900/80 p-6">
-                  <Quote className="h-8 w-8 text-emerald-400" />
-                  <p className="mt-6 text-sm text-slate-200">{testimonial.quote}</p>
+                <Card key={testimonial.name} className="border-gray-200/50 bg-white/80 backdrop-blur-sm shadow-sm p-6">
+                  <Quote className="h-8 w-8 text-blue-500" />
+                  <p className="mt-6 text-sm text-gray-700">{testimonial.quote}</p>
                   <div className="mt-6 text-sm">
-                    <p className="font-semibold text-white">{testimonial.name}</p>
-                    <p className="text-slate-400">{testimonial.role}</p>
+                    <p className="font-semibold text-gray-900">{testimonial.name}</p>
+                    <p className="text-gray-600">{testimonial.role}</p>
                   </div>
-                  <div className="mt-4 flex items-center gap-1 text-emerald-300">
+                  <div className="mt-4 flex items-center gap-1 text-yellow-400">
                     {[...Array(5)].map((_, index) => (
                       <Star key={index} className="h-4 w-4 fill-current" />
                     ))}
@@ -189,29 +189,29 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Bonus stack */}
-        <section className="border-b border-white/5 bg-slate-950">
+        {/* Bonus stack - Apple Style */}
+        <section className="border-b border-gray-100 bg-white">
           <div className="container mx-auto grid gap-12 px-6 py-20 lg:grid-cols-[1fr_1.1fr] lg:items-center">
             <div>
-              <Badge className="bg-white/10 text-emerald-200">Bonus vault</Badge>
-              <h2 className="mt-4 text-3xl font-semibold text-white md:text-4xl">
+              <Badge className="bg-blue-50 text-blue-600 border-0">Bonus vault</Badge>
+              <h2 className="mt-4 text-3xl font-semibold text-gray-900 md:text-4xl">
                 Secure instant access to funnels, scripts, and launch templates
               </h2>
-              <p className="mt-4 text-slate-300">
+              <p className="mt-4 text-gray-600">
                 We condensed years of high-ticket campaigns into plug-and-play assets. Download funnels, story frameworks, and launch calendars so you never stare at a blank page again.
               </p>
             </div>
 
-            <Card className="border-emerald-500/40 bg-emerald-500/5 p-8">
-              <CardTitle className="text-xl font-semibold text-white">Included bonuses</CardTitle>
-              <div className="mt-6 space-y-4 text-sm text-emerald-100">
+            <Card className="border-blue-200/50 bg-gradient-to-br from-blue-50 to-white shadow-lg p-8">
+              <CardTitle className="text-xl font-semibold text-gray-900">Included bonuses</CardTitle>
+              <div className="mt-6 space-y-4 text-sm text-gray-700">
                 {[
                   "10-part email follow-up sequence with fill-in-the-blank prompts",
                   "High-converting webinar slide deck and presenter notes",
                   "Launch scorecard to track daily metrics and momentum"
                 ].map((bonus) => (
                   <div key={bonus} className="flex items-start gap-3">
-                    <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-400" />
+                    <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-500" />
                     <span>{bonus}</span>
                   </div>
                 ))}
@@ -220,17 +220,17 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Final CTA */}
-        <section id="reserve" className="relative overflow-hidden border-y border-white/5 bg-emerald-500/10">
-          <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.3),_transparent_55%)]" />
+        {/* Final CTA - Apple Style */}
+        <section id="reserve" className="relative overflow-hidden border-y border-gray-100 bg-gradient-to-br from-blue-50 to-indigo-50">
+          <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.15),_transparent_55%)]" />
           <div className="container mx-auto flex flex-col items-center gap-6 px-6 py-20 text-center">
-            <h2 className="text-3xl font-semibold text-white md:text-4xl">
+            <h2 className="text-3xl font-semibold text-gray-900 md:text-4xl">
               Claim your free seat before enrollment closes
             </h2>
-            <p className="max-w-2xl text-base text-slate-200">
+            <p className="max-w-2xl text-base text-gray-600">
               This live experience only happens once per quarter. Get the storytelling, offer creation, and launch frameworks that power the world&apos;s most successful experts.
             </p>
-            <Button size="lg" className="bg-emerald-400 px-10 text-slate-950 transition hover:bg-emerald-300">
+            <Button size="lg" className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 px-10 text-white shadow-lg shadow-blue-500/30">
               Save my spot now
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
@@ -238,13 +238,13 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="border-t border-white/5 bg-slate-950/80 py-10">
-        <div className="container mx-auto flex flex-col items-center justify-between gap-6 px-6 text-sm text-slate-500 md:flex-row">
+      <footer className="border-t border-gray-200 bg-white py-10">
+        <div className="container mx-auto flex flex-col items-center justify-between gap-6 px-6 text-sm text-gray-600 md:flex-row">
           <p>© {new Date().getFullYear()} Expert Launch Lab. All rights reserved.</p>
           <div className="flex gap-6">
-            <Link href="/privacy" className="hover:text-emerald-200">Privacy</Link>
-            <Link href="/terms" className="hover:text-emerald-200">Terms</Link>
-            <Link href="/support" className="hover:text-emerald-200">Support</Link>
+            <Link href="/privacy" className="hover:text-blue-600 transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-blue-600 transition-colors">Terms</Link>
+            <Link href="/support" className="hover:text-blue-600 transition-colors">Support</Link>
           </div>
         </div>
       </footer>
