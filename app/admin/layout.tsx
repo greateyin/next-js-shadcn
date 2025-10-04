@@ -2,8 +2,7 @@ import { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getUserRolesAndPermissions } from "@/lib/auth/roleService";
-import { AdminSidebar } from "@/components/admin/AdminSidebar";
-import { AdminHeader } from "@/components/admin/AdminHeader";
+import { AdminLayoutClient } from "@/components/admin/AdminLayoutClient";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 
 export const metadata: Metadata = {
@@ -49,13 +48,12 @@ export default async function AdminLayout({
       enableSystem
       disableTransitionOnChange
     >
-      <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
-        <AdminSidebar applications={userRolesAndPermissions.applications} />
-        <div className="flex flex-col flex-1 overflow-hidden">
-          <AdminHeader user={session.user} />
-          <main className="flex-1 overflow-y-auto p-4">{children}</main>
-        </div>
-      </div>
+      <AdminLayoutClient 
+        user={session.user}
+        applications={userRolesAndPermissions.applications}
+      >
+        {children}
+      </AdminLayoutClient>
     </ThemeProvider>
   );
 }

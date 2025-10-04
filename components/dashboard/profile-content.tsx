@@ -31,42 +31,44 @@ export function ProfileContent({ session, accountInfo }: ProfileContentProps) {
   const { user } = session;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
+    <div className="space-y-6 md:space-y-8">
+      {/* Header - Apple Style */}
+      <div className="space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">My Profile</h1>
-            <p className="text-muted-foreground mt-2">
+            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-gray-900">
+              My Profile
+            </h1>
+            <p className="text-gray-600 mt-2 text-base">
               View and manage your account information
             </p>
           </div>
-          <Badge className="bg-emerald-500/15 text-emerald-400 h-fit">
+          <Badge className="bg-gradient-to-r from-green-400 to-emerald-500 text-white border-0 h-fit self-start sm:self-auto shadow-sm">
             Personal Space
           </Badge>
         </div>
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        {/* Profile Card */}
-        <Card>
-          <CardHeader className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
+      {/* Main Content Grid - Apple Style */}
+      <div className="grid gap-5 md:gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+        {/* Profile Card - Apple Style */}
+        <Card className="border-gray-200/50 shadow-sm bg-white/80 backdrop-blur-sm">
+          <CardHeader className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between pb-4">
             <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16 border">
+              <Avatar className="h-16 w-16 md:h-20 md:w-20 border-2 border-gray-100 shadow-md">
                 <AvatarImage 
                   src={user.image || undefined} 
                   alt={user.name ?? user.email ?? "Avatar"} 
                 />
-                <AvatarFallback className="text-lg">
+                <AvatarFallback className="text-lg md:text-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white">
                   {user.name?.charAt(0) ?? user.email?.charAt(0) ?? "U"}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <CardTitle className="text-2xl font-semibold">
+                <CardTitle className="text-xl md:text-2xl font-semibold text-gray-900">
                   {user.name ?? "Untitled Expert"}
                 </CardTitle>
-                <CardDescription className="text-base">
+                <CardDescription className="text-base text-gray-600">
                   {user.email}
                 </CardDescription>
               </div>
@@ -77,35 +79,35 @@ export function ProfileContent({ session, accountInfo }: ProfileContentProps) {
                   <Badge 
                     key={role} 
                     variant="outline" 
-                    className="border-border/60 text-muted-foreground capitalize"
+                    className="border-blue-200 bg-blue-50/50 text-blue-700 capitalize hover:bg-blue-100/50 transition-colors"
                   >
                     {role}
                   </Badge>
                 ))
               ) : (
-                <Badge variant="outline" className="border-border/60 text-muted-foreground">
+                <Badge variant="outline" className="border-gray-300 bg-gray-50 text-gray-700">
                   Member
                 </Badge>
               )}
             </div>
           </CardHeader>
           
-          <CardContent className="space-y-6">
-            {/* Account Details Grid */}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Account Status</p>
-                <p className="font-medium capitalize">
+          <CardContent className="space-y-6 pt-6">
+            {/* Account Details Grid - Apple Style */}
+            <div className="grid gap-4 sm:gap-5 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <p className="text-sm font-medium text-gray-500">Account Status</p>
+                <p className="font-medium text-gray-900 capitalize">
                   {accountInfo?.status ?? user.status ?? "active"}
                 </p>
               </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Primary Email</p>
-                <p className="font-medium break-all">{user.email}</p>
+              <div className="space-y-1.5">
+                <p className="text-sm font-medium text-gray-500">Primary Email</p>
+                <p className="font-medium text-gray-900 break-all">{user.email}</p>
               </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Member Since</p>
-                <p className="font-medium">
+              <div className="space-y-1.5">
+                <p className="text-sm font-medium text-gray-500">Member Since</p>
+                <p className="font-medium text-gray-900">
                   {accountInfo?.createdAt 
                     ? new Date(accountInfo.createdAt).toLocaleDateString('en-US', {
                         year: 'numeric',
@@ -115,9 +117,9 @@ export function ProfileContent({ session, accountInfo }: ProfileContentProps) {
                     : "—"}
                 </p>
               </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Last Login</p>
-                <p className="font-medium">
+              <div className="space-y-1.5">
+                <p className="text-sm font-medium text-gray-500">Last Login</p>
+                <p className="font-medium text-gray-900">
                   {accountInfo?.lastSuccessfulLogin
                     ? new Date(accountInfo.lastSuccessfulLogin).toLocaleDateString('en-US', {
                         year: 'numeric',
@@ -133,48 +135,48 @@ export function ProfileContent({ session, accountInfo }: ProfileContentProps) {
 
             <Separator />
 
-            {/* Action Buttons */}
+            {/* Action Buttons - Apple Style */}
             <div className="flex flex-wrap items-center gap-3">
-              <Button asChild variant="default">
+              <Button asChild className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-sm">
                 <Link href="/settings">Update Account</Link>
               </Button>
-              <Button asChild variant="outline">
+              <Button asChild variant="outline" className="border-gray-300 hover:bg-gray-50">
                 <Link href="/settings#security">Security Settings</Link>
               </Button>
             </div>
           </CardContent>
         </Card>
 
-        {/* Right Column */}
-        <div className="space-y-6">
-          {/* Security Snapshot */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Security Snapshot</CardTitle>
-              <CardDescription>
+        {/* Right Column - Apple Style */}
+        <div className="space-y-5 md:space-y-6">
+          {/* Security Snapshot - Apple Style */}
+          <Card className="border-gray-200/50 shadow-sm bg-white/80 backdrop-blur-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg font-semibold text-gray-900">Security Snapshot</CardTitle>
+              <CardDescription className="text-gray-600">
                 Monitor key security details tied to your account
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4 text-sm">
-              <div className="rounded-lg border bg-muted/40 p-4 space-y-1">
-                <p className="font-medium">Two-Factor Authentication</p>
-                <p className="text-muted-foreground">
+            <CardContent className="space-y-3 text-sm">
+              <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-white p-4 space-y-1.5 shadow-sm">
+                <p className="font-semibold text-gray-900">Two-Factor Authentication</p>
+                <p className="text-gray-700 leading-relaxed">
                   {accountInfo?.isTwoFactorEnabled
                     ? "✅ Enabled. You'll be asked for a code on new devices."
                     : "⚠️ Disabled. Enable it from settings to add extra security."}
                 </p>
               </div>
-              <div className="rounded-lg border bg-muted/40 p-4 space-y-1">
-                <p className="font-medium">Role-Based Access</p>
-                <p className="text-muted-foreground">
+              <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-white p-4 space-y-1.5 shadow-sm">
+                <p className="font-semibold text-gray-900">Role-Based Access</p>
+                <p className="text-gray-700 leading-relaxed">
                   {user.roleNames?.length
                     ? `You have access to ${user.roleNames.join(", ")} features.`
                     : "You have standard member access to your personal tools."}
                 </p>
               </div>
-              <div className="rounded-lg border bg-muted/40 p-4 space-y-1">
-                <p className="font-medium">Applications</p>
-                <p className="text-muted-foreground">
+              <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-white p-4 space-y-1.5 shadow-sm">
+                <p className="font-semibold text-gray-900">Applications</p>
+                <p className="text-gray-700 leading-relaxed">
                   {user.applicationPaths?.length
                     ? `Active: ${user.applicationPaths.join(", ")}`
                     : "No custom applications assigned yet."}
@@ -183,22 +185,22 @@ export function ProfileContent({ session, accountInfo }: ProfileContentProps) {
             </CardContent>
           </Card>
 
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>
+          {/* Quick Actions - Apple Style */}
+          <Card className="border-gray-200/50 shadow-sm bg-white/80 backdrop-blur-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg font-semibold text-gray-900">Quick Actions</CardTitle>
+              <CardDescription className="text-gray-600">
                 Common tasks and shortcuts
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <Button asChild className="w-full" variant="outline">
+            <CardContent className="space-y-2.5">
+              <Button asChild className="w-full justify-start border-gray-200 hover:bg-gray-50 text-gray-700" variant="outline">
                 <Link href="/settings">Notification Preferences</Link>
               </Button>
-              <Button asChild className="w-full" variant="outline">
+              <Button asChild className="w-full justify-start border-gray-200 hover:bg-gray-50 text-gray-700" variant="outline">
                 <Link href="/settings#security">Manage Login Security</Link>
               </Button>
-              <Button asChild className="w-full" variant="outline">
+              <Button asChild className="w-full justify-start border-gray-200 hover:bg-gray-50 text-gray-700" variant="outline">
                 <Link href="/settings#privacy">Privacy Settings</Link>
               </Button>
             </CardContent>

@@ -31,17 +31,20 @@ export default async function UsersPage() {
   }));
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">User Management</h2>
+    <div className="flex-1 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-gray-900">User Management</h2>
+          <p className="text-gray-600 mt-2">Manage system users and their roles</p>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Users</CardTitle>
-          <CardDescription>Manage system users and their roles</CardDescription>
+      <Card className="border-gray-200/50 shadow-sm bg-white/80 backdrop-blur-sm">
+        <CardHeader className="border-b border-gray-100">
+          <CardTitle className="text-lg font-semibold text-gray-900">Users</CardTitle>
+          <CardDescription className="text-gray-600">View and manage all registered users</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <UsersTable users={formattedUsers} />
         </CardContent>
       </Card>

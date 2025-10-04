@@ -81,7 +81,14 @@ export function ApplicationsTable({ applications }: ApplicationsTableProps) {
       header: "Status",
       cell: ({ row }) => {
         const isActive = row.getValue("isActive") as boolean
-        return <Badge variant={isActive ? "success" : "secondary"}>{isActive ? "Active" : "Inactive"}</Badge>
+        return (
+          <Badge 
+            variant={isActive ? "default" : "secondary"}
+            className={isActive ? "bg-green-500 hover:bg-green-600 text-white" : ""}
+          >
+            {isActive ? "Active" : "Inactive"}
+          </Badge>
+        )
       },
     },
     {
@@ -113,9 +120,10 @@ export function ApplicationsTable({ applications }: ApplicationsTableProps) {
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuContent align="end" className="w-52 rounded-xl border-gray-200/50 shadow-xl bg-white/95 backdrop-blur-xl p-2">
+              <DropdownMenuLabel className="px-3 py-2 font-semibold text-gray-900">Actions</DropdownMenuLabel>
               <DropdownMenuItem
+                className="rounded-lg cursor-pointer hover:bg-gray-100 focus:bg-gray-100 px-3 py-2"
                 onClick={() => {
                   toast({
                     title: "Edit Application",
@@ -126,6 +134,7 @@ export function ApplicationsTable({ applications }: ApplicationsTableProps) {
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
+                className="rounded-lg cursor-pointer hover:bg-gray-100 focus:bg-gray-100 px-3 py-2"
                 onClick={() => {
                   toast({
                     title: app.isActive ? "Disable Application" : "Enable Application",
@@ -135,8 +144,9 @@ export function ApplicationsTable({ applications }: ApplicationsTableProps) {
               >
                 {app.isActive ? "Disable" : "Enable"}
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
+              <DropdownMenuSeparator className="bg-gray-200/50 my-2" />
               <DropdownMenuItem
+                className="rounded-lg cursor-pointer hover:bg-gray-100 focus:bg-gray-100 px-3 py-2"
                 onClick={() => {
                   toast({
                     title: "Manage Menu Items",
@@ -147,6 +157,7 @@ export function ApplicationsTable({ applications }: ApplicationsTableProps) {
                 Manage Menu Items
               </DropdownMenuItem>
               <DropdownMenuItem
+                className="rounded-lg cursor-pointer hover:bg-gray-100 focus:bg-gray-100 px-3 py-2"
                 onClick={() => {
                   toast({
                     title: "Manage Role Access",
@@ -180,28 +191,28 @@ export function ApplicationsTable({ applications }: ApplicationsTableProps) {
 
   return (
     <div>
-      <div className="flex items-center justify-between py-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6">
         <Input
-          placeholder="Filter applications..."
+          placeholder="Filter by application name..."
           value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
             table.getColumn("name")?.setFilterValue(event.target.value)
           }
-          className="max-w-sm"
+          className="max-w-sm border-gray-300 focus:border-blue-500"
         />
-        <Button>
+        <Button className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-sm">
           <PlusCircle className="mr-2 h-4 w-4" />
           Add Application
         </Button>
       </div>
-      <div className="rounded-md border">
+      <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="border-b border-gray-200 hover:bg-transparent">
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead key={header.id} className="text-gray-700 font-semibold text-xs uppercase tracking-wider">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -220,9 +231,10 @@ export function ApplicationsTable({ applications }: ApplicationsTableProps) {
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className="text-gray-900">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
@@ -238,23 +250,30 @@ export function ApplicationsTable({ applications }: ApplicationsTableProps) {
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          Previous
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-        >
-          Next
-        </Button>
+      <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100">
+        <div className="text-sm text-gray-600">
+          Showing {table.getRowModel().rows.length} of {applications.length} applications
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+            className="border-gray-300 hover:bg-gray-50"
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+            className="border-gray-300 hover:bg-gray-50"
+          >
+            Next
+          </Button>
+        </div>
       </div>
     </div>
   )

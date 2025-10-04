@@ -11,11 +11,15 @@ import {
   LayoutGrid, 
   MenuIcon,
   SettingsIcon,
-  HelpCircleIcon
+  HelpCircleIcon,
+  X
 } from "lucide-react";
+import { useState } from "react";
 
 interface AdminSidebarProps {
   applications: Application[];
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
 interface SidebarItemProps {
@@ -30,10 +34,10 @@ function SidebarItem({ href, title, icon, active }: SidebarItemProps) {
     <Link
       href={href}
       className={cn(
-        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all",
+        "flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all",
         active
-          ? "bg-primary text-primary-foreground"
-          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md shadow-blue-500/30"
+          : "text-gray-700 hover:bg-gray-100/80 hover:text-gray-900"
       )}
     >
       {icon}
@@ -47,21 +51,44 @@ function useActiveLink() {
   return (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function AdminSidebar({ applications }: AdminSidebarProps) {
+export function AdminSidebar({ applications, isOpen = false, onClose }: AdminSidebarProps) {
   const isActive = useActiveLink();
 
   return (
-    <aside className="hidden w-64 border-r bg-background md:block">
-      <div className="flex h-16 items-center border-b px-4">
-        <Link href="/admin" className="flex items-center gap-2 font-semibold">
-          <ShieldIcon className="h-6 w-6" />
-          <span>Admin Panel</span>
-        </Link>
-      </div>
-      <div className="p-4">
-        <nav className="flex flex-col gap-1">
+    <>
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm md:hidden"
+          onClick={onClose}
+        />
+      )}
+
+      {/* Sidebar - Apple Style */}
+      <aside
+        className={cn(
+          "fixed md:static inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out md:translate-x-0",
+          "bg-white/80 backdrop-blur-xl border-r border-gray-200/50",
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <div className="flex h-16 items-center justify-between border-b border-gray-200/50 px-6">
+          <Link href="/admin" className="flex items-center gap-2 font-semibold text-gray-900">
+            <ShieldIcon className="h-5 w-5" />
+            <span className="text-lg font-medium">Admin Panel</span>
+          </Link>
+          {/* Mobile Close Button */}
+          <button
+            onClick={onClose}
+            className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            <X className="h-5 w-5 text-gray-600" />
+          </button>
+        </div>
+        <div className="p-4">
+          <nav className="flex flex-col gap-0.5">
           <div className="py-2">
-            <h3 className="mb-2 px-2 text-xs font-semibold text-muted-foreground">
+            <h3 className="mb-2 px-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
               Dashboard
             </h3>
             <SidebarItem
@@ -72,7 +99,7 @@ export function AdminSidebar({ applications }: AdminSidebarProps) {
             />
           </div>
           <div className="py-2">
-            <h3 className="mb-2 px-2 text-xs font-semibold text-muted-foreground">
+            <h3 className="mb-2 px-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
               Access Control
             </h3>
             <SidebarItem
@@ -102,7 +129,7 @@ export function AdminSidebar({ applications }: AdminSidebarProps) {
           </div>
           {applications.length > 0 && (
             <div className="py-2">
-              <h3 className="mb-2 px-2 text-xs font-semibold text-muted-foreground">
+              <h3 className="mb-2 px-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
                 Applications
               </h3>
               {applications
@@ -118,7 +145,7 @@ export function AdminSidebar({ applications }: AdminSidebarProps) {
             </div>
           )}
           <div className="py-2">
-            <h3 className="mb-2 px-2 text-xs font-semibold text-muted-foreground">
+            <h3 className="mb-2 px-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
               Settings
             </h3>
             <SidebarItem
@@ -137,5 +164,6 @@ export function AdminSidebar({ applications }: AdminSidebarProps) {
         </nav>
       </div>
     </aside>
+    </>
   );
 }

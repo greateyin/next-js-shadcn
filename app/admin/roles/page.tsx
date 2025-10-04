@@ -38,17 +38,20 @@ export default async function RolesPage() {
   }));
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Role Management</h2>
+    <div className="flex-1 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-gray-900">Role Management</h2>
+          <p className="text-gray-600 mt-2">Manage system roles and their permissions</p>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Roles</CardTitle>
-          <CardDescription>Manage system roles and their permissions</CardDescription>
+      <Card className="border-gray-200/50 shadow-sm bg-white/80 backdrop-blur-sm">
+        <CardHeader className="border-b border-gray-100">
+          <CardTitle className="text-lg font-semibold text-gray-900">Roles</CardTitle>
+          <CardDescription className="text-gray-600">Configure roles and assign permissions</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <RolesTable roles={formattedRoles} />
         </CardContent>
       </Card>

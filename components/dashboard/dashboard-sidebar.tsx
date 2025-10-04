@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { getIcon } from "@/lib/icon-map";
-import { LayoutDashboard } from "lucide-react";
+import { LayoutDashboard, X } from "lucide-react";
+import { useState } from "react";
 
 /**
  * Menu item type
@@ -28,9 +29,11 @@ export interface SidebarMenuItem {
 
 interface SidebarNavProps extends React.HTMLAttributes<HTMLElement> {
   items: SidebarMenuItem[];
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export function DashboardSidebar({ className, items, ...props }: SidebarNavProps) {
+export function DashboardSidebar({ className, items, isOpen = false, onClose, ...props }: SidebarNavProps) {
   const pathname = usePathname();
 
   /**
@@ -40,25 +43,25 @@ export function DashboardSidebar({ className, items, ...props }: SidebarNavProps
     const isActive = pathname === item.path;
     const Icon = getIcon(item.icon);
 
-    // Divider
+    // Divider - Apple Style
     if (item.type === "DIVIDER") {
       return (
-        <div key={item.id} className="my-2 border-t border-border" />
+        <div key={item.id} className="my-3 border-t border-gray-200/50" />
       );
     }
 
-    // Group header (non-clickable)
+    // Group header - Apple Style
     if (item.type === "GROUP") {
       return (
-        <div key={item.id} className="px-3 pt-4 pb-2">
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        <div key={item.id} className="px-3 pt-5 pb-2">
+          <h3 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
             {item.displayName}
           </h3>
         </div>
       );
     }
 
-    // External link
+    // External link - Apple Style
     if (item.type === "EXTERNAL") {
       return (
         <a
@@ -67,8 +70,8 @@ export function DashboardSidebar({ className, items, ...props }: SidebarNavProps
           target="_blank"
           rel="noopener noreferrer"
           className={cn(
-            "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
-            "text-muted-foreground hover:bg-muted hover:text-foreground"
+            "flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all",
+            "text-gray-700 hover:bg-gray-100/80 hover:text-gray-900"
           )}
           title={item.description || undefined}
         >
@@ -81,16 +84,16 @@ export function DashboardSidebar({ className, items, ...props }: SidebarNavProps
       );
     }
 
-    // Regular link
+    // Regular link - Apple Style
     return (
       <Link
         key={item.id}
         href={item.path}
         className={cn(
-          "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
+          "flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all",
           isActive
-            ? "bg-primary text-primary-foreground shadow-sm"
-            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md shadow-blue-500/30"
+            : "text-gray-700 hover:bg-gray-100/80 hover:text-gray-900"
         )}
         title={item.description || undefined}
       >
@@ -101,40 +104,73 @@ export function DashboardSidebar({ className, items, ...props }: SidebarNavProps
   };
 
   return (
-    <aside className="hidden lg:block w-64 border-r bg-muted/10">
-      <div className="flex h-full flex-col gap-2">
-        {/* Logo/Brand Area */}
-        <div className="flex h-16 items-center border-b px-6">
-          <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-            <LayoutDashboard className="h-6 w-6" />
-            <span className="text-lg">Dashboard</span>
-          </Link>
-        </div>
+    <>
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm lg:hidden"
+          onClick={onClose}
+        />
+      )}
 
-        {/* Navigation */}
-        <nav className="flex-1 space-y-1 px-3 py-2 overflow-y-auto">
-          {items.map((item) => (
-            <div key={item.id}>
-              {renderMenuItem(item)}
-              {/* Render children if exists (simple one-level nesting) */}
-              {item.children && item.children.length > 0 && (
-                <div className="ml-4 mt-1 space-y-1">
-                  {item.children.map((child) => renderMenuItem(child))}
-                </div>
-              )}
+      {/* Sidebar - Apple Style */}
+      <aside
+        className={cn(
+          "fixed lg:static inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out lg:translate-x-0",
+          "bg-white/80 backdrop-blur-xl border-r border-gray-200/50",
+          isOpen ? "translate-x-0" : "-translate-x-full",
+          className
+        )}
+        {...props}
+      >
+        <div className="flex h-full flex-col">
+          {/* Logo/Brand Area - Apple Style */}
+          <div className="flex h-16 items-center justify-between border-b border-gray-200/50 px-6">
+            <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-gray-900">
+              <LayoutDashboard className="h-5 w-5" />
+              <span className="text-lg font-medium">Dashboard</span>
+            </Link>
+            {/* Mobile Close Button */}
+            <button
+              onClick={onClose}
+              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <X className="h-5 w-5 text-gray-600" />
+            </button>
+          </div>
+
+          {/* Navigation - Apple Style */}
+          <nav className="flex-1 space-y-0.5 px-3 py-4 overflow-y-auto">
+            {items.map((item) => (
+              <div key={item.id} onClick={onClose}>
+                {renderMenuItem(item)}
+                {/* Render children if exists */}
+                {item.children && item.children.length > 0 && (
+                  <div className="ml-4 mt-0.5 space-y-0.5">
+                    {item.children.map((child) => (
+                      <div key={child.id} onClick={onClose}>
+                        {renderMenuItem(child)}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </nav>
+
+          {/* Footer Area - Apple Style */}
+          <div className="border-t border-gray-200/50 p-4">
+            <div className="rounded-xl bg-gradient-to-br from-gray-50 to-gray-100/50 p-3.5 shadow-sm">
+              <p className="text-xs text-gray-600">
+                Need help?{" "}
+                <a href="#" className="font-medium text-blue-600 hover:text-blue-700 transition-colors">
+                  Contact Support
+                </a>
+              </p>
             </div>
-          ))}
-        </nav>
-
-        {/* Footer Area */}
-        <div className="border-t p-4">
-          <div className="rounded-lg bg-muted/50 p-3">
-            <p className="text-xs text-muted-foreground">
-              Need help? <a href="#" className="font-medium text-foreground hover:underline">Contact Support</a>
-            </p>
           </div>
         </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 }

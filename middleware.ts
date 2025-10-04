@@ -48,12 +48,8 @@ export default auth(async (req) => {
     return NextResponse.redirect(url)
   }
 
-  // Non-admin users should not land on the dashboard
-  if (req.auth && isDashboardPage && !userHasAdminPrivileges) {
-    const url = req.nextUrl.clone()
-    url.pathname = DEFAULT_LOGIN_REDIRECT
-    return NextResponse.redirect(url)
-  }
+  // Dashboard is accessible to all authenticated users
+  // Menu items are controlled dynamically based on user roles
 
   // Role-based access control for admin routes
   if (req.auth && (isAdminPage || isApiAdminRoute)) {

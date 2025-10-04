@@ -17,10 +17,12 @@ import { logoutAction } from "@/actions/auth";
  * @interface
  * @property {React.ReactNode} [children] - Content to render inside the button
  * @property {string} [redirectTo] - Optional redirect URL after logout
+ * @property {string} [className] - Additional CSS classes for styling
  */
 interface LogoutButtonProps {
   children?: React.ReactNode;
   redirectTo?: string;
+  className?: string;
 }
 
 /**
@@ -65,7 +67,7 @@ interface LogoutButtonProps {
  * </DropdownMenu>
  * ```
  */
-export function LogoutButton({ children, redirectTo = "/" }: LogoutButtonProps) {
+export function LogoutButton({ children, redirectTo = "/", className }: LogoutButtonProps) {
   const [isPending, startTransition] = useTransition();
 
   /**
@@ -85,7 +87,7 @@ export function LogoutButton({ children, redirectTo = "/" }: LogoutButtonProps) 
       size="sm"
       onClick={handleLogout}
       disabled={isPending}
-      className="w-full p-0"
+      className={className || "w-full p-0"}
     >
       {isPending ? (
         <>
