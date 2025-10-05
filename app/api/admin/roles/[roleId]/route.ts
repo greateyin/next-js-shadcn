@@ -8,7 +8,7 @@ import { db } from "@/lib/db"
  */
 export async function PATCH(
   req: Request,
-  { params }: { params: { roleId: string } }
+  { params }: { params: Promise<{ roleId: string }> }
 ) {
   try {
     const session = await auth()
@@ -17,6 +17,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { roleId } = await params
     const body = await req.json()
     const { name, description } = body
 
@@ -26,7 +27,7 @@ export async function PATCH(
         where: {
           name: name.toLowerCase().trim(),
           NOT: {
-            id: params.roleId
+            id: roleId
           }
         }
       })
@@ -38,7 +39,7 @@ export async function PATCH(
 
     const role = await db.role.update({
       where: {
-        id: params.roleId
+        id: roleId
       },
       data: {
         name: name ? name.toLowerCase().trim() : undefined,
@@ -72,7 +73,7 @@ export async function PATCH(
  */
 export async function DELETE(
   req: Request,
-  { params }: { params: { roleId: string } }
+  { params }: { params: Promise<{ roleId: string }> }
 ) {
   try {
     const session = await auth()
@@ -81,9 +82,11 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { roleId } = await params
+
     // 檢查是否為系統保留角色
     const role = await db.role.findUnique({
-      where: { id: params.roleId },
+      where: { id: roleId },
       select: { name: true }
     })
 
@@ -93,7 +96,7 @@ export async function DELETE(
 
     await db.role.delete({
       where: {
-        id: params.roleId
+        id: roleId
       }
     })
 

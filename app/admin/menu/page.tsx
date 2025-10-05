@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { MenuTable } from "@/components/admin/menu/MenuTable";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  AdminPageContainer,
+  AdminPageHeader,
+  AdminCard,
+  AdminLoadingState,
+} from "@/components/admin/common";
 import { getMenuItems } from "@/actions/menu";
 
 /**
@@ -137,38 +142,28 @@ export default function MenuPage() {
   }, []);
 
   return (
-    <div className="flex-1 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-gray-900">
-            Menu Management
-          </h2>
-          <p className="text-gray-600 mt-2">Manage application menus and navigation structure</p>
-        </div>
-      </div>
+    <AdminPageContainer>
+      <AdminPageHeader
+        title="Menu Management"
+        description="Manage application menus and navigation structure"
+      />
 
-      <Card className="border-gray-200/50 shadow-sm bg-white/80 backdrop-blur-sm">
-        <CardHeader className="border-b border-gray-100">
-          <CardTitle className="text-lg font-semibold text-gray-900">Menu Items</CardTitle>
-          <CardDescription className="text-gray-600">
-            Configure menu items, hierarchy, and role access
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="flex items-center justify-center p-8">
-              <div className="text-gray-500">Loading...</div>
-            </div>
-          ) : (
-            <MenuTable
-              menuItems={menuItems}
-              applications={applications}
-              availableRoles={availableRoles}
-              onRefresh={loadData}
-            />
-          )}
-        </CardContent>
-      </Card>
-    </div>
+      <AdminCard
+        title="Menu Items"
+        description="Configure menu items, hierarchy, and role access"
+        noPadding
+      >
+        {isLoading ? (
+          <AdminLoadingState message="Loading menu items..." />
+        ) : (
+          <MenuTable
+            menuItems={menuItems}
+            applications={applications}
+            availableRoles={availableRoles}
+            onRefresh={loadData}
+          />
+        )}
+      </AdminCard>
+    </AdminPageContainer>
   );
 }

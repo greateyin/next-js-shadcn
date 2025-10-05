@@ -8,7 +8,7 @@ import { db } from "@/lib/db"
  */
 export async function GET(
   req: Request,
-  { params }: { params: { roleId: string } }
+  { params }: { params: Promise<{ roleId: string }> }
 ) {
   try {
     const session = await auth()
@@ -17,16 +17,18 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { roleId } = await params
+
     const userRoles = await db.userRole.findMany({
       where: {
-        roleId: params.roleId
+        roleId
       },
       select: {
         userId: true
       }
     })
 
-    const userIds = userRoles.map(ur => ur.userId)
+    const userIds = userRoles.map((ur: { userId: string }) => ur.userId)
 
     return NextResponse.json({ userIds })
   } catch (error) {
@@ -41,7 +43,7 @@ export async function GET(
  */
 export async function PUT(
   req: Request,
-  { params }: { params: { roleId: string } }
+  { params }: { params: Promise<{ roleId: string }> }
 ) {
   try {
     const session = await auth()
@@ -50,6 +52,7 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { roleId } = await params
     const body = await req.json()
     const { userIds } = body
 
@@ -58,19 +61,19 @@ export async function PUT(
     }
 
     // 使用事務來確保數據一致性
-    await db.$transaction(async (tx) => {
+    await db.$transaction(async (tx: typeof db) => {
       // 刪除現有的所有用戶關聯
       await tx.userRole.deleteMany({
         where: {
-          roleId: params.roleId
+          roleId
         }
       })
 
       // 創建新的用戶關聯
       if (userIds.length > 0) {
         await tx.userRole.createMany({
-          data: userIds.map(userId => ({
-            roleId: params.roleId,
+          data: userIds.map((userId: string) => ({
+            roleId,
             userId
           }))
         })

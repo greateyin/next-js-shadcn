@@ -140,7 +140,7 @@ export function ManageRolesDialog({
       }
     } catch (error) {
       console.error("[MANAGE_ROLES]", error);
-      toast.error("發生未預期的錯誤");
+      toast.error("An unexpected error occurred");
     } finally {
       setIsSubmitting(false);
     }

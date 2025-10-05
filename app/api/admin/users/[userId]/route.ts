@@ -8,7 +8,7 @@ import { db } from "@/lib/db"
  */
 export async function PATCH(
   req: Request,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     const session = await auth()
@@ -17,6 +17,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { userId } = await params
     const body = await req.json()
     const { 
       name, 
@@ -30,7 +31,7 @@ export async function PATCH(
 
     const user = await db.user.update({
       where: {
-        id: params.userId
+        id: userId
       },
       data: {
         name,
@@ -65,7 +66,7 @@ export async function PATCH(
  */
 export async function DELETE(
   req: Request,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     const session = await auth()
@@ -74,14 +75,16 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { userId } = await params
+
     // 防止刪除自己
-    if (session.user.id === params.userId) {
+    if (session.user.id === userId) {
       return NextResponse.json({ error: "Cannot delete yourself" }, { status: 400 })
     }
 
     await db.user.delete({
       where: {
-        id: params.userId
+        id: userId
       }
     })
 

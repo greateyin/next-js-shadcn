@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { ApplicationsTable } from "@/components/admin/applications/ApplicationsTable";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  AdminPageContainer,
+  AdminPageHeader,
+  AdminCard,
+  AdminLoadingState,
+} from "@/components/admin/common";
 import { getApplications } from "@/actions/application";
 
 interface Application {
@@ -31,6 +36,10 @@ interface Role {
   description: string | null;
 }
 
+/**
+ * Applications Management Page
+ * Manages system applications and their role-based access control
+ */
 export default function ApplicationsPage() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [availableRoles, setAvailableRoles] = useState<Role[]>([]);
@@ -39,30 +48,22 @@ export default function ApplicationsPage() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      // 獲取應用程式列表
-      const appsResult = await getApplications();
-      
-      // 獲取所有角色
-      const rolesData = await fetch("/api/roles").then((res) => res.json());
-      
+      const [appsResult, rolesData] = await Promise.all([
+        getApplications(),
+        fetch("/api/roles").then((res) => res.json()),
+      ]);
+
       if (appsResult.applications) {
         const formattedApplications = appsResult.applications.map((app: any) => ({
-          id: app.id,
-          name: app.name,
-          displayName: app.displayName,
-          description: app.description || "無描述",
-          path: app.path,
-          icon: app.icon,
-          isActive: app.isActive,
+          ...app,
+          description: app.description || "No description",
           roles: app.roles || [],
           menuItemCount: app._count?.menuItems || 0,
-          order: app.order,
           createdAt: app.createdAt.toString(),
         }));
-        
         setApplications(formattedApplications);
       }
-      
+
       if (rolesData.roles) {
         setAvailableRoles(rolesData.roles);
       }
@@ -78,37 +79,27 @@ export default function ApplicationsPage() {
   }, []);
 
   return (
-    <div className="flex-1 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-gray-900">
-            Application Management
-          </h2>
-          <p className="text-gray-600 mt-2">Manage system applications and access control</p>
-        </div>
-      </div>
+    <AdminPageContainer>
+      <AdminPageHeader
+        title="Application Management"
+        description="Manage system applications and access control"
+      />
 
-      <Card className="border-gray-200/50 shadow-sm bg-white/80 backdrop-blur-sm">
-        <CardHeader className="border-b border-gray-100">
-          <CardTitle className="text-lg font-semibold text-gray-900">Applications</CardTitle>
-          <CardDescription className="text-gray-600">
-            Configure applications and role access
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="flex items-center justify-center p-8">
-              <div className="text-gray-500">Loading...</div>
-            </div>
-          ) : (
-            <ApplicationsTable
-              applications={applications}
-              availableRoles={availableRoles}
-              onRefresh={loadData}
-            />
-          )}
-        </CardContent>
-      </Card>
-    </div>
+      <AdminCard
+        title="Applications"
+        description="Configure applications and role access"
+        noPadding
+      >
+        {isLoading ? (
+          <AdminLoadingState message="Loading applications..." />
+        ) : (
+          <ApplicationsTable
+            applications={applications}
+            availableRoles={availableRoles}
+            onRefresh={loadData}
+          />
+        )}
+      </AdminCard>
+    </AdminPageContainer>
   );
 }

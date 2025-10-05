@@ -285,8 +285,8 @@ export function ApplicationFormDialog({
               <p className="text-xs text-gray-500">Lower numbers appear first</p>
             </div>
 
-            <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4">
-              <div>
+            <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4 gap-4">
+              <div className="flex-1">
                 <Label htmlFor="isActive" className="text-gray-700 font-medium">
                   Active Status
                 </Label>
@@ -294,11 +294,17 @@ export function ApplicationFormDialog({
                   Control whether the application is visible to users
                 </p>
               </div>
-              <Switch
-                id="isActive"
-                checked={formData.isActive}
-                onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
-              />
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="isActive"
+                  checked={formData.isActive}
+                  onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+                  className="data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-gray-300"
+                />
+                <span className={`text-sm font-medium whitespace-nowrap ${formData.isActive ? 'text-green-600' : 'text-gray-500'}`}>
+                  {formData.isActive ? 'Active' : 'Inactive'}
+                </span>
+              </div>
             </div>
           </div>
 

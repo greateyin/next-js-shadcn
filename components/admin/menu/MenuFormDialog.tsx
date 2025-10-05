@@ -330,7 +330,7 @@ export function MenuFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-white border-gray-200/50">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto !bg-white border-gray-200/50">
         <DialogHeader>
           <DialogTitle className="text-gray-900">
             {isEditMode ? "Edit Menu Item" : "Create Menu Item"}

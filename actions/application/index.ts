@@ -24,7 +24,7 @@ export async function createApplication(data: CreateApplicationInput) {
     // 驗證使用者身份
     const session = await auth();
     if (!session?.user?.id) {
-      return { error: "未授權" };
+      return { error: "Unauthorized" };
     }
 
     // 驗證輸入資料
@@ -36,7 +36,7 @@ export async function createApplication(data: CreateApplicationInput) {
     });
 
     if (existingByName) {
-      return { error: "應用程式名稱已存在" };
+      return { error: "Application name already exists" };
     }
 
     // 檢查路徑是否已存在
@@ -45,7 +45,7 @@ export async function createApplication(data: CreateApplicationInput) {
     });
 
     if (existingByPath) {
-      return { error: "應用程式路徑已存在" };
+      return { error: "Application path already exists" };
     }
 
     // 創建應用程式
@@ -63,10 +63,10 @@ export async function createApplication(data: CreateApplicationInput) {
       newValue: JSON.stringify(application),
     });
 
-    return { success: "應用程式創建成功", application };
+    return { success: "Application created successfully", application };
   } catch (error) {
     console.error("[CREATE_APPLICATION]", error);
-    return { error: "創建應用程式時發生錯誤" };
+    return { error: "Error creating application" };
   }
 }
 
@@ -78,7 +78,7 @@ export async function updateApplication(data: UpdateApplicationInput) {
     // 驗證使用者身份
     const session = await auth();
     if (!session?.user?.id) {
-      return { error: "未授權" };
+      return { error: "Unauthorized" };
     }
 
     // 驗證輸入資料
@@ -91,7 +91,7 @@ export async function updateApplication(data: UpdateApplicationInput) {
     });
 
     if (!existingApp) {
-      return { error: "應用程式不存在" };
+      return { error: "Application not found" };
     }
 
     // 如果更新名稱，檢查新名稱是否已被其他應用程式使用
@@ -104,7 +104,7 @@ export async function updateApplication(data: UpdateApplicationInput) {
       });
 
       if (nameExists) {
-        return { error: "應用程式名稱已存在" };
+        return { error: "Application name already exists" };
       }
     }
 
@@ -118,7 +118,7 @@ export async function updateApplication(data: UpdateApplicationInput) {
       });
 
       if (pathExists) {
-        return { error: "應用程式路徑已存在" };
+        return { error: "Application path already exists" };
       }
     }
 
@@ -139,10 +139,10 @@ export async function updateApplication(data: UpdateApplicationInput) {
       newValue: JSON.stringify(application),
     });
 
-    return { success: "應用程式更新成功", application };
+    return { success: "Application updated successfully", application };
   } catch (error) {
     console.error("[UPDATE_APPLICATION]", error);
-    return { error: "更新應用程式時發生錯誤" };
+    return { error: "Error updating application" };
   }
 }
 
@@ -154,7 +154,7 @@ export async function toggleApplicationStatus(data: ToggleApplicationStatusInput
     // 驗證使用者身份
     const session = await auth();
     if (!session?.user?.id) {
-      return { error: "未授權" };
+      return { error: "Unauthorized" };
     }
 
     // 驗證輸入資料
@@ -166,7 +166,7 @@ export async function toggleApplicationStatus(data: ToggleApplicationStatusInput
     });
 
     if (!existingApp) {
-      return { error: "應用程式不存在" };
+      return { error: "Application not found" };
     }
 
     // 更新狀態
@@ -187,12 +187,12 @@ export async function toggleApplicationStatus(data: ToggleApplicationStatusInput
     });
 
     return {
-      success: `應用程式已${validatedData.isActive ? "啟用" : "停用"}`,
+      success: `Application ${validatedData.isActive ? 'enabled' : 'disabled'} successfully`,
       application,
     };
   } catch (error) {
     console.error("[TOGGLE_APPLICATION_STATUS]", error);
-    return { error: "切換應用程式狀態時發生錯誤" };
+    return { error: "Error toggling application status" };
   }
 }
 
@@ -204,7 +204,7 @@ export async function deleteApplication(data: DeleteApplicationInput) {
     // 驗證使用者身份
     const session = await auth();
     if (!session?.user?.id) {
-      return { error: "未授權" };
+      return { error: "Unauthorized" };
     }
 
     // 驗證輸入資料
@@ -224,19 +224,19 @@ export async function deleteApplication(data: DeleteApplicationInput) {
     });
 
     if (!existingApp) {
-      return { error: "應用程式不存在" };
+      return { error: "Application not found" };
     }
 
     // 檢查是否有關聯的選單項目或角色
     if (existingApp._count.menuItems > 0) {
       return {
-        error: `無法刪除應用程式，因為它有 ${existingApp._count.menuItems} 個關聯的選單項目`,
+        error: `Cannot delete application because it has ${existingApp._count.menuItems} associated menu items`,
       };
     }
 
     if (existingApp._count.roles > 0) {
       return {
-        error: `無法刪除應用程式，因為它有 ${existingApp._count.roles} 個關聯的角色`,
+        error: `Cannot delete application because it has ${existingApp._count.roles} associated roles`,
       };
     }
 
@@ -255,10 +255,10 @@ export async function deleteApplication(data: DeleteApplicationInput) {
       oldValue: JSON.stringify(existingApp),
     });
 
-    return { success: "應用程式刪除成功" };
+    return { success: "Application deleted successfully" };
   } catch (error) {
     console.error("[DELETE_APPLICATION]", error);
-    return { error: "刪除應用程式時發生錯誤" };
+    return { error: "Error deleting application" };
   }
 }
 
@@ -270,7 +270,7 @@ export async function manageApplicationRoles(data: ManageApplicationRolesInput) 
     // 驗證使用者身份
     const session = await auth();
     if (!session?.user?.id) {
-      return { error: "未授權" };
+      return { error: "Unauthorized" };
     }
 
     // 驗證輸入資料
@@ -289,7 +289,7 @@ export async function manageApplicationRoles(data: ManageApplicationRolesInput) 
     });
 
     if (!existingApp) {
-      return { error: "應用程式不存在" };
+      return { error: "Application not found" };
     }
 
     // 驗證所有角色 ID 是否存在
@@ -302,7 +302,7 @@ export async function manageApplicationRoles(data: ManageApplicationRolesInput) 
     });
 
     if (roles.length !== validatedData.roleIds.length) {
-      return { error: "某些角色不存在" };
+      return { error: "Some roles do not exist" };
     }
 
     // 使用交易來更新角色關聯
@@ -336,10 +336,10 @@ export async function manageApplicationRoles(data: ManageApplicationRolesInput) 
       newValue: JSON.stringify(validatedData.roleIds),
     });
 
-    return { success: "應用程式角色存取權限更新成功" };
+    return { success: "Application role access updated successfully" };
   } catch (error) {
     console.error("[MANAGE_APPLICATION_ROLES]", error);
-    return { error: "管理應用程式角色時發生錯誤" };
+    return { error: "Error managing application roles" };
   }
 }
 
@@ -370,7 +370,7 @@ export async function getApplications() {
     return { applications };
   } catch (error) {
     console.error("[GET_APPLICATIONS]", error);
-    return { error: "獲取應用程式列表時發生錯誤" };
+    return { error: "Error fetching applications" };
   }
 }
 
@@ -399,12 +399,12 @@ export async function getApplicationById(id: string) {
     });
 
     if (!application) {
-      return { error: "應用程式不存在" };
+      return { error: "Application not found" };
     }
 
     return { application };
   } catch (error) {
     console.error("[GET_APPLICATION_BY_ID]", error);
-    return { error: "獲取應用程式時發生錯誤" };
+    return { error: "Error fetching application" };
   }
 }

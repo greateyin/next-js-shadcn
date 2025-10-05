@@ -13,6 +13,7 @@ import {
   getFilteredRowModel,
 } from "@tanstack/react-table"
 import { toast } from "sonner"
+import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import {
   Table,
@@ -24,6 +25,7 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Switch } from "@/components/ui/switch"
 import { 
   MoreHorizontal, 
   PlusCircle, 
@@ -115,14 +117,36 @@ export function ApplicationsTable({ applications, availableRoles, onRefresh }: A
       accessorKey: "isActive",
       header: "Status",
       cell: ({ row }) => {
+        const app = row.original
         const isActive = row.getValue("isActive") as boolean
         return (
-          <Badge 
-            variant={isActive ? "default" : "secondary"}
-            className={isActive ? "bg-green-500 hover:bg-green-600 text-white" : ""}
-          >
-            {isActive ? "Active" : "Inactive"}
-          </Badge>
+          <div className="flex items-center gap-3">
+            <Switch
+              checked={isActive}
+              onCheckedChange={async (checked) => {
+                const result = await toggleApplicationStatus({
+                  id: app.id,
+                  isActive: checked,
+                })
+                if (result.error) {
+                  toast.error(result.error)
+                } else if (result.success) {
+                  toast.success(result.success)
+                  onRefresh()
+                }
+              }}
+              className={cn(
+                "data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-gray-300",
+                "data-[state=checked]:hover:bg-green-600 transition-all duration-200"
+              )}
+            />
+            <span className={cn(
+              "text-sm font-medium transition-colors",
+              isActive ? "text-green-600" : "text-gray-500"
+            )}>
+              {isActive ? "Active" : "Inactive"}
+            </span>
+          </div>
         )
       },
     },
@@ -250,7 +274,7 @@ export function ApplicationsTable({ applications, availableRoles, onRefresh }: A
       }
     } catch (error) {
       console.error("[DELETE_APPLICATION]", error)
-      toast.error("刪除應用程式時發生錯誤")
+      toast.error("Error deleting application")
     } finally {
       setIsDeleting(false)
     }
