@@ -136,6 +136,43 @@ export const authConfig: NextAuthConfig = {
   ],
   callbacks: {
     /**
+     * 安全的重定向回调 - 只允许重定向到白名单中的域名
+     */
+    async redirect({ url, baseUrl }) {
+      // 允许的子域列表（从环境变量读取，默认只允许当前域）
+      const allowedDomains = process.env.ALLOWED_DOMAINS
+        ? process.env.ALLOWED_DOMAINS.split(",").map(d => d.trim())
+        : [new URL(baseUrl).hostname];
+      
+      try {
+        const urlObj = new URL(url, baseUrl);
+        const baseUrlObj = new URL(baseUrl);
+        
+        // 检查是否是允许的域名
+        const isAllowedDomain = allowedDomains.some(domain => {
+          // 精确匹配或子域匹配
+          return urlObj.hostname === domain || 
+                 urlObj.hostname.endsWith(`.${domain}`);
+        });
+        
+        // 检查是否是同一父域
+        const isSameParentDomain = process.env.COOKIE_DOMAIN && 
+          urlObj.hostname.endsWith(process.env.COOKIE_DOMAIN);
+        
+        if (isAllowedDomain || isSameParentDomain) {
+          return urlObj.toString();
+        }
+        
+        // 如果都不匹配，返回 baseUrl
+        console.warn(`Redirect blocked: ${url} is not in allowed domains`);
+        return baseUrl;
+      } catch (error) {
+        console.error("Redirect error:", error);
+        return baseUrl;
+      }
+    },
+    
+    /**
      * Called when a user signs in via OAuth provider
      * Handles automatic account creation and role assignment for OAuth users
      */
@@ -252,12 +289,17 @@ export const authConfig: NextAuthConfig = {
   },
   cookies: {
     sessionToken: {
-      name: `next-auth.session-token`,
+      // 使用 __Secure- 前缀提高安全性（生产环境）
+      name: process.env.NODE_ENV === "production"
+        ? "__Secure-authjs.session-token"
+        : "authjs.session-token",
       options: {
         httpOnly: true,
         sameSite: "lax" as const,
         path: "/",
-        secure: process.env.NODE_ENV === "production"
+        secure: process.env.NODE_ENV === "production",
+        // 👇 关键：跨子域共享 Cookie
+        domain: process.env.COOKIE_DOMAIN || undefined
       }
     }
   },
