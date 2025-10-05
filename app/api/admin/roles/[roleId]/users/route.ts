@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { auth } from "@/auth"
+import { checkAdminAuth } from "@/lib/auth/admin-check"
 import { db } from "@/lib/db"
 
 /**
@@ -11,11 +11,8 @@ export async function GET(
   { params }: { params: Promise<{ roleId: string }> }
 ) {
   try {
-    const session = await auth()
-
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const { error, session } = await checkAdminAuth()
+    if (error) return error
 
     const { roleId } = await params
 
@@ -46,11 +43,8 @@ export async function PUT(
   { params }: { params: Promise<{ roleId: string }> }
 ) {
   try {
-    const session = await auth()
-
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const { error, session } = await checkAdminAuth()
+    if (error) return error
 
     const { roleId } = await params
     const body = await req.json()

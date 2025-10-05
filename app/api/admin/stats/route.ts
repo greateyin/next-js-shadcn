@@ -10,8 +10,18 @@ export async function GET() {
   try {
     const session = await auth();
 
+    // 检查是否登录
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // 检查是否有管理员权限
+    const isAdmin = session.user.role === "admin" || 
+                    session.user.roleNames?.includes("admin") ||
+                    session.user.roleNames?.includes("super-admin");
+    
+    if (!isAdmin) {
+      return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 });
     }
 
     // 并行获取所有统计数据

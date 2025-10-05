@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { auth } from "@/auth"
+import { checkAdminAuth } from "@/lib/auth/admin-check"
 import { db } from "@/lib/db"
 
 /**
@@ -8,11 +8,8 @@ import { db } from "@/lib/db"
  */
 export async function GET() {
   try {
-    const session = await auth()
-
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const { error, session } = await checkAdminAuth()
+    if (error) return error
 
     const applications = await db.application.findMany({
       orderBy: {
