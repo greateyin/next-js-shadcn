@@ -593,16 +593,25 @@ export function MenuFormDialog({
               control={form.control}
               name="isVisible"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border border-gray-200 p-4">
-                  <div className="space-y-0.5">
+                <FormItem className="flex flex-row items-center justify-between rounded-lg bg-gray-50 p-4 gap-4">
+                  <div className="space-y-0.5 flex-1">
                     <FormLabel className="text-base text-gray-900">Visible</FormLabel>
                     <FormDescription className="text-sm text-gray-600">
                       Show this menu item in navigation
                     </FormDescription>
                   </div>
-                  <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
-                  </FormControl>
+                  <div className="flex items-center gap-2">
+                    <FormControl>
+                      <Switch 
+                        checked={field.value} 
+                        onCheckedChange={field.onChange}
+                        className="data-[state=checked]:bg-blue-500 data-[state=unchecked]:bg-gray-300"
+                      />
+                    </FormControl>
+                    <span className={`text-sm font-medium whitespace-nowrap ${field.value ? 'text-blue-600' : 'text-gray-500'}`}>
+                      {field.value ? 'Visible' : 'Hidden'}
+                    </span>
+                  </div>
                 </FormItem>
               )}
             />
@@ -612,16 +621,25 @@ export function MenuFormDialog({
               control={form.control}
               name="isDisabled"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border border-gray-200 p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base text-gray-900">Disabled</FormLabel>
+                <FormItem className="flex flex-row items-center justify-between rounded-lg bg-gray-50 p-4 gap-4">
+                  <div className="space-y-0.5 flex-1">
+                    <FormLabel className="text-base text-gray-900">Enabled Status</FormLabel>
                     <FormDescription className="text-sm text-gray-600">
-                      Prevent users from accessing this menu item
+                      Control whether users can access this menu item
                     </FormDescription>
                   </div>
-                  <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
-                  </FormControl>
+                  <div className="flex items-center gap-2">
+                    <FormControl>
+                      <Switch 
+                        checked={!field.value} 
+                        onCheckedChange={(checked) => field.onChange(!checked)}
+                        className="data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-red-400"
+                      />
+                    </FormControl>
+                    <span className={`text-sm font-medium whitespace-nowrap ${!field.value ? 'text-green-600' : 'text-red-500'}`}>
+                      {!field.value ? 'Enabled' : 'Disabled'}
+                    </span>
+                  </div>
                 </FormItem>
               )}
             />

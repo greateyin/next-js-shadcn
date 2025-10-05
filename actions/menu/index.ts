@@ -476,3 +476,53 @@ export async function updateMenuItemsOrder(data: UpdateMenuItemsOrderInput) {
     return { error: "Failed to update menu items order" };
   }
 }
+
+/**
+ * Toggle menu item visibility
+ */
+export async function toggleMenuVisibility(data: { id: string; isVisible: boolean }) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id || session.user.role !== "admin") {
+      return { error: "Unauthorized" };
+    }
+
+    const menuItem = await db.menuItem.update({
+      where: { id: data.id },
+      data: { isVisible: data.isVisible },
+    });
+
+    return {
+      success: `Menu item ${data.isVisible ? "shown" : "hidden"} successfully`,
+      menuItem,
+    };
+  } catch (error) {
+    console.error("[TOGGLE_MENU_VISIBILITY]", error);
+    return { error: "Failed to toggle menu visibility" };
+  }
+}
+
+/**
+ * Toggle menu item disabled state
+ */
+export async function toggleMenuDisabled(data: { id: string; isDisabled: boolean }) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id || session.user.role !== "admin") {
+      return { error: "Unauthorized" };
+    }
+
+    const menuItem = await db.menuItem.update({
+      where: { id: data.id },
+      data: { isDisabled: data.isDisabled },
+    });
+
+    return {
+      success: `Menu item ${data.isDisabled ? "disabled" : "enabled"} successfully`,
+      menuItem,
+    };
+  } catch (error) {
+    console.error("[TOGGLE_MENU_DISABLED]", error);
+    return { error: "Failed to toggle menu disabled state" };
+  }
+}

@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,7 +32,7 @@ import {
 } from "@/components/ui/select";
 import { MenuFormDialog } from "./MenuFormDialog";
 import { ManageMenuRolesDialog } from "./ManageMenuRolesDialog";
-import { deleteMenuItem } from "@/actions/menu";
+import { deleteMenuItem, toggleMenuVisibility, toggleMenuDisabled } from "@/actions/menu";
 import {
   MoreHorizontal,
   Plus,
@@ -382,25 +384,64 @@ export function MenuTable({ menuItems, applications, availableRoles, onRefresh }
 
                   {/* 狀態 */}
                   <TableCell>
-                    <div className="flex items-center gap-1">
-                      {!item.isVisible && (
-                        <Badge variant="outline" className="text-xs gap-1">
-                          <EyeOff className="h-3 w-3" />
-                          Hidden
-                        </Badge>
-                      )}
-                      {item.isDisabled && (
-                        <Badge variant="destructive" className="text-xs gap-1">
-                          <Ban className="h-3 w-3" />
-                          Disabled
-                        </Badge>
-                      )}
-                      {item.isVisible && !item.isDisabled && (
-                        <Badge variant="default" className="text-xs gap-1 bg-green-600">
-                          <Eye className="h-3 w-3" />
-                          Active
-                        </Badge>
-                      )}
+                    <div className="flex flex-col gap-2">
+                      {/* Visibility Toggle */}
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={item.isVisible}
+                          onCheckedChange={async (checked) => {
+                            const result = await toggleMenuVisibility({
+                              id: item.id,
+                              isVisible: checked,
+                            });
+                            if (result.error) {
+                              toast.error(result.error);
+                            } else if (result.success) {
+                              toast.success(result.success);
+                              onRefresh();
+                            }
+                          }}
+                          className={cn(
+                            "data-[state=checked]:bg-blue-500 data-[state=unchecked]:bg-gray-300",
+                            "scale-75"
+                          )}
+                        />
+                        <span className={cn(
+                          "text-xs font-medium",
+                          item.isVisible ? "text-blue-600" : "text-gray-500"
+                        )}>
+                          {item.isVisible ? "Visible" : "Hidden"}
+                        </span>
+                      </div>
+                      
+                      {/* Disabled Toggle */}
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={!item.isDisabled}
+                          onCheckedChange={async (checked) => {
+                            const result = await toggleMenuDisabled({
+                              id: item.id,
+                              isDisabled: !checked,
+                            });
+                            if (result.error) {
+                              toast.error(result.error);
+                            } else if (result.success) {
+                              toast.success(result.success);
+                              onRefresh();
+                            }
+                          }}
+                          className={cn(
+                            "data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-red-400",
+                            "scale-75"
+                          )}
+                        />
+                        <span className={cn(
+                          "text-xs font-medium",
+                          !item.isDisabled ? "text-green-600" : "text-red-500"
+                        )}>
+                          {!item.isDisabled ? "Enabled" : "Disabled"}
+                        </span>
+                      </div>
                     </div>
                   </TableCell>
 
