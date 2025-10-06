@@ -25,7 +25,7 @@ function SubmitButton() {
 
   return (
     <Button type="submit" className="w-full" disabled={pending}>
-      {pending ? "發送中..." : "發送重置連結"}
+      {pending ? "Sending..." : "Send Reset Link"}
     </Button>
   );
 }
@@ -52,19 +52,19 @@ export default function ForgotPasswordPage() {
     <div className="flex min-h-screen w-full items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
         <AuthCardWrapper
-          headerLabel="忘記密碼？"
-          backButtonLabel="返回登入"
+          headerLabel="Forgot Password?"
+          backButtonLabel="Back to Login"
           backButtonHref="/auth/login"
         >
           <div className="space-y-4">
             <p className="text-sm text-gray-600 text-center">
-              輸入您的電子郵件地址，我們將發送密碼重置連結給您。
+              Enter your email address and we'll send you a password reset link.
             </p>
             
             <form action={formAction} className="space-y-6">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-gray-700">電子郵件</Label>
+                  <Label htmlFor="email" className="text-gray-700">Email</Label>
                   <Input
                     id="email"
                     name="email"

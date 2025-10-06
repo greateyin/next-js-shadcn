@@ -26,7 +26,7 @@ function SubmitButton() {
 
   return (
     <Button type="submit" className="w-full" disabled={pending}>
-      {pending ? "重置中..." : "重置密碼"}
+      {pending ? "Resetting..." : "Reset Password"}
     </Button>
   );
 }
@@ -57,9 +57,9 @@ function PasswordStrength({ password }: { password: string }) {
   };
 
   const getLabel = () => {
-    if (strength < 2) return "弱";
-    if (strength < 4) return "中等";
-    return "強";
+    if (strength < 2) return "Weak";
+    if (strength < 4) return "Medium";
+    return "Strong";
   };
 
   if (!password) return null;
@@ -73,7 +73,7 @@ function PasswordStrength({ password }: { password: string }) {
         />
       </div>
       <p className="text-xs text-muted-foreground">
-        密碼強度: {getLabel()}
+        Password Strength: {getLabel()}
       </p>
     </div>
   );
@@ -110,7 +110,7 @@ export function ResetPasswordForm() {
   if (!token) {
     return (
       <div className="text-center">
-        <FormError message="缺少重置令牌！請檢查您的電子郵件連結。" />
+        <FormError message="Missing reset token! Please check your email link." />
       </div>
     );
   }
@@ -118,9 +118,9 @@ export function ResetPasswordForm() {
   return (
     <div className="space-y-4">
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold">重置密碼</h2>
+        <h2 className="text-2xl font-bold">Reset Password</h2>
         <p className="text-sm text-muted-foreground">
-          請輸入您的新密碼
+          Please enter your new password
         </p>
       </div>
 
@@ -130,13 +130,13 @@ export function ResetPasswordForm() {
         <div className="space-y-4">
           {/* Password Field */}
           <div className="space-y-2">
-            <Label htmlFor="password">新密碼</Label>
+            <Label htmlFor="password">New Password</Label>
             <div className="relative">
               <Input
                 id="password"
                 name="password"
                 type={showPassword ? "text" : "password"}
-                placeholder="至少 8 個字元"
+                placeholder="At least 8 characters"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -156,19 +156,19 @@ export function ResetPasswordForm() {
             </div>
             <PasswordStrength password={password} />
             <p className="text-xs text-muted-foreground">
-              密碼必須包含至少 8 個字元，包括大小寫字母和數字
+              Password must contain at least 8 characters, including uppercase, lowercase and numbers
             </p>
           </div>
 
           {/* Confirm Password Field */}
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">確認新密碼</Label>
+            <Label htmlFor="confirmPassword">Confirm New Password</Label>
             <div className="relative">
               <Input
                 id="confirmPassword"
                 name="confirmPassword"
                 type={showConfirmPassword ? "text" : "password"}
-                placeholder="再次輸入新密碼"
+                placeholder="Re-enter your new password"
                 required
                 autoComplete="new-password"
               />

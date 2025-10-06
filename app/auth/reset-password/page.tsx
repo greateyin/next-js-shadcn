@@ -21,10 +21,10 @@ export default function NewPasswordPage() {
   return (
     <div className="flex min-h-screen w-full items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
-        <Suspense fallback={<div className="text-center text-gray-600">載入中...</div>}>
+        <Suspense fallback={<div className="text-center text-gray-600">Loading...</div>}>
           <AuthCardWrapper
-            headerLabel="重置密碼"
-            backButtonLabel="返回登入"
+            headerLabel="Reset Password"
+            backButtonLabel="Back to Login"
             backButtonHref="/auth/login"
           >
             <ResetPasswordForm />

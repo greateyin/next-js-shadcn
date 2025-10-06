@@ -41,7 +41,7 @@ const LogoutPage = () => {
     <div className="flex items-center justify-center min-h-screen w-full p-4">
       <div className="text-center space-y-3">
         <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-gray-900 border-r-transparent"></div>
-        <p className="text-gray-600">登出中...</p>
+        <p className="text-gray-600">Logging out...</p>
       </div>
     </div>
   );

@@ -117,7 +117,7 @@ export function LoginForm() {
                 href="/auth/forgot-password"
                 className="text-sm text-gray-600 hover:text-gray-900 hover:underline transition-colors"
               >
-                忘記密碼？
+                Forgot Password?
               </a>
             </div>
           </div>
