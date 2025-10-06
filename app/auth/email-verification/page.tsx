@@ -31,8 +31,12 @@ export default function EmailVerificationPage() {
   }
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <EmailVerificationForm token={token} />
-    </Suspense>
+    <div className="flex min-h-screen w-full items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <Suspense fallback={<div className="text-center text-gray-600">載入中...</div>}>
+          <EmailVerificationForm token={token} />
+        </Suspense>
+      </div>
+    </div>
   );
 }

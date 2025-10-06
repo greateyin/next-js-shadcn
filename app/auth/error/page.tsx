@@ -15,19 +15,21 @@ import { Skeleton } from "@/components/ui/skeleton";
  */
 const AuthErrorPage: React.FC = () => {
     return (
-        <div className="flex justify-center items-center min-h-screen bg-background">
-            <Card className="w-full max-w-md">
-                <CardContent>
-                    <Suspense fallback={
-                        <div className="space-y-2">
-                            <Skeleton className="h-4 w-[250px]" />
-                            <Skeleton className="h-4 w-[200px]" />
-                        </div>
-                    }>
-                        <AuthErrorForm />
-                    </Suspense>
-                </CardContent>
-            </Card>
+        <div className="flex justify-center items-center min-h-screen w-full p-4">
+            <div className="w-full max-w-md">
+                <Card className="border-gray-200/50 shadow-sm bg-white/80 backdrop-blur-sm">
+                    <CardContent className="pt-6">
+                        <Suspense fallback={
+                            <div className="space-y-2">
+                                <Skeleton className="h-4 w-[250px]" />
+                                <Skeleton className="h-4 w-[200px]" />
+                            </div>
+                        }>
+                            <AuthErrorForm />
+                        </Suspense>
+                    </CardContent>
+                </Card>
+            </div>
         </div>
     );
 };

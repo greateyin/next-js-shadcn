@@ -25,14 +25,16 @@ export const metadata: Metadata = {
  */
 export default function RegisterPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <AuthCardWrapper
-        headerLabel="Create an account"
-        backButtonLabel="Already have an account? Login"
-        backButtonHref="/auth/login"
-      >
-        <RegisterForm />
-      </AuthCardWrapper>
+    <div className="flex min-h-screen w-full items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-6">
+        <AuthCardWrapper
+          headerLabel="Create an account"
+          backButtonLabel="Already have an account? Login"
+          backButtonHref="/auth/login"
+        >
+          <RegisterForm />
+        </AuthCardWrapper>
+      </div>
     </div>
   );
 }

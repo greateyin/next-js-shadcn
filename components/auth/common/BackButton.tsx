@@ -59,7 +59,7 @@ export function BackButton({ href, label }: BackButtonProps) {
   return (
     <Button
       variant="link"
-      className="font-normal w-full"
+      className="font-normal w-full text-gray-600 hover:text-gray-900"
       size="sm"
       asChild
     >

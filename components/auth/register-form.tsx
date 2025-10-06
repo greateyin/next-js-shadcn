@@ -137,13 +137,14 @@ export function RegisterForm() {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel className="text-gray-700">Name</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
                       placeholder="John Doe"
                       disabled={isPending}
                       type="text"
+                      className="border-gray-200 focus:border-gray-400 focus:ring-gray-400"
                     />
                   </FormControl>
                   <FormMessage />
@@ -155,13 +156,14 @@ export function RegisterForm() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel className="text-gray-700">Email</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
                       placeholder="john.doe@example.com"
                       disabled={isPending}
                       type="email"
+                      className="border-gray-200 focus:border-gray-400 focus:ring-gray-400"
                     />
                   </FormControl>
                   <FormMessage />
@@ -173,13 +175,14 @@ export function RegisterForm() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel className="text-gray-700">Password</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
                       placeholder="******"
                       disabled={isPending}
                       type="password"
+                      className="border-gray-200 focus:border-gray-400 focus:ring-gray-400"
                     />
                   </FormControl>
                   <FormMessage />

@@ -84,10 +84,10 @@ export function LoginForm() {
       
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
+          <span className="w-full border-t border-gray-200" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
+          <span className="bg-white/80 px-2 text-gray-600">
             Or continue with
           </span>
         </div>
@@ -101,6 +101,7 @@ export function LoginForm() {
             placeholder="Email"
             required
             autoComplete="email"
+            className="border-gray-200 focus:border-gray-400 focus:ring-gray-400"
           />
           <div className="space-y-2">
             <Input
@@ -109,11 +110,12 @@ export function LoginForm() {
               placeholder="Password"
               required
               autoComplete="current-password"
+              className="border-gray-200 focus:border-gray-400 focus:ring-gray-400"
             />
             <div className="flex justify-end">
               <a
                 href="/auth/forgot-password"
-                className="text-sm text-primary hover:underline"
+                className="text-sm text-gray-600 hover:text-gray-900 hover:underline transition-colors"
               >
                 忘記密碼？
               </a>

@@ -19,9 +19,9 @@ import { AuthCardWrapper } from '@/components/auth/common/AuthCardWrapper';
 
 export default function NewPasswordPage() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center py-12 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md">
-        <Suspense fallback={<div className="text-center">載入中...</div>}>
+    <div className="flex min-h-screen w-full items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-6">
+        <Suspense fallback={<div className="text-center text-gray-600">載入中...</div>}>
           <AuthCardWrapper
             headerLabel="重置密碼"
             backButtonLabel="返回登入"

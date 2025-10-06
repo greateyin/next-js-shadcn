@@ -49,37 +49,42 @@ export default function ForgotPasswordPage() {
   }, [state]);
 
   return (
-    <AuthCardWrapper
-      headerLabel="忘記密碼？"
-      backButtonLabel="返回登入"
-      backButtonHref="/auth/login"
-    >
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground text-center">
-          輸入您的電子郵件地址，我們將發送密碼重置連結給您。
-        </p>
-        
-        <form action={formAction} className="space-y-6">
+    <div className="flex min-h-screen w-full items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-6">
+        <AuthCardWrapper
+          headerLabel="忘記密碼？"
+          backButtonLabel="返回登入"
+          backButtonHref="/auth/login"
+        >
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">電子郵件</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="john.doe@example.com"
-                required
-                autoComplete="email"
-              />
-            </div>
+            <p className="text-sm text-gray-600 text-center">
+              輸入您的電子郵件地址，我們將發送密碼重置連結給您。
+            </p>
+            
+            <form action={formAction} className="space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-gray-700">電子郵件</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="john.doe@example.com"
+                    required
+                    autoComplete="email"
+                    className="border-gray-200 focus:border-gray-400 focus:ring-gray-400"
+                  />
+                </div>
+              </div>
+
+              {state?.error && <FormError message={state.error} />}
+              {state?.success && <FormSuccess message={state.success} />}
+
+              <SubmitButton />
+            </form>
           </div>
-
-          {state?.error && <FormError message={state.error} />}
-          {state?.success && <FormSuccess message={state.success} />}
-
-          <SubmitButton />
-        </form>
+        </AuthCardWrapper>
       </div>
-    </AuthCardWrapper>
+    </div>
   );
 }

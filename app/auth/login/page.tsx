@@ -25,8 +25,8 @@ export const metadata: Metadata = {
  */
 export default function LoginPage() {
   return (
-    <div className="container flex h-screen w-screen flex-col items-center justify-center">
-      <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+    <div className="flex min-h-screen w-full items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-6">
         <AuthCardWrapper
           headerLabel="Welcome back"
           backButtonLabel="Don't have an account? Sign up"

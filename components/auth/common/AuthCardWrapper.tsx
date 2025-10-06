@@ -40,10 +40,10 @@ export function AuthCardWrapper({
 }: AuthCardWrapperProps) {
   return (
     <Card className={cn(
-      "w-[400px] shadow-md border-border bg-card text-card-foreground",
+      "w-full max-w-md border-gray-200/50 shadow-sm bg-white/80 backdrop-blur-sm",
       className
     )}>
-      <CardHeader>
+      <CardHeader className="space-y-1 pb-4">
         <Header label={headerLabel} />
       </CardHeader>
       <CardContent>
@@ -53,10 +53,10 @@ export function AuthCardWrapper({
         <CardFooter className="flex flex-col space-y-4 pt-0">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border" />
+              <span className="w-full border-t border-gray-200" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">
+              <span className="bg-white/80 px-2 text-gray-600">
                 Or continue with
               </span>
             </div>
@@ -64,7 +64,7 @@ export function AuthCardWrapper({
           <Social />
         </CardFooter>
       )}
-      <CardFooter className="flex justify-center">
+      <CardFooter className="flex justify-center pt-4">
         <BackButton
           label={backButtonLabel}
           href={backButtonHref}
