@@ -16,7 +16,7 @@ interface AddRoleDialogProps {
 
 /**
  * AddRoleDialog - Apple Style
- * 新增角色對話框
+ * Add role dialog
  */
 export function AddRoleDialog({ open, onOpenChange, onAdd }: AddRoleDialogProps) {
   const [loading, setLoading] = useState(false)

@@ -16,7 +16,7 @@ interface AddUserDialogProps {
 
 /**
  * AddUserDialog - Apple Style
- * 新增用戶對話框
+ * Add user dialog
  */
 export function AddUserDialog({ open, onOpenChange, onAdd }: AddUserDialogProps) {
   const [loading, setLoading] = useState(false)

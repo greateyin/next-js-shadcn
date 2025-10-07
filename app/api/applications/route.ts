@@ -4,17 +4,17 @@ import { auth } from "@/auth";
 
 /**
  * GET /api/applications
- * 獲取所有應用程式列表
+ * Get all applications list
  */
 export async function GET() {
   try {
-    // 驗證使用者身份
+    // Verify user identity
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "未授權" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 獲取所有應用程式
+    // Get all applications
     const applications = await db.application.findMany({
       orderBy: {
         order: "asc",
@@ -35,7 +35,7 @@ export async function GET() {
   } catch (error) {
     console.error("[GET_APPLICATIONS]", error);
     return NextResponse.json(
-      { error: "獲取應用程式列表時發生錯誤" },
+      { error: "Error occurred while fetching applications list" },
       { status: 500 }
     );
   }

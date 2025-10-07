@@ -2,13 +2,13 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 
 /**
- * 检查用户是否有管理员权限
- * @returns 如果有权限返回 session，否则返回 error response
+ * Check if user has administrator permissions
+ * @returns Returns session if authorized, otherwise returns error response
  */
 export async function checkAdminAuth() {
   const session = await auth();
 
-  // 检查是否登录
+  // Check if logged in
   if (!session?.user) {
     return {
       error: NextResponse.json(
@@ -19,7 +19,7 @@ export async function checkAdminAuth() {
     };
   }
 
-  // 检查是否有管理员权限
+  // Check if has administrator permissions
   const isAdmin =
     session.user.role === "admin" ||
     session.user.roleNames?.includes("admin") ||
@@ -35,7 +35,7 @@ export async function checkAdminAuth() {
     };
   }
 
-  // 有权限，返回 session
+  // Has permission, return session
   return {
     error: null,
     session,
@@ -43,16 +43,16 @@ export async function checkAdminAuth() {
 }
 
 /**
- * 检查用户是否有特定应用的访问权限
- * @param session 用户 session
- * @param appPath 应用路径
- * @returns 是否有权限
+ * Check if user has access permission to specific application
+ * @param session User session
+ * @param appPath Application path
+ * @returns Whether has permission
  */
 export function hasApplicationAccess(
   session: any,
   appPath: string
 ): boolean {
-  // 管理员有所有权限
+  // Admin has all permissions
   const isAdmin =
     session.user.role === "admin" ||
     session.user.roleNames?.includes("admin") ||
@@ -62,6 +62,6 @@ export function hasApplicationAccess(
     return true;
   }
 
-  // 检查是否有特定应用权限
+  // Check if has specific application permission
   return session.user.applicationPaths?.includes(appPath) || false;
 }

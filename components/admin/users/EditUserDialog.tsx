@@ -38,7 +38,7 @@ interface EditUserDialogProps {
 
 /**
  * EditUserDialog - Apple Style
- * 用戶編輯對話框
+ * User edit dialog
  */
 export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDialogProps) {
   const [loading, setLoading] = useState(false)
@@ -52,7 +52,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
     loginAttempts: 0
   })
 
-  // 當 user 改變時更新表單數據
+  // Update form data when user changes
   useEffect(() => {
     if (user) {
       setFormData({

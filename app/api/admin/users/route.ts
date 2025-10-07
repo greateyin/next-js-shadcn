@@ -5,7 +5,7 @@ import { hashPassword } from "@/lib/crypto"
 
 /**
  * GET /api/admin/users
- * 獲取所有用戶
+ * Get all users
  */
 export async function GET() {
   try {
@@ -34,7 +34,7 @@ export async function GET() {
 
 /**
  * POST /api/admin/users
- * 創建新用戶
+ * Create new user
  */
 export async function POST(req: Request) {
   try {
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
     const body = await req.json()
     const { name, email, password, status } = body
 
-    // 檢查 email 是否已存在
+    // Check if email already exists
     const existingUser = await db.user.findUnique({
       where: { email }
     })
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
     // Hash password
     const hashedPassword = await hashPassword(password)
 
-    // 創建用戶
+    // Create user
     const user = await db.user.create({
       data: {
         name,

@@ -1,7 +1,7 @@
 /**
- * 轻量级 Session API - 用于子应用的客户端读取 session
+ * Lightweight Session API - for client-side session reading in sub-applications
  * 
- * 这个端点使子应用的 useSession() 可以同源访问，避免 CORS 问题
+ * This endpoint allows sub-application's useSession() to access same-origin, avoiding CORS issues
  */
 
 import { NextResponse } from "next/server";
@@ -10,7 +10,7 @@ import { getSubdomainSession } from "@/lib/auth/subdomain-auth";
 /**
  * GET /api/auth/session
  * 
- * 返回当前用户的 session（如果存在）
+ * Returns current user's session (if exists)
  */
 export async function GET() {
   try {

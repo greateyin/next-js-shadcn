@@ -32,7 +32,7 @@ interface ManageApplicationsDialogProps {
 
 /**
  * ManageApplicationsDialog - Apple Style
- * 管理角色應用訪問對話框
+ * Manage role application access dialog
  */
 export function ManageApplicationsDialog({ role, open, onOpenChange, onSave }: ManageApplicationsDialogProps) {
   const [loading, setLoading] = useState(false)

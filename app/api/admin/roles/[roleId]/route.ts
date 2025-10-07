@@ -4,7 +4,7 @@ import { db } from "@/lib/db"
 
 /**
  * PATCH /api/admin/roles/[roleId]
- * 更新角色
+ * Update role
  */
 export async function PATCH(
   req: Request,
@@ -18,7 +18,7 @@ export async function PATCH(
     const body = await req.json()
     const { name, description } = body
 
-    // 檢查新名稱是否與其他角色衝突
+    // Check if new name conflicts with other roles
     if (name) {
       const existingRole = await db.role.findFirst({
         where: {
@@ -66,7 +66,7 @@ export async function PATCH(
 
 /**
  * DELETE /api/admin/roles/[roleId]
- * 刪除角色
+ * Delete role
  */
 export async function DELETE(
   req: Request,
@@ -78,7 +78,7 @@ export async function DELETE(
 
     const { roleId } = await params
 
-    // 檢查是否為系統保留角色
+    // Check if it's a system reserved role
     const role = await db.role.findUnique({
       where: { id: roleId },
       select: { name: true }

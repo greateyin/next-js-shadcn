@@ -4,17 +4,17 @@ import { auth } from "@/auth";
 
 /**
  * GET /api/roles
- * 獲取所有角色列表
+ * Get all roles list
  */
 export async function GET() {
   try {
-    // 驗證使用者身份
+    // Verify user identity
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "未授權" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 獲取所有角色
+    // Get all roles
     const roles = await db.role.findMany({
       orderBy: {
         name: "asc",
@@ -30,7 +30,7 @@ export async function GET() {
   } catch (error) {
     console.error("[GET_ROLES]", error);
     return NextResponse.json(
-      { error: "獲取角色列表時發生錯誤" },
+      { error: "Error occurred while fetching roles list" },
       { status: 500 }
     );
   }

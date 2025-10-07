@@ -4,7 +4,7 @@ import { db } from "@/lib/db"
 
 /**
  * GET /api/admin/roles/[roleId]/applications
- * 獲取角色的應用程式
+ * Get role's applications
  */
 export async function GET(
   req: Request,
@@ -36,7 +36,7 @@ export async function GET(
 
 /**
  * PUT /api/admin/roles/[roleId]/applications
- * 更新角色的應用程式（完全替換）
+ * Update role's applications (complete replacement)
  */
 export async function PUT(
   req: Request,
@@ -54,16 +54,16 @@ export async function PUT(
       return NextResponse.json({ error: "Invalid application IDs" }, { status: 400 })
     }
 
-    // 使用事務來確保數據一致性
+    // Use transaction to ensure data consistency
     await db.$transaction(async (tx: typeof db) => {
-      // 刪除現有的所有應用關聯
+      // Delete all existing application associations
       await tx.roleApplication.deleteMany({
         where: {
           roleId
         }
       })
 
-      // 創建新的應用關聯
+      // Create new application associations
       if (applicationIds.length > 0) {
         await tx.roleApplication.createMany({
           data: applicationIds.map((applicationId: string) => ({

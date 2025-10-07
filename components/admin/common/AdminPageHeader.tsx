@@ -8,9 +8,9 @@ interface AdminPageHeaderProps {
 }
 
 /**
- * Admin 页面标题组件
+ * Admin page header component
  * 
- * 提供统一的页面标题样式，可选描述和操作按钮
+ * Provides unified page header style with optional description and action buttons
  * 
  * @example
  * <AdminPageHeader

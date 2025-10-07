@@ -4,7 +4,7 @@ import { db } from "@/lib/db"
 
 /**
  * GET /api/admin/roles/[roleId]/menu-access
- * 獲取角色的選單訪問權限
+ * Get role's menu access permissions
  */
 export async function GET(
   req: Request,
@@ -36,7 +36,7 @@ export async function GET(
 
 /**
  * PUT /api/admin/roles/[roleId]/menu-access
- * 更新角色的選單訪問權限（完全替換）
+ * Update role's menu access permissions (complete replacement)
  */
 export async function PUT(
   req: Request,
@@ -54,16 +54,16 @@ export async function PUT(
       return NextResponse.json({ error: "Invalid menu access data" }, { status: 400 })
     }
 
-    // 使用事務來確保數據一致性
+    // Use transaction to ensure data consistency
     await db.$transaction(async (tx: typeof db) => {
-      // 刪除現有的所有選單訪問權限
+      // Delete all existing menu access permissions
       await tx.menuItemRole.deleteMany({
         where: {
           roleId
         }
       })
 
-      // 創建新的選單訪問權限
+      // Create new menu access permissions
       if (menuAccess.length > 0) {
         await tx.menuItemRole.createMany({
           data: menuAccess.map((access: any) => ({

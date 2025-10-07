@@ -1,7 +1,7 @@
 /**
- * Admin 通用组件导出
+ * Admin common component exports
  * 
- * 统一导出所有 Admin 通用组件，便于使用
+ * Unified export of all Admin common components for easy use
  * 
  * @example
  * import {
@@ -18,5 +18,5 @@ export { AdminCard } from "./AdminCard";
 export { AdminLoadingState } from "./AdminLoadingState";
 export { AdminEmptyState } from "./AdminEmptyState";
 
-// 导出样式常量（便于直接访问）
+// Export style constants (for direct access)
 export { adminStyles, cn } from "@/lib/styles/admin";

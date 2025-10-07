@@ -83,7 +83,7 @@ interface ApplicationFormDialogProps {
 
 /**
  * ApplicationFormDialog - Apple Style (Consistent with RolesTable)
- * 應用程式表單對話框
+ * Application form dialog
  */
 export function ApplicationFormDialog({
   open,

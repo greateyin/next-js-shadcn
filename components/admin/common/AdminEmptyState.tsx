@@ -9,9 +9,9 @@ interface AdminEmptyStateProps {
 }
 
 /**
- * Admin 空状态组件
+ * Admin empty state component
  * 
- * 用于显示没有数据时的友好提示
+ * Used to display friendly prompt when there is no data
  * 
  * @example
  * <AdminEmptyState
@@ -21,7 +21,7 @@ interface AdminEmptyStateProps {
  * />
  * 
  * @example
- * // 带图标的空状态
+ * // Empty state with icon
  * <AdminEmptyState
  *   title="No results"
  *   description="Try adjusting your search"

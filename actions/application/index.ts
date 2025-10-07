@@ -17,20 +17,20 @@ import {
 import { auditLogger } from "@/lib/audit/auditLogger";
 
 /**
- * 創建新的應用程式
+ * Create a new application
  */
 export async function createApplication(data: CreateApplicationInput) {
   try {
-    // 驗證使用者身份
+    // Verify user authentication
     const session = await auth();
     if (!session?.user?.id) {
       return { error: "Unauthorized" };
     }
 
-    // 驗證輸入資料
+    // Validate input data
     const validatedData = createApplicationSchema.parse(data);
 
-    // 檢查名稱是否已存在
+    // Check if name already exists
     const existingByName = await db.application.findUnique({
       where: { name: validatedData.name },
     });
@@ -39,7 +39,7 @@ export async function createApplication(data: CreateApplicationInput) {
       return { error: "Application name already exists" };
     }
 
-    // 檢查路徑是否已存在
+    // Check if path already exists
     const existingByPath = await db.application.findUnique({
       where: { path: validatedData.path },
     });
@@ -48,12 +48,12 @@ export async function createApplication(data: CreateApplicationInput) {
       return { error: "Application path already exists" };
     }
 
-    // 創建應用程式
+    // Create application
     const application = await db.application.create({
       data: validatedData,
     });
 
-    // 記錄審計日誌
+    // Log audit trail
     await auditLogger.log({
       userId: session.user.id,
       action: "CREATE_APPLICATION",
@@ -71,21 +71,21 @@ export async function createApplication(data: CreateApplicationInput) {
 }
 
 /**
- * 更新應用程式
+ * Update an application
  */
 export async function updateApplication(data: UpdateApplicationInput) {
   try {
-    // 驗證使用者身份
+    // Verify user authentication
     const session = await auth();
     if (!session?.user?.id) {
       return { error: "Unauthorized" };
     }
 
-    // 驗證輸入資料
+    // Validate input data
     const validatedData = updateApplicationSchema.parse(data);
     const { id, ...updateData } = validatedData;
 
-    // 檢查應用程式是否存在
+    // Check if application exists
     const existingApp = await db.application.findUnique({
       where: { id },
     });
@@ -94,7 +94,7 @@ export async function updateApplication(data: UpdateApplicationInput) {
       return { error: "Application not found" };
     }
 
-    // 如果更新名稱，檢查新名稱是否已被其他應用程式使用
+    // If updating name, check if new name is already used by another application
     if (updateData.name && updateData.name !== existingApp.name) {
       const nameExists = await db.application.findFirst({
         where: {
@@ -108,7 +108,7 @@ export async function updateApplication(data: UpdateApplicationInput) {
       }
     }
 
-    // 如果更新路徑，檢查新路徑是否已被其他應用程式使用
+    // If updating path, check if new path is already used by another application
     if (updateData.path && updateData.path !== existingApp.path) {
       const pathExists = await db.application.findFirst({
         where: {
@@ -122,13 +122,13 @@ export async function updateApplication(data: UpdateApplicationInput) {
       }
     }
 
-    // 更新應用程式
+    // Update application
     const application = await db.application.update({
       where: { id },
       data: updateData,
     });
 
-    // 記錄審計日誌
+    // Log audit trail
     await auditLogger.log({
       userId: session.user.id,
       action: "UPDATE_APPLICATION",
@@ -147,20 +147,20 @@ export async function updateApplication(data: UpdateApplicationInput) {
 }
 
 /**
- * 切換應用程式啟用狀態
+ * Toggle application active status
  */
 export async function toggleApplicationStatus(data: ToggleApplicationStatusInput) {
   try {
-    // 驗證使用者身份
+    // Verify user authentication
     const session = await auth();
     if (!session?.user?.id) {
       return { error: "Unauthorized" };
     }
 
-    // 驗證輸入資料
+    // Validate input data
     const validatedData = toggleApplicationStatusSchema.parse(data);
 
-    // 檢查應用程式是否存在
+    // Check if application exists
     const existingApp = await db.application.findUnique({
       where: { id: validatedData.id },
     });
@@ -169,13 +169,13 @@ export async function toggleApplicationStatus(data: ToggleApplicationStatusInput
       return { error: "Application not found" };
     }
 
-    // 更新狀態
+    // Update status
     const application = await db.application.update({
       where: { id: validatedData.id },
       data: { isActive: validatedData.isActive },
     });
 
-    // 記錄審計日誌
+    // Log audit trail
     await auditLogger.log({
       userId: session.user.id,
       action: validatedData.isActive ? "ENABLE_APPLICATION" : "DISABLE_APPLICATION",
@@ -197,20 +197,20 @@ export async function toggleApplicationStatus(data: ToggleApplicationStatusInput
 }
 
 /**
- * 刪除應用程式
+ * Delete an application
  */
 export async function deleteApplication(data: DeleteApplicationInput) {
   try {
-    // 驗證使用者身份
+    // Verify user authentication
     const session = await auth();
     if (!session?.user?.id) {
       return { error: "Unauthorized" };
     }
 
-    // 驗證輸入資料
+    // Validate input data
     const validatedData = deleteApplicationSchema.parse(data);
 
-    // 檢查應用程式是否存在
+    // Check if application exists
     const existingApp = await db.application.findUnique({
       where: { id: validatedData.id },
       include: {
@@ -227,7 +227,7 @@ export async function deleteApplication(data: DeleteApplicationInput) {
       return { error: "Application not found" };
     }
 
-    // 檢查是否有關聯的選單項目或角色
+    // Check if there are associated menu items or roles
     if (existingApp._count.menuItems > 0) {
       return {
         error: `Cannot delete application because it has ${existingApp._count.menuItems} associated menu items`,
@@ -240,12 +240,12 @@ export async function deleteApplication(data: DeleteApplicationInput) {
       };
     }
 
-    // 刪除應用程式
+    // Delete application
     await db.application.delete({
       where: { id: validatedData.id },
     });
 
-    // 記錄審計日誌
+    // Log audit trail
     await auditLogger.log({
       userId: session.user.id,
       action: "DELETE_APPLICATION",
@@ -263,20 +263,20 @@ export async function deleteApplication(data: DeleteApplicationInput) {
 }
 
 /**
- * 管理應用程式的角色存取權限
+ * Manage application role access permissions
  */
 export async function manageApplicationRoles(data: ManageApplicationRolesInput) {
   try {
-    // 驗證使用者身份
+    // Verify user authentication
     const session = await auth();
     if (!session?.user?.id) {
       return { error: "Unauthorized" };
     }
 
-    // 驗證輸入資料
+    // Validate input data
     const validatedData = manageApplicationRolesSchema.parse(data);
 
-    // 檢查應用程式是否存在
+    // Check if application exists
     const existingApp = await db.application.findUnique({
       where: { id: validatedData.applicationId },
       include: {
@@ -292,7 +292,7 @@ export async function manageApplicationRoles(data: ManageApplicationRolesInput) 
       return { error: "Application not found" };
     }
 
-    // 驗證所有角色 ID 是否存在
+    // Verify all role IDs exist
     const roles = await db.role.findMany({
       where: {
         id: {
@@ -305,16 +305,16 @@ export async function manageApplicationRoles(data: ManageApplicationRolesInput) 
       return { error: "Some roles do not exist" };
     }
 
-    // 使用交易來更新角色關聯
+    // Use transaction to update role associations
     await db.$transaction(async (tx: any) => {
-      // 刪除現有的角色關聯
+      // Delete existing role associations
       await tx.roleApplication.deleteMany({
         where: {
           applicationId: validatedData.applicationId,
         },
       });
 
-      // 創建新的角色關聯
+      // Create new role associations
       if (validatedData.roleIds.length > 0) {
         await tx.roleApplication.createMany({
           data: validatedData.roleIds.map((roleId: string) => ({
@@ -325,7 +325,7 @@ export async function manageApplicationRoles(data: ManageApplicationRolesInput) 
       }
     });
 
-    // 記錄審計日誌
+    // Log audit trail
     await auditLogger.log({
       userId: session.user.id,
       action: "MANAGE_APPLICATION_ROLES",
@@ -344,7 +344,7 @@ export async function manageApplicationRoles(data: ManageApplicationRolesInput) 
 }
 
 /**
- * 獲取所有應用程式
+ * Get all applications
  */
 export async function getApplications() {
   try {
@@ -375,7 +375,7 @@ export async function getApplications() {
 }
 
 /**
- * 根據 ID 獲取單個應用程式
+ * Get a single application by ID
  */
 export async function getApplicationById(id: string) {
   try {

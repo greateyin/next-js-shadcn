@@ -4,18 +4,18 @@ import { db } from "@/lib/db";
 
 /**
  * GET /api/admin/stats
- * 获取管理后台统计数据
+ * Get admin dashboard statistics
  */
 export async function GET() {
   try {
     const session = await auth();
 
-    // 检查是否登录
+    // Check if logged in
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 检查是否有管理员权限
+    // Check if has administrator permissions
     const isAdmin = session.user.role === "admin" || 
                     session.user.roleNames?.includes("admin") ||
                     session.user.roleNames?.includes("super-admin");
@@ -24,65 +24,65 @@ export async function GET() {
       return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 });
     }
 
-    // 并行获取所有统计数据
+    // Fetch all statistics in parallel
     const [
-      // 用户统计
+      // User statistics
       totalUsers,
       activeUsers,
       pendingUsers,
       suspendedUsers,
       usersWithTwoFactor,
       
-      // 角色统计
+      // Role statistics
       totalRoles,
       
-      // 应用统计
+      // Application statistics
       totalApplications,
       activeApplications,
       
-      // 菜单统计
+      // Menu statistics
       totalMenuItems,
       visibleMenuItems,
       disabledMenuItems,
       
-      // 会话统计
+      // Session statistics
       activeSessions,
       todaySessions,
       
-      // 权限统计
+      // Permission statistics
       totalPermissions,
       
-      // 审计日志统计（最近 24 小时）
+      // Audit log statistics (last 24 hours)
       recentAuditLogs,
       failedOperations,
       criticalLogs,
       
-      // 最近 7 天的用户增长
+      // User growth in the last 7 days
       last7DaysUsers,
       
-      // 按状态分组的用户数
+      // User count grouped by status
       usersByStatus,
     ] = await Promise.all([
-      // 用户统计
+      // User statistics
       db.user.count(),
       db.user.count({ where: { status: "active" } }),
       db.user.count({ where: { status: "pending" } }),
       db.user.count({ where: { status: "suspended" } }),
       db.user.count({ where: { isTwoFactorEnabled: true } }),
       
-      // 角色统计
+      // Role statistics
       db.role.count(),
       
-      // 应用统计
+      // Application statistics
       db.application.count(),
       db.application.count({ where: { isActive: true } }),
       
-      // 菜单统计
+      // Menu statistics
       db.menuItem.count(),
       db.menuItem.count({ where: { isVisible: true } }),
       db.menuItem.count({ where: { isDisabled: true } }),
       
-      // 会话统计（未过期的会话）
+      // Session statistics (unexpired sessions)
       db.session.count({
         where: {
           expires: {
@@ -101,10 +101,10 @@ export async function GET() {
         },
       }),
       
-      // 权限统计
+      // Permission statistics
       db.permission.count(),
       
-      // 审计日志统计（最近 24 小时）
+      // Audit log statistics (last 24 hours)
       db.auditLog.findMany({
         where: {
           timestamp: {
@@ -142,7 +142,7 @@ export async function GET() {
         },
       }),
       
-      // 最近 7 天的用户增长
+      // User growth in last 7 days
       db.user.groupBy({
         by: ["createdAt"],
         _count: true,
@@ -153,14 +153,14 @@ export async function GET() {
         },
       }),
       
-      // 按状态分组的用户数
+      // User count grouped by status
       db.user.groupBy({
         by: ["status"],
         _count: true,
       }),
     ]);
 
-    // 计算用户增长趋势（相对于上个月）
+    // Calculate user growth trend (relative to last month)
     const lastMonthUsers = await db.user.count({
       where: {
         createdAt: {
@@ -173,7 +173,7 @@ export async function GET() {
       ? ((totalUsers - lastMonthUsers) / lastMonthUsers * 100).toFixed(1)
       : "0";
 
-    // 计算会话增长趋势
+    // Calculate session growth trend
     const yesterdaySessions = await db.session.count({
       where: {
         createdAt: {
@@ -187,7 +187,7 @@ export async function GET() {
       ? ((todaySessions - yesterdaySessions) / yesterdaySessions * 100).toFixed(1)
       : "0";
 
-    // 处理按状态分组的数据
+    // Process grouped by status data
     const statusDistribution = usersByStatus.reduce((acc, item) => {
       acc[item.status] = item._count;
       return acc;

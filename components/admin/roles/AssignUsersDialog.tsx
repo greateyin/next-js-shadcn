@@ -30,7 +30,7 @@ interface AssignUsersDialogProps {
 
 /**
  * AssignUsersDialog - Apple Style
- * 分配用戶到角色對話框
+ * Assign users to role dialog
  */
 export function AssignUsersDialog({ role, open, onOpenChange, onSave }: AssignUsersDialogProps) {
   const [loading, setLoading] = useState(false)

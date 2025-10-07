@@ -4,7 +4,7 @@ import { db } from "@/lib/db"
 
 /**
  * GET /api/admin/permissions
- * 獲取所有權限
+ * Get all permissions
  */
 export async function GET() {
   try {

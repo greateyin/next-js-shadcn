@@ -1,5 +1,5 @@
 /**
- * Application 管理組件導出
+ * Application management component exports
  */
 
 export { ApplicationsTable } from "./ApplicationsTable";

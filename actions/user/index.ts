@@ -1,10 +1,10 @@
 /**
- * @fileoverview 使用者相關 Server Actions 的集中匯出點
+ * @fileoverview Centralized export point for user-related Server Actions
  * @module actions/user
- * @description 統一匯出所有使用者相關的 Server Actions
+ * @description Unified exports for all user-related Server Actions
  */
 
-// 使用者查詢和管理相關
+// User query and management related
 export {
   getUserByEmail,
   getUserById,

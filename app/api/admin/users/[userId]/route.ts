@@ -4,7 +4,7 @@ import { db } from "@/lib/db"
 
 /**
  * PATCH /api/admin/users/[userId]
- * 更新用戶
+ * Update user
  */
 export async function PATCH(
   req: Request,
@@ -59,7 +59,7 @@ export async function PATCH(
 
 /**
  * DELETE /api/admin/users/[userId]
- * 刪除用戶
+ * Delete user
  */
 export async function DELETE(
   req: Request,
@@ -71,7 +71,7 @@ export async function DELETE(
 
     const { userId } = await params
 
-    // 防止刪除自己
+    // Prevent deleting yourself
     if (session.user.id === userId) {
       return NextResponse.json({ error: "Cannot delete yourself" }, { status: 400 })
     }

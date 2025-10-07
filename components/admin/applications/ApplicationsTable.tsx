@@ -375,7 +375,7 @@ export function ApplicationsTable({ applications, availableRoles, onRefresh }: A
       </div>
       </div>
 
-      {/* 新增/編輯應用程式對話框 */}
+      {/* Add/Edit Application Dialog */}
       <ApplicationFormDialog
         open={isFormDialogOpen}
         onOpenChange={setIsFormDialogOpen}
@@ -392,7 +392,7 @@ export function ApplicationsTable({ applications, availableRoles, onRefresh }: A
         onSuccess={onRefresh}
       />
 
-      {/* 管理角色存取對話框 */}
+      {/* Manage Role Access Dialog */}
       {selectedApplication && (
         <ManageRolesDialog
           open={isRolesDialogOpen}
@@ -405,7 +405,7 @@ export function ApplicationsTable({ applications, availableRoles, onRefresh }: A
         />
       )}
 
-      {/* 刪除確認對話框 */}
+      {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

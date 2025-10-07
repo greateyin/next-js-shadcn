@@ -16,8 +16,8 @@ import {
 } from "@/schemas/menu";
 
 /**
- * 獲取所有選單項目
- * 包含關聯的應用程式、父項目、子項目和角色存取權限
+ * Get all menu items
+ * Includes associated applications, parent items, child items, and role access permissions
  */
 export async function getMenuItems() {
   try {
@@ -77,7 +77,7 @@ export async function getMenuItems() {
 }
 
 /**
- * 根據應用程式獲取選單項目
+ * Get menu items by application
  */
 export async function getMenuItemsByApplication(applicationId: string) {
   try {
@@ -126,7 +126,7 @@ export async function getMenuItemsByApplication(applicationId: string) {
 }
 
 /**
- * 創建新的選單項目
+ * Create a new menu item
  */
 export async function createMenuItem(data: CreateMenuItemInput) {
   try {
@@ -135,10 +135,10 @@ export async function createMenuItem(data: CreateMenuItemInput) {
       return { error: "Unauthorized" };
     }
 
-    // 驗證輸入
+    // Validate input
     const validatedData = CreateMenuItemSchema.parse(data);
 
-    // 檢查應用程式是否存在
+    // Check if application exists
     const application = await db.application.findUnique({
       where: { id: validatedData.applicationId },
     });
@@ -147,7 +147,7 @@ export async function createMenuItem(data: CreateMenuItemInput) {
       return { error: "Application not found" };
     }
 
-    // 檢查 name 是否在該應用程式中已存在
+    // Check if name already exists in this application
     const existingName = await db.menuItem.findUnique({
       where: {
         applicationId_name: {
@@ -161,7 +161,7 @@ export async function createMenuItem(data: CreateMenuItemInput) {
       return { error: "Menu item with this name already exists in this application" };
     }
 
-    // 檢查 path 是否在該應用程式中已存在
+    // Check if path already exists in this application
     const existingPath = await db.menuItem.findUnique({
       where: {
         applicationId_path: {
@@ -175,7 +175,7 @@ export async function createMenuItem(data: CreateMenuItemInput) {
       return { error: "Menu item with this path already exists in this application" };
     }
 
-    // 如果有父項目，檢查父項目是否存在且屬於同一應用程式
+    // If there's a parent item, check if it exists and belongs to the same application
     if (validatedData.parentId) {
       const parentItem = await db.menuItem.findUnique({
         where: { id: validatedData.parentId },
@@ -190,7 +190,7 @@ export async function createMenuItem(data: CreateMenuItemInput) {
       }
     }
 
-    // 創建選單項目
+    // Create menu item
     const menuItem = await db.menuItem.create({
       data: {
         name: validatedData.name,
@@ -219,7 +219,7 @@ export async function createMenuItem(data: CreateMenuItemInput) {
 }
 
 /**
- * 更新選單項目
+ * Update a menu item
  */
 export async function updateMenuItem(data: UpdateMenuItemInput) {
   try {
@@ -228,10 +228,10 @@ export async function updateMenuItem(data: UpdateMenuItemInput) {
       return { error: "Unauthorized" };
     }
 
-    // 驗證輸入
+    // Validate input
     const validatedData = UpdateMenuItemSchema.parse(data);
 
-    // 檢查選單項目是否存在
+    // Check if menu item exists
     const existingMenuItem = await db.menuItem.findUnique({
       where: { id: validatedData.id },
     });
@@ -240,7 +240,7 @@ export async function updateMenuItem(data: UpdateMenuItemInput) {
       return { error: "Menu item not found" };
     }
 
-    // 如果更新 name，檢查是否與同應用程式的其他選單項目衝突
+    // If updating name, check for conflicts with other menu items in the same application
     if (validatedData.name && validatedData.name !== existingMenuItem.name) {
       const conflictingName = await db.menuItem.findFirst({
         where: {
@@ -255,7 +255,7 @@ export async function updateMenuItem(data: UpdateMenuItemInput) {
       }
     }
 
-    // 如果更新 path，檢查是否與同應用程式的其他選單項目衝突
+    // If updating path, check for conflicts with other menu items in the same application
     if (validatedData.path && validatedData.path !== existingMenuItem.path) {
       const conflictingPath = await db.menuItem.findFirst({
         where: {
@@ -270,10 +270,10 @@ export async function updateMenuItem(data: UpdateMenuItemInput) {
       }
     }
 
-    // 如果更新 parentId，檢查父項目是否存在且不會造成循環參照
+    // If updating parentId, check if parent exists and won't create circular reference
     if (validatedData.parentId !== undefined) {
       if (validatedData.parentId) {
-        // 檢查父項目是否存在
+        // Check if parent item exists
         const parentItem = await db.menuItem.findUnique({
           where: { id: validatedData.parentId },
         });
@@ -282,17 +282,17 @@ export async function updateMenuItem(data: UpdateMenuItemInput) {
           return { error: "Parent menu item not found" };
         }
 
-        // 檢查是否屬於同一應用程式
+        // Check if belongs to the same application
         if (parentItem.applicationId !== existingMenuItem.applicationId) {
           return { error: "Parent menu item must belong to the same application" };
         }
 
-        // 檢查是否會造成循環參照（不能將父項目設為自己或自己的子項目）
+        // Check if will create circular reference (cannot set parent as itself or its own child)
         if (validatedData.parentId === validatedData.id) {
           return { error: "Menu item cannot be its own parent" };
         }
 
-        // 遞迴檢查子項目
+        // Recursively check child items
         const checkCircularReference = async (itemId: string, targetId: string): Promise<boolean> => {
           const children = await db.menuItem.findMany({
             where: { parentId: itemId },
@@ -322,7 +322,7 @@ export async function updateMenuItem(data: UpdateMenuItemInput) {
       }
     }
 
-    // 更新選單項目
+    // Update menu item
     const updatedMenuItem = await db.menuItem.update({
       where: { id: validatedData.id },
       data: {
@@ -351,7 +351,7 @@ export async function updateMenuItem(data: UpdateMenuItemInput) {
 }
 
 /**
- * 刪除選單項目
+ * Delete a menu item
  */
 export async function deleteMenuItem(data: DeleteMenuItemInput) {
   try {
@@ -360,10 +360,10 @@ export async function deleteMenuItem(data: DeleteMenuItemInput) {
       return { error: "Unauthorized" };
     }
 
-    // 驗證輸入
+    // Validate input
     const validatedData = DeleteMenuItemSchema.parse(data);
 
-    // 檢查選單項目是否存在
+    // Check if menu item exists
     const menuItem = await db.menuItem.findUnique({
       where: { id: validatedData.id },
       include: {
@@ -379,14 +379,14 @@ export async function deleteMenuItem(data: DeleteMenuItemInput) {
       return { error: "Menu item not found" };
     }
 
-    // 檢查是否有子項目
+    // Check if has child items
     if (menuItem._count.children > 0) {
       return {
         error: `Cannot delete menu item with ${menuItem._count.children} child item(s). Please delete or reassign child items first.`,
       };
     }
 
-    // 刪除選單項目（會自動刪除相關的 MenuItemRole 記錄，因為有 onDelete: Cascade）
+    // Delete menu item (will automatically delete related MenuItemRole records due to onDelete: Cascade)
     await db.menuItem.delete({
       where: { id: validatedData.id },
     });
@@ -399,7 +399,7 @@ export async function deleteMenuItem(data: DeleteMenuItemInput) {
 }
 
 /**
- * 管理選單項目的角色存取權限
+ * Manage menu item role access permissions
  */
 export async function manageMenuItemRoles(data: ManageMenuItemRolesInput) {
   try {
@@ -408,10 +408,10 @@ export async function manageMenuItemRoles(data: ManageMenuItemRolesInput) {
       return { error: "Unauthorized" };
     }
 
-    // 驗證輸入
+    // Validate input
     const validatedData = ManageMenuItemRolesSchema.parse(data);
 
-    // 檢查選單項目是否存在
+    // Check if menu item exists
     const menuItem = await db.menuItem.findUnique({
       where: { id: validatedData.menuItemId },
     });
@@ -420,14 +420,14 @@ export async function manageMenuItemRoles(data: ManageMenuItemRolesInput) {
       return { error: "Menu item not found" };
     }
 
-    // 在事務中更新角色存取權限
-    await db.$transaction(async (tx: typeof db) => {
-      // 刪除現有的角色存取記錄
+    // Update role access permissions in a transaction
+    await db.$transaction(async (tx: any) => {
+      // Delete existing role access records
       await tx.menuItemRole.deleteMany({
         where: { menuItemId: validatedData.menuItemId },
       });
 
-      // 創建新的角色存取記錄
+      // Create new role access records
       if (validatedData.roleIds.length > 0) {
         await tx.menuItemRole.createMany({
           data: validatedData.roleIds.map((roleId) => ({
@@ -448,7 +448,7 @@ export async function manageMenuItemRoles(data: ManageMenuItemRolesInput) {
 }
 
 /**
- * 批量更新選單項目順序
+ * Batch update menu item order
  */
 export async function updateMenuItemsOrder(data: UpdateMenuItemsOrderInput) {
   try {
@@ -457,10 +457,10 @@ export async function updateMenuItemsOrder(data: UpdateMenuItemsOrderInput) {
       return { error: "Unauthorized" };
     }
 
-    // 驗證輸入
+    // Validate input
     const validatedData = UpdateMenuItemsOrderSchema.parse(data);
 
-    // 在事務中更新所有選單項目的順序
+    // Update all menu item orders in a transaction
     await db.$transaction(
       validatedData.items.map((item) =>
         db.menuItem.update({

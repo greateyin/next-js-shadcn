@@ -1,33 +1,33 @@
 /**
- * @fileoverview 認證相關 Server Actions 的集中匯出點
+ * @fileoverview Centralized export point for authentication-related Server Actions
  * @module actions/auth
- * @description 統一匯出所有認證相關的 Server Actions
+ * @description Unified exports for all authentication-related Server Actions
  */
 
-// 登入/登出相關
+// Login/logout related
 export {
   loginAction,
   loginWithRedirectAction,
   logoutAction,
 } from "./login";
 
-// 使用者註冊相關
+// User registration related
 export {
   registerAction,
   resendVerificationEmail,
 } from "./registration";
 
-// 密碼重置相關
+// Password reset related
 export {
-  // 新版本 - 使用 Server Actions (推薦)
+  // New version - Using Server Actions (recommended)
   requestPasswordResetAction,
   resetPasswordWithTokenAction,
-  // 舊版本 - 向後兼容
+  // Legacy version - Backward compatibility
   resetPassword,
   newPasswordAction,
 } from "./password-reset";
 
-// 雙因素認證相關
+// Two-factor authentication related
 export {
   getTwoFactorTokenByToken,
   getTwoFactorTokenByUserId,
@@ -35,7 +35,7 @@ export {
   verifyTwoFactorToken,
 } from "./two-factor";
 
-// 電子郵件驗證相關
+// Email verification related
 export {
   getVerificationTokenByToken,
   getVerificationTokenByEmail,

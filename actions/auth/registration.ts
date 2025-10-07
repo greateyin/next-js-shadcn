@@ -1,7 +1,7 @@
 /**
- * @fileoverview 使用者註冊相關的 Server Actions
+ * @fileoverview User registration related Server Actions
  * @module actions/auth/registration
- * @description 處理使用者註冊、電子郵件驗證、密碼重置等認證流程
+ * @description Handles user registration, email verification, password reset and other authentication flows
  */
 
 "use server";
@@ -22,42 +22,42 @@ import {
 import { getPasswordResetTokenByToken } from "@/data/password-reset-token";
 
 /**
- * 使用者註冊 Action
+ * User registration Action
  * @async
  * @function registerAction
- * @param {z.infer<typeof RegisterSchema>} values - 註冊表單資料
- * @returns {Promise<{error: string} | {success: string}>} 返回成功或錯誤訊息
- * @throws {Error} 當資料庫操作失敗時拋出
+ * @param {z.infer<typeof RegisterSchema>} values - Registration form data
+ * @returns {Promise<{error: string} | {success: string}>} Returns success or error message
+ * @throws {Error} When database operation fails
  * @description
- * 處理使用者註冊流程：
- * 1. 驗證輸入欄位
- * 2. 檢查電子郵件是否已被使用
- * 3. 創建新使用者帳號（密碼經過哈希處理）
- * 4. 生成並發送電子郵件驗證令牌
+ * Handles user registration flow:
+ * 1. Validate input fields
+ * 2. Check if email is already in use
+ * 3. Create new user account (password is hashed)
+ * 4. Generate and send email verification token
  */
 export const registerAction = async (
   values: z.infer<typeof RegisterSchema>
 ) => {
-  // 驗證表單欄位
+  // Validate form fields
   const validatedFields = RegisterSchema.safeParse(values);
 
   if (!validatedFields.success) {
-    return { error: "欄位驗證失敗！" };
+    return { error: "Field validation failed!" };
   }
 
   const { email, password, name } = validatedFields.data;
   
-  // 對密碼進行哈希處理
+  // Hash the password
   const hashedPassword = await hashPassword(password);
 
-  // 檢查電子郵件是否已被使用
+  // Check if email is already in use
   const existingUser = await getUserByEmail(email);
 
   if (existingUser) {
-    return { error: "此電子郵件已被使用！" };
+    return { error: "This email is already in use!" };
   }
 
-  // 創建新使用者
+  // Create new user
   await db.user.create({
     data: {
       name,
@@ -66,34 +66,34 @@ export const registerAction = async (
     },
   });
 
-  // 生成並發送驗證令牌
+  // Generate and send verification token
   const verificationToken = await generateVerificationToken(email);
   await sendVerificationEmail(email, verificationToken.token);
 
-  return { success: "驗證郵件已發送！" };
+  return { success: "Verification email has been sent!" };
 };
 
 /**
- * 重新發送驗證郵件 Action
+ * Resend verification email Action
  * @async
  * @function resendVerificationEmail
- * @param {string} email - 要重新發送驗證郵件的電子郵件地址
- * @returns {Promise<{error: string} | {success: string}>} 返回成功或錯誤訊息
+ * @param {string} email - Email address to resend verification email to
+ * @returns {Promise<{error: string} | {success: string}>} Returns success or error message
  * @description
- * 重新生成並發送電子郵件驗證令牌給指定的電子郵件地址。
- * 僅當使用者存在時才會發送郵件。
+ * Regenerate and send email verification token to the specified email address.
+ * Email is only sent if the user exists.
  */
 export const resendVerificationEmail = async (email: string) => {
-  // 檢查使用者是否存在
+  // Check if user exists
   const existingUser = await getUserByEmail(email);
 
   if (!existingUser) {
-    return { error: "找不到此電子郵件！" };
+    return { error: "Email not found!" };
   }
 
-  // 生成新的驗證令牌並發送郵件
+  // Generate new verification token and send email
   const verificationToken = await generateVerificationToken(email);
   await sendVerificationEmail(email, verificationToken.token);
 
-  return { success: "驗證郵件已重新發送！" };
+  return { success: "Verification email has been resent!" };
 };

@@ -39,7 +39,7 @@ interface ManageMenuAccessDialogProps {
 
 /**
  * ManageMenuAccessDialog - Apple Style
- * 管理角色選單訪問對話框
+ * Manage role menu access dialog
  */
 export function ManageMenuAccessDialog({ role, open, onOpenChange, onSave }: ManageMenuAccessDialogProps) {
   const [loading, setLoading] = useState(false)

@@ -1,7 +1,7 @@
 /**
- * @fileoverview 雙因素認證相關的 Server Actions
+ * @fileoverview Two-factor authentication related Server Actions
  * @module actions/auth/two-factor
- * @description 處理雙因素認證令牌的生成、驗證和管理
+ * @description Handles generation, verification and management of two-factor authentication tokens
  */
 
 "use server";
@@ -12,14 +12,14 @@ import { logger } from "@/lib/serverLogger";
 import { generateToken } from "@/lib/crypto";
 
 /**
- * 根據令牌值取得雙因素認證令牌
+ * Get two-factor authentication token by token value
  * @async
  * @function getTwoFactorTokenByToken
- * @param {string} token - 要查詢的令牌值
- * @returns {Promise<TwoFactorToken | null>} 找到時返回令牌物件，否則返回 null
+ * @param {string} token - Token value to query
+ * @returns {Promise<TwoFactorToken | null>} Returns token object if found, otherwise returns null
  * @description
- * 從資料庫中查詢指定的雙因素認證令牌。
- * 錯誤時記錄日誌並返回 null。
+ * Queries the specified two-factor authentication token from the database.
+ * Logs error and returns null on failure.
  */
 export const getTwoFactorTokenByToken = async (
   token: string
@@ -30,7 +30,7 @@ export const getTwoFactorTokenByToken = async (
     });
   } catch (error) {
     const typedError = error as Error;
-    logger.error("根據令牌取得雙因素認證令牌時發生錯誤:", {
+    logger.error("Error getting two-factor authentication token by token:", {
       error: typedError.message,
       stack: typedError.stack,
     });
@@ -39,14 +39,14 @@ export const getTwoFactorTokenByToken = async (
 };
 
 /**
- * 根據使用者 ID 取得雙因素認證令牌
+ * Get two-factor authentication token by user ID
  * @async
  * @function getTwoFactorTokenByUserId
- * @param {string} userId - 要查詢的使用者 ID
- * @returns {Promise<TwoFactorToken | null>} 找到時返回令牌物件，否則返回 null
+ * @param {string} userId - User ID to query
+ * @returns {Promise<TwoFactorToken | null>} Returns token object if found, otherwise returns null
  * @description
- * 從資料庫中查詢指定使用者的雙因素認證令牌。
- * 使用 findFirst 因為每個使用者可能有多個令牌（雖然通常只有一個有效令牌）。
+ * Queries the two-factor authentication token for the specified user from the database.
+ * Uses findFirst because each user may have multiple tokens (although typically only one valid token).
  */
 export const getTwoFactorTokenByUserId = async (
   userId: string
@@ -59,7 +59,7 @@ export const getTwoFactorTokenByUserId = async (
     });
   } catch (error) {
     const typedError = error as Error;
-    logger.error("根據使用者 ID 取得雙因素認證令牌時發生錯誤:", {
+    logger.error("Error getting two-factor authentication token by user ID:", {
       error: typedError.message,
       stack: typedError.stack,
     });
@@ -68,40 +68,40 @@ export const getTwoFactorTokenByUserId = async (
 };
 
 /**
- * 為使用者建立新的雙因素認證令牌
+ * Create new two-factor authentication token for user
  * @async
  * @function createTwoFactorToken
- * @param {string} userId - 要建立令牌的使用者 ID
- * @returns {Promise<TwoFactorToken>} 返回建立的令牌物件
- * @throws {Error} 當令牌建立失敗時拋出
+ * @param {string} userId - User ID to create token for
+ * @returns {Promise<TwoFactorToken>} Returns created token object
+ * @throws {Error} Throws when token creation fails
  * @description
- * 建立新的雙因素認證令牌：
- * 1. 如果使用者已有令牌，先刪除舊令牌
- * 2. 生成新的隨機令牌（6 位數字）
- * 3. 設定 5 分鐘的有效期限
- * 4. 儲存到資料庫並返回
+ * Creates new two-factor authentication token:
+ * 1. If user already has a token, delete old token first
+ * 2. Generate new random token (6 digits)
+ * 3. Set 5-minute expiration time
+ * 4. Save to database and return
  */
 export const createTwoFactorToken = async (
   userId: string
 ): Promise<TwoFactorToken> => {
   try {
-    // 生成隨機令牌（6 位數字）
+    // Generate random token (6 digits)
     const token = generateToken();
-    // 設定 5 分鐘的有效期限
+    // Set 5-minute expiration time
     const expires = new Date(Date.now() + 5 * 60 * 1000);
 
-    // 檢查是否已有令牌
+    // Check if token already exists
     const existingToken = await getTwoFactorTokenByUserId(userId);
     
-    // 如果已有令牌，先刪除
+    // If token exists, delete it first
     if (existingToken) {
       await db.twoFactorToken.delete({
         where: { id: existingToken.id },
       });
-      logger.info("已刪除使用者的舊雙因素認證令牌", { userId });
+      logger.info("Deleted user's old two-factor authentication token", { userId });
     }
 
-    // 建立新令牌
+    // Create new token
     const newToken = await db.twoFactorToken.create({
       data: {
         token,
@@ -110,68 +110,68 @@ export const createTwoFactorToken = async (
       },
     });
 
-    logger.info("已建立新的雙因素認證令牌", { userId });
+    logger.info("Created new two-factor authentication token", { userId });
     return newToken;
   } catch (error) {
     const typedError = error as Error;
-    logger.error("建立雙因素認證令牌時發生錯誤:", {
+    logger.error("Error creating two-factor authentication token:", {
       error: typedError.message,
       stack: typedError.stack,
       userId,
     });
-    throw new Error("建立雙因素認證令牌失敗");
+    throw new Error("Failed to create two-factor authentication token");
   }
 };
 
 /**
- * 驗證雙因素認證令牌
+ * Verify two-factor authentication token
  * @async
  * @function verifyTwoFactorToken
- * @param {string} userId - 使用者 ID
- * @param {string} token - 要驗證的令牌值
- * @returns {Promise<boolean>} 令牌有效時返回 true，否則返回 false
- * @throws {Error} 當資料庫操作失敗時拋出
+ * @param {string} userId - User ID
+ * @param {string} token - Token value to verify
+ * @returns {Promise<boolean>} Returns true if token is valid, otherwise returns false
+ * @throws {Error} Throws when database operation fails
  * @description
- * 驗證雙因素認證令牌：
- * 1. 檢查令牌是否存在
- * 2. 檢查令牌是否屬於指定使用者
- * 3. 檢查令牌是否未過期
- * 4. 驗證成功後刪除令牌（一次性使用）
+ * Verifies two-factor authentication token:
+ * 1. Check if token exists
+ * 2. Check if token belongs to specified user
+ * 3. Check if token has not expired
+ * 4. Delete token after successful verification (one-time use)
  */
 export const verifyTwoFactorToken = async (
   userId: string,
   token: string
 ): Promise<boolean> => {
   try {
-    // 查詢令牌（必須屬於指定使用者且未過期）
+    // Query token (must belong to specified user and not expired)
     const twoFactorToken = await db.twoFactorToken.findFirst({
       where: {
         token,
         userId,
-        expires: { gt: new Date() }, // 確保令牌未過期
+        expires: { gt: new Date() }, // Ensure token has not expired
       },
     });
 
-    // 令牌不存在或已過期
+    // Token does not exist or has expired
     if (!twoFactorToken) {
-      logger.warn("雙因素認證令牌驗證失敗", { userId, reason: "令牌不存在或已過期" });
+      logger.warn("Two-factor authentication token verification failed", { userId, reason: "Token does not exist or has expired" });
       return false;
     }
 
-    // 驗證成功後刪除令牌（一次性使用）
+    // Delete token after successful verification (one-time use)
     await db.twoFactorToken.delete({
       where: { id: twoFactorToken.id },
     });
 
-    logger.info("雙因素認證令牌驗證成功", { userId });
+    logger.info("Two-factor authentication token verification successful", { userId });
     return true;
   } catch (error) {
     const typedError = error as Error;
-    logger.error("驗證雙因素認證令牌時發生錯誤:", {
+    logger.error("Error verifying two-factor authentication token:", {
       error: typedError.message,
       stack: typedError.stack,
       userId,
     });
-    throw new Error("驗證雙因素認證令牌失敗");
+    throw new Error("Failed to verify two-factor authentication token");
   }
 };

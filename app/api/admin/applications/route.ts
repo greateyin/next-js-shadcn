@@ -4,7 +4,7 @@ import { db } from "@/lib/db"
 
 /**
  * GET /api/admin/applications
- * 獲取所有應用程式
+ * Get all applications
  */
 export async function GET() {
   try {

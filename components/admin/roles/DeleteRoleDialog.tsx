@@ -21,7 +21,7 @@ interface DeleteRoleDialogProps {
 
 /**
  * DeleteRoleDialog - Apple Style
- * 刪除角色確認對話框
+ * Delete role confirmation dialog
  */
 export function DeleteRoleDialog({ role, open, onOpenChange, onDelete }: DeleteRoleDialogProps) {
   const [loading, setLoading] = useState(false)

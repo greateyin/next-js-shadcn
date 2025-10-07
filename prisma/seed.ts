@@ -8,7 +8,7 @@ import { PrismaClient } from '@prisma/client'
 import { hashPassword } from '../lib/crypto'
 
 /**
- * 初始化 Prisma Client
+ * Initialize Prisma Client
  */
 const prisma = new PrismaClient()
 
@@ -17,7 +17,7 @@ async function main() {
   console.log('=' .repeat(50))
 
   await prisma.$transaction(async (prisma) => {
-    // === 1. 創建角色 ===
+    // === 1. Create Roles ===
     console.log('\n📋 Step 1: Creating default roles...')
     await prisma.role.createMany({
       data: [
@@ -34,7 +34,7 @@ async function main() {
     
     console.log(`   ✅ Created roles: admin, user, moderator`)
 
-    // === 2. 創建權限 ===
+    // === 2. Create Permissions ===
     console.log('\n🔐 Step 2: Creating permissions...')
     const permissionsData = [
       { name: 'users:read', description: 'View users' },
@@ -68,10 +68,10 @@ async function main() {
     const permissions = await prisma.permission.findMany()
     console.log(`   ✅ Created ${permissions.length} permissions`)
 
-    // === 3. 設定角色權限 ===
+    // === 3. Assign Permissions to Roles ===
     console.log('\n🔗 Step 3: Assigning permissions to roles...')
     
-    // Admin 擁有所有權限
+    // Admin has all permissions
     await prisma.rolePermission.createMany({
       data: permissions.map((perm) => ({
         roleId: adminRole.id,
@@ -81,7 +81,7 @@ async function main() {
     })
     console.log(`   ✅ Admin: ${permissions.length} permissions`)
 
-    // User 只有基本查看權限
+    // User has only basic read permissions
     const userPermissions = permissions.filter((p) => 
       p.name.includes(':read') && !p.name.includes('admin')
     )
@@ -95,7 +95,7 @@ async function main() {
     })
     console.log(`   ✅ User: ${userPermissions.length} permissions`)
     
-    // Moderator 有一些管理權限
+    // Moderator has some management permissions
     const moderatorPermissions = permissions.filter((p) => 
       p.name.includes('users:') || p.name.includes('menu:')
     )
@@ -109,7 +109,7 @@ async function main() {
     })
     console.log(`   ✅ Moderator: ${moderatorPermissions.length} permissions`)
 
-    // === 4. 創建應用程式 ===
+    // === 4. Create Applications ===
     console.log('\n📱 Step 4: Creating default applications...')
     await prisma.application.createMany({
       data: [
@@ -124,26 +124,26 @@ async function main() {
     
     console.log(`   ✅ Created applications: dashboard, admin`)
 
-    // === 5. 設定角色應用程式權限 ===
+    // === 5. Assign Applications to Roles ===
     console.log('\n🔗 Step 5: Assigning applications to roles...')
     await prisma.roleApplication.createMany({
       data: [
-        // Admin 可以存取所有應用程式
+        // Admin can access all applications
         { roleId: adminRole.id, applicationId: dashboardApp.id },
         { roleId: adminRole.id, applicationId: adminApp.id },
-        // User 只能存取 dashboard
+        // User can only access dashboard
         { roleId: userRole.id, applicationId: dashboardApp.id },
-        // Moderator 可以存取 dashboard
+        // Moderator can access dashboard
         { roleId: moderatorRole.id, applicationId: dashboardApp.id },
       ],
       skipDuplicates: true
     })
     console.log(`   ✅ Assigned applications to roles`)
 
-    // === 6. 創建選單項目 ===
+    // === 6. Create Menu Items ===
     console.log('\n🗂️  Step 6: Creating menu items...')
     
-    // Dashboard 選單項目
+    // Dashboard menu items
     const menuItemsData = [
       {
         name: 'dashboard',
@@ -195,7 +195,7 @@ async function main() {
       },
     ]
     
-    // 創建選單項目
+    // Create menu items
     for (const item of menuItemsData) {
       await prisma.menuItem.upsert({
         where: {
@@ -211,7 +211,7 @@ async function main() {
     
     console.log(`   ✅ Created ${menuItemsData.length} menu items`)
     
-    // 取得創建的選單項目
+    // Get created menu items
     const dashboardMenuItem = await prisma.menuItem.findFirst({
       where: { name: 'dashboard', applicationId: dashboardApp.id }
     })!
@@ -225,10 +225,10 @@ async function main() {
       where: { name: 'settings', applicationId: dashboardApp.id }
     })!
     
-    // === 7. 設定選單項目權限 ===
+    // === 7. Assign Menu Item Permissions ===
     console.log('\n🔐 Step 7: Assigning menu item permissions...')
     
-    // Users 選單只有 admin 和 moderator 可見
+    // Users menu is only visible to admin and moderator
     await prisma.menuItemRole.createMany({
       data: [
         {
@@ -250,7 +250,7 @@ async function main() {
     console.log(`   ✅ Users menu: restricted to admin & moderator`)
     console.log(`   ✅ Other menus: public (no restrictions)`)
 
-    // === 8. 創建測試使用者 ===
+    // === 8. Create Test Users ===
     console.log('\n👥 Step 8: Creating test users...')
     
     // Admin User
@@ -309,7 +309,7 @@ async function main() {
     })
     console.log(`   ✅ Test: test@example.com (password: Test@123)`)
 
-    // === 9. 設定使用者角色 ===
+    // === 9. Assign Roles to Users ===
     console.log('\n🔗 Step 9: Assigning roles to users...')
     await prisma.userRole.createMany({
       data: [
@@ -322,7 +322,7 @@ async function main() {
     })
     console.log(`   ✅ Roles assigned to all users`)
 
-    // === 10. 創建登入方法記錄 ===
+    // === 10. Create Login Method Records ===
     console.log('\n🔑 Step 10: Creating login methods...')
     await prisma.loginMethod.createMany({
       data: [
@@ -353,7 +353,7 @@ async function main() {
   console.log('')
 }
 
-// 執行種子腳本
+// Execute seed script
 main()
   .catch((e) => {
     console.error('Error during database seed:', e)

@@ -1,279 +1,279 @@
 /**
- * Admin 页面统一样式配置
+ * Admin page unified style configuration
  * 
- * 此文件定义了所有 /admin 路径下页面的统一样式
- * 便于全局修改主题和维护一致性
+ * This file defines unified styles for all pages under /admin path
+ * Facilitates global theme modification and consistency maintenance
  */
 
 /**
- * Admin 页面样式常量
+ * Admin page style constants
  */
 export const adminStyles = {
-  // ==================== 页面布局 ====================
+  // ==================== Page Layout ====================
   
   /**
-   * 页面主容器
-   * 使用: <div className={adminStyles.pageContainer}>
+   * Page main container
+   * Usage: <div className={adminStyles.pageContainer}>
    */
   pageContainer: "flex-1 space-y-6",
   
-  // ==================== 页面标题区块 ====================
+  // ==================== Page Header Section ====================
   
   /**
-   * 标题容器 - 包含标题和可选的操作按钮
+   * Header container - includes title and optional action buttons
    */
   headerContainer: "flex items-center justify-between",
   
   /**
-   * 标题内容区
+   * Header content area
    */
   headerContent: "",
   
   /**
-   * 页面主标题
+   * Page main title
    */
   headerTitle: "text-3xl md:text-4xl font-semibold tracking-tight text-gray-900",
   
   /**
-   * 页面描述文字
+   * Page description text
    */
   headerDescription: "text-gray-600 mt-2",
   
-  // ==================== Card 样式 ====================
+  // ==================== Card Styles ====================
   
   card: {
     /**
-     * Card 基础样式
-     * Apple Style: 白色背景 + 玻璃效果 + 灰色边框
+     * Card base style
+     * Apple Style: white background + glass effect + gray border
      */
     base: "border-gray-200/50 shadow-sm bg-white/80 backdrop-blur-sm",
     
     /**
-     * Card Header 样式
-     * 带底部边框的 header
+     * Card Header style
+     * Header with bottom border
      */
     header: "border-b border-gray-100",
     
     /**
-     * Card Title 样式
+     * Card Title style
      */
     title: "text-lg font-semibold text-gray-900",
     
     /**
-     * Card Description 样式
+     * Card Description style
      */
     description: "text-gray-600",
     
     /**
-     * Card Content 样式（无内边距，用于表格）
+     * Card Content style (no padding, for tables)
      */
     content: "p-0",
     
     /**
-     * Card Content 样式（有内边距）
+     * Card Content style (with padding)
      */
     contentWithPadding: "p-6",
   },
   
-  // ==================== 状态样式 ====================
+  // ==================== State Styles ====================
   
   loading: {
     /**
-     * Loading 容器
+     * Loading container
      */
     container: "flex items-center justify-center p-8",
     
     /**
-     * Loading 文字
+     * Loading text
      */
     text: "text-gray-500",
     
     /**
-     * Loading 图标
+     * Loading icon
      */
     icon: "h-5 w-5 animate-spin text-gray-500",
   },
   
   empty: {
     /**
-     * 空状态容器
+     * Empty state container
      */
     container: "flex flex-col items-center justify-center p-12",
     
     /**
-     * 空状态标题
+     * Empty state title
      */
     title: "text-lg font-medium text-gray-900",
     
     /**
-     * 空状态描述
+     * Empty state description
      */
     description: "mt-2 text-gray-600",
     
     /**
-     * 空状态图标
+     * Empty state icon
      */
     icon: "mb-4 text-gray-400",
   },
   
-  // ==================== 文字颜色 ====================
+  // ==================== Text Colors ====================
   
   text: {
     /**
-     * 主要文字颜色（标题、重要信息）
+     * Primary text color (titles, important information)
      */
     primary: "text-gray-900",
     
     /**
-     * 次要文字颜色（描述、说明）
+     * Secondary text color (descriptions, explanations)
      */
     secondary: "text-gray-600",
     
     /**
-     * 辅助文字颜色（提示、补充）
+     * Tertiary text color (hints, supplements)
      */
     tertiary: "text-gray-500",
     
     /**
-     * 成功状态文字
+     * Success state text
      */
     success: "text-green-600",
     
     /**
-     * 错误状态文字
+     * Error state text
      */
     error: "text-red-600",
     
     /**
-     * 警告状态文字
+     * Warning state text
      */
     warning: "text-yellow-600",
     
     /**
-     * 信息状态文字
+     * Info state text
      */
     info: "text-blue-600",
   },
   
-  // ==================== 背景颜色 ====================
+  // ==================== Background Colors ====================
   
   bg: {
     /**
-     * Card 背景（玻璃效果）
+     * Card background (glass effect)
      */
     card: "bg-white/80 backdrop-blur-sm",
     
     /**
-     * Hover 背景
+     * Hover background
      */
     hover: "hover:bg-gray-50",
     
     /**
-     * Active 背景
+     * Active background
      */
     active: "bg-blue-50",
     
     /**
-     * 成功背景
+     * Success background
      */
     success: "bg-green-50",
     
     /**
-     * 错误背景
+     * Error background
      */
     error: "bg-red-50",
     
     /**
-     * 警告背景
+     * Warning background
      */
     warning: "bg-yellow-50",
   },
   
-  // ==================== 边框 ====================
+  // ==================== Borders ====================
   
   border: {
     /**
-     * 默认边框（半透明灰色）
+     * Default border (semi-transparent gray)
      */
     default: "border-gray-200/50",
     
     /**
-     * 浅色边框
+     * Light border
      */
     light: "border-gray-100",
     
     /**
-     * 深色边框
+     * Dark border
      */
     dark: "border-gray-300",
   },
   
-  // ==================== Tabs 样式 ====================
+  // ==================== Tabs Styles ====================
   
   tabs: {
     /**
-     * TabsList 样式
+     * TabsList style
      */
     list: "bg-gray-100/80 border border-gray-200/50",
     
     /**
-     * TabsTrigger 样式
-     * 包含 active 状态
+     * TabsTrigger style
+     * Includes active state
      */
     trigger: "data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm",
     
     /**
-     * TabsContent 容器
+     * TabsContent container
      */
     content: "space-y-6",
   },
   
-  // ==================== 按钮样式 ====================
+  // ==================== Button Styles ====================
   
   button: {
     /**
-     * 主要按钮（用于重要操作）
+     * Primary button (for important actions)
      */
     primary: "bg-blue-600 text-white hover:bg-blue-700",
     
     /**
-     * 次要按钮
+     * Secondary button
      */
     secondary: "bg-gray-100 text-gray-900 hover:bg-gray-200",
     
     /**
-     * 危险按钮（删除等）
+     * Danger button (delete, etc.)
      */
     danger: "bg-red-600 text-white hover:bg-red-700",
   },
   
-  // ==================== 表格样式 ====================
+  // ==================== Table Styles ====================
   
   table: {
     /**
-     * 表格容器
+     * Table container
      */
     container: "w-full overflow-auto",
     
     /**
-     * 表格 header
+     * Table header
      */
     header: "bg-gray-50 border-b border-gray-100",
     
     /**
-     * 表格 row
+     * Table row
      */
     row: "border-b border-gray-100 hover:bg-gray-50",
     
     /**
-     * 表格 cell
+     * Table cell
      */
     cell: "px-6 py-4",
   },
 } as const;
 
 /**
- * 组合样式的辅助函数
+ * Helper function for combining styles
  * 
  * @example
  * cn(adminStyles.card.base, "mt-4", someCondition && "opacity-50")
@@ -283,6 +283,6 @@ export function cn(...classes: (string | undefined | false | null)[]): string {
 }
 
 /**
- * 类型导出
+ * Type exports
  */
 export type AdminStyles = typeof adminStyles;

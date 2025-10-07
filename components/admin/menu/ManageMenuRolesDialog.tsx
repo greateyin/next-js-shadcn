@@ -20,7 +20,7 @@ import { Loader2, Search, Filter, X } from "lucide-react";
 import { manageMenuItemRoles } from "@/actions/menu";
 
 /**
- * Role 介面定義
+ * Role interface definition
  */
 interface Role {
   id: string;
@@ -42,8 +42,8 @@ interface ManageMenuRolesDialogProps {
 }
 
 /**
- * ManageMenuRolesDialog 組件
- * 管理選單項目的角色存取權限
+ * ManageMenuRolesDialog component
+ * Manage role access permissions for menu items
  */
 export function ManageMenuRolesDialog({
   open,
@@ -59,20 +59,20 @@ export function ManageMenuRolesDialog({
   const [searchQuery, setSearchQuery] = useState("");
   const [filterMode, setFilterMode] = useState<"all" | "selected" | "unselected">("all");
 
-  // 當對話框打開或 currentRoleIds 改變時，更新選中的角色
+  // Update selected roles when dialog opens or currentRoleIds changes
   useEffect(() => {
     if (open) {
       setSelectedRoleIds(currentRoleIds);
-      setSearchQuery(""); // 重置搜尋
-      setFilterMode("all"); // 重置篩選
+      setSearchQuery(""); // Reset search
+      setFilterMode("all"); // Reset filter
     }
   }, [open, currentRoleIds]);
 
-  // 篩選後的角色列表
+  // Filtered role list
   const filteredRoles = useMemo(() => {
     let filtered = availableRoles;
 
-    // 搜尋篩選
+    // Search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
@@ -82,7 +82,7 @@ export function ManageMenuRolesDialog({
       );
     }
 
-    // 狀態篩選
+    // Status filter
     if (filterMode === "selected") {
       filtered = filtered.filter((role) => selectedRoleIds.includes(role.id));
     } else if (filterMode === "unselected") {
@@ -93,7 +93,7 @@ export function ManageMenuRolesDialog({
   }, [availableRoles, searchQuery, filterMode, selectedRoleIds]);
 
   /**
-   * 切換角色選擇
+   * Toggle role selection
    */
   const handleToggleRole = (roleId: string) => {
     setSelectedRoleIds((prev) =>
@@ -102,21 +102,21 @@ export function ManageMenuRolesDialog({
   };
 
   /**
-   * 全選
+   * Select all
    */
   const handleSelectAll = () => {
     setSelectedRoleIds(availableRoles.map((role) => role.id));
   };
 
   /**
-   * 取消全選
+   * Deselect all
    */
   const handleDeselectAll = () => {
     setSelectedRoleIds([]);
   };
 
   /**
-   * 反選
+   * Invert selection
    */
   const handleInvertSelection = () => {
     const allRoleIds = availableRoles.map((role) => role.id);
@@ -125,14 +125,14 @@ export function ManageMenuRolesDialog({
   };
 
   /**
-   * 清除搜尋
+   * Clear search
    */
   const handleClearSearch = () => {
     setSearchQuery("");
   };
 
   /**
-   * 選擇篩選結果
+   * Select filtered results
    */
   const handleSelectFiltered = () => {
     const filteredIds = filteredRoles.map((role) => role.id);
@@ -141,7 +141,7 @@ export function ManageMenuRolesDialog({
   };
 
   /**
-   * 取消選擇篩選結果
+   * Deselect filtered results
    */
   const handleDeselectFiltered = () => {
     const filteredIds = new Set(filteredRoles.map((role) => role.id));
@@ -149,7 +149,7 @@ export function ManageMenuRolesDialog({
   };
 
   /**
-   * 提交表單
+   * Submit form
    */
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -188,7 +188,7 @@ export function ManageMenuRolesDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* 搜尋框 */}
+          {/* Search box */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
@@ -210,7 +210,7 @@ export function ManageMenuRolesDialog({
             )}
           </div>
 
-          {/* 篩選器與統計 */}
+          {/* Filter and statistics */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex gap-2">
               <Button
@@ -264,7 +264,7 @@ export function ManageMenuRolesDialog({
             )}
           </div>
 
-          {/* 批量操作按鈕 */}
+          {/* Bulk action buttons */}
           <div className="flex gap-2 flex-wrap">
             <Button
               type="button"
@@ -305,7 +305,7 @@ export function ManageMenuRolesDialog({
             </Button>
           </div>
 
-          {/* 角色列表 */}
+          {/* Role list */}
           <ScrollArea className="h-[350px] rounded-md border border-gray-300 bg-gray-50/30 p-4">
             {availableRoles.length === 0 ? (
               <div className="text-center text-sm text-gray-500 py-8">No available roles</div>
@@ -352,7 +352,7 @@ export function ManageMenuRolesDialog({
             )}
           </ScrollArea>
 
-          {/* 已選擇角色數量與統計 */}
+          {/* Selected role count and statistics */}
           <div className="flex items-center justify-between rounded-lg bg-blue-50/50 px-4 py-3 border border-blue-200/50">
             <div className="flex items-center gap-4">
               <div>

@@ -51,7 +51,7 @@ import {
 import * as LucideIcons from "lucide-react";
 
 /**
- * MenuItem 介面定義
+ * MenuItem interface definition
  */
 interface MenuItem {
   id: string;
@@ -97,7 +97,7 @@ interface MenuItem {
 }
 
 /**
- * Application 介面定義
+ * Application interface definition
  */
 interface Application {
   id: string;
@@ -106,7 +106,7 @@ interface Application {
 }
 
 /**
- * Role 介面定義
+ * Role interface definition
  */
 interface Role {
   id: string;
@@ -125,7 +125,7 @@ interface MenuTableProps {
 }
 
 /**
- * 獲取選單項目類型圖標
+ * Get menu item type icon
  */
 const getTypeIcon = (type: string) => {
   switch (type) {
@@ -143,7 +143,7 @@ const getTypeIcon = (type: string) => {
 };
 
 /**
- * 獲取選單項目類型樣式
+ * Get menu item type badge variant
  */
 const getTypeBadgeVariant = (type: string): "default" | "secondary" | "outline" | "destructive" => {
   switch (type) {
@@ -161,8 +161,8 @@ const getTypeBadgeVariant = (type: string): "default" | "secondary" | "outline" 
 };
 
 /**
- * MenuTable 組件
- * 顯示和管理選單項目列表
+ * MenuTable component
+ * Display and manage menu item list
  */
 export function MenuTable({ menuItems, applications, availableRoles, onRefresh }: MenuTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -175,10 +175,10 @@ export function MenuTable({ menuItems, applications, availableRoles, onRefresh }
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
   /**
-   * 篩選選單項目
+   * Filter menu items
    */
   const filteredMenuItems = menuItems.filter((item) => {
-    // 搜尋篩選
+    // Search filter
     const matchesSearch =
       searchQuery === "" ||
       item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -186,18 +186,18 @@ export function MenuTable({ menuItems, applications, availableRoles, onRefresh }
       item.path.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.description?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    // 應用程式篩選
+    // Application filter
     const matchesApplication =
       selectedApplication === "all" || item.applicationId === selectedApplication;
 
-    // 類型篩選
+    // Type filter
     const matchesType = selectedType === "all" || item.type === selectedType;
 
     return matchesSearch && matchesApplication && matchesType;
   });
 
   /**
-   * 處理編輯
+   * Handle edit
    */
   const handleEdit = (menuItem: MenuItem) => {
     setSelectedMenuItem(menuItem);
@@ -205,7 +205,7 @@ export function MenuTable({ menuItems, applications, availableRoles, onRefresh }
   };
 
   /**
-   * 處理管理角色存取
+   * Handle manage role access
    */
   const handleManageRoles = (menuItem: MenuItem) => {
     setSelectedMenuItem(menuItem);
@@ -213,7 +213,7 @@ export function MenuTable({ menuItems, applications, availableRoles, onRefresh }
   };
 
   /**
-   * 處理刪除
+   * Handle delete
    */
   const handleDelete = async (menuItem: MenuItem) => {
     if (!confirm(`Are you sure you want to delete "${menuItem.displayName}"?`)) {
@@ -240,7 +240,7 @@ export function MenuTable({ menuItems, applications, availableRoles, onRefresh }
   };
 
   /**
-   * 渲染選單項目圖標
+   * Render menu item icon
    */
   const renderIcon = (iconName: string | null) => {
     if (!iconName) return null;
@@ -253,10 +253,10 @@ export function MenuTable({ menuItems, applications, availableRoles, onRefresh }
 
   return (
     <div className="space-y-4">
-      {/* 工具列 */}
+      {/* Toolbar */}
       <div className="flex items-center justify-between gap-4 p-4 border-b border-gray-100">
         <div className="flex items-center gap-4 flex-1">
-          {/* 搜尋框 */}
+          {/* Search box */}
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
@@ -267,7 +267,7 @@ export function MenuTable({ menuItems, applications, availableRoles, onRefresh }
             />
           </div>
 
-          {/* 應用程式篩選 */}
+          {/* Application filter */}
           <Select value={selectedApplication} onValueChange={setSelectedApplication}>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="All Applications" />
@@ -282,7 +282,7 @@ export function MenuTable({ menuItems, applications, availableRoles, onRefresh }
             </SelectContent>
           </Select>
 
-          {/* 類型篩選 */}
+          {/* Type filter */}
           <Select value={selectedType} onValueChange={setSelectedType}>
             <SelectTrigger className="w-[150px]">
               <SelectValue placeholder="All Types" />
@@ -297,7 +297,7 @@ export function MenuTable({ menuItems, applications, availableRoles, onRefresh }
           </Select>
         </div>
 
-        {/* 新增按鈕 */}
+        {/* Add button */}
         <Button
           onClick={() => setIsCreateDialogOpen(true)}
           className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
@@ -307,7 +307,7 @@ export function MenuTable({ menuItems, applications, availableRoles, onRefresh }
         </Button>
       </div>
 
-      {/* 表格 */}
+      {/* Table */}
       <div className="rounded-md">
         <Table>
           <TableHeader>
@@ -333,7 +333,7 @@ export function MenuTable({ menuItems, applications, availableRoles, onRefresh }
             ) : (
               filteredMenuItems.map((item) => (
                 <TableRow key={item.id} className="hover:bg-gray-50/50">
-                  {/* 名稱 */}
+                  {/* Name */}
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
                       {renderIcon(item.icon)}
@@ -344,21 +344,21 @@ export function MenuTable({ menuItems, applications, availableRoles, onRefresh }
                     </div>
                   </TableCell>
 
-                  {/* 路徑 */}
+                  {/* Path */}
                   <TableCell>
                     <code className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-700">
                       {item.path}
                     </code>
                   </TableCell>
 
-                  {/* 應用程式 */}
+                  {/* Application */}
                   <TableCell>
                     <Badge variant="outline" className="text-xs">
                       {item.application.displayName}
                     </Badge>
                   </TableCell>
 
-                  {/* 類型 */}
+                  {/* Type */}
                   <TableCell>
                     <Badge variant={getTypeBadgeVariant(item.type)} className="gap-1">
                       {getTypeIcon(item.type)}
@@ -366,7 +366,7 @@ export function MenuTable({ menuItems, applications, availableRoles, onRefresh }
                     </Badge>
                   </TableCell>
 
-                  {/* 父項目 */}
+                  {/* Parent item */}
                   <TableCell>
                     {item.parent ? (
                       <span className="text-sm text-gray-600">{item.parent.displayName}</span>
@@ -375,14 +375,14 @@ export function MenuTable({ menuItems, applications, availableRoles, onRefresh }
                     )}
                   </TableCell>
 
-                  {/* 順序 */}
+                  {/* Order */}
                   <TableCell className="text-center">
                     <Badge variant="secondary" className="font-mono">
                       {item.order}
                     </Badge>
                   </TableCell>
 
-                  {/* 狀態 */}
+                  {/* Status */}
                   <TableCell>
                     <div className="flex flex-col gap-2">
                       {/* Visibility Toggle */}
@@ -445,14 +445,14 @@ export function MenuTable({ menuItems, applications, availableRoles, onRefresh }
                     </div>
                   </TableCell>
 
-                  {/* 角色 */}
+                  {/* Roles */}
                   <TableCell>
                     <Badge variant="secondary" className="text-xs">
                       {item.roleAccess.length} role{item.roleAccess.length !== 1 ? "s" : ""}
                     </Badge>
                   </TableCell>
 
-                  {/* 操作 */}
+                  {/* Actions */}
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -490,7 +490,7 @@ export function MenuTable({ menuItems, applications, availableRoles, onRefresh }
         </Table>
       </div>
 
-      {/* 對話框 */}
+      {/* Dialogs */}
       <MenuFormDialog
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}

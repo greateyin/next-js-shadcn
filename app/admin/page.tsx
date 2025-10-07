@@ -71,7 +71,7 @@ export default function AdminDashboardPage() {
     };
 
     fetchStats();
-    // 每 30 秒刷新一次数据
+    // Refresh data every 30 seconds
     const interval = setInterval(fetchStats, 30000);
     return () => clearInterval(interval);
   }, []);

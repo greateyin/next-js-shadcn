@@ -11,14 +11,14 @@ interface AdminCardProps {
 }
 
 /**
- * Admin 标准化卡片组件
+ * Admin standardized card component
  * 
- * 提供统一的卡片样式，包含可选的标题、描述和操作按钮
+ * Provides unified card styles with optional title, description and action buttons
  * 
- * @param noPadding - 是否移除内容区域的内边距（用于表格等）
+ * @param noPadding - Whether to remove content area padding (for tables, etc.)
  * 
  * @example
- * // 带标题和描述的卡片
+ * // Card with title and description
  * <AdminCard
  *   title="Users"
  *   description="View and manage all users"
@@ -27,7 +27,7 @@ interface AdminCardProps {
  * </AdminCard>
  * 
  * @example
- * // 无内边距的卡片（用于表格）
+ * // Card without padding (for tables)
  * <AdminCard
  *   title="Users"
  *   description="View and manage all users"
@@ -37,7 +37,7 @@ interface AdminCardProps {
  * </AdminCard>
  * 
  * @example
- * // 带操作按钮的卡片
+ * // Card with action button
  * <AdminCard
  *   title="Users"
  *   headerAction={<Button>Add User</Button>}

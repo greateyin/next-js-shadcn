@@ -6,9 +6,9 @@ interface AdminPageContainerProps {
 }
 
 /**
- * Admin 页面主容器
+ * Admin page main container
  * 
- * 提供统一的页面布局容器，包含标准间距
+ * Provides unified page layout container with standard spacing
  * 
  * @example
  * <AdminPageContainer>

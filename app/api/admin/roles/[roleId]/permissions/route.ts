@@ -4,7 +4,7 @@ import { db } from "@/lib/db"
 
 /**
  * GET /api/admin/roles/[roleId]/permissions
- * 獲取角色的權限
+ * Get role's permissions
  */
 export async function GET(
   req: Request,
@@ -36,7 +36,7 @@ export async function GET(
 
 /**
  * PUT /api/admin/roles/[roleId]/permissions
- * 更新角色的權限（完全替換）
+ * Update role's permissions (complete replacement)
  */
 export async function PUT(
   req: Request,
@@ -54,16 +54,16 @@ export async function PUT(
       return NextResponse.json({ error: "Invalid permission IDs" }, { status: 400 })
     }
 
-    // 使用事務來確保數據一致性
+    // Use transaction to ensure data consistency
     await db.$transaction(async (tx: typeof db) => {
-      // 刪除現有的所有權限關聯
+      // Delete all existing permission associations
       await tx.rolePermission.deleteMany({
         where: {
           roleId
         }
       })
 
-      // 創建新的權限關聯
+      // Create new permission associations
       if (permissionIds.length > 0) {
         await tx.rolePermission.createMany({
           data: permissionIds.map((permissionId: string) => ({

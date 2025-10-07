@@ -11,7 +11,7 @@ import {
 import { getMenuItems } from "@/actions/menu";
 
 /**
- * MenuItem 介面定義
+ * MenuItem interface definition
  */
 interface MenuItem {
   id: string;
@@ -57,7 +57,7 @@ interface MenuItem {
 }
 
 /**
- * Application 介面定義
+ * Application interface definition
  */
 interface Application {
   id: string;
@@ -66,7 +66,7 @@ interface Application {
 }
 
 /**
- * Role 介面定義
+ * Role interface definition
  */
 interface Role {
   id: string;
@@ -75,7 +75,7 @@ interface Role {
 }
 
 /**
- * Menu 管理頁面組件
+ * Menu management page component
  */
 export default function MenuPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -84,18 +84,18 @@ export default function MenuPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   /**
-   * 載入資料
+   * Load data
    */
   const loadData = async () => {
     setIsLoading(true);
     try {
-      // 獲取選單項目列表
+      // Get menu item list
       const menuResult = await getMenuItems();
 
-      // 獲取所有應用程式
+      // Get all applications
       const appsData = await fetch("/api/applications").then((res) => res.json());
 
-      // 獲取所有角色
+      // Get all roles
       const rolesData = await fetch("/api/roles").then((res) => res.json());
 
       if (menuResult.menuItems) {

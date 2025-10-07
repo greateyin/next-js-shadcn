@@ -20,7 +20,7 @@ interface DeleteUserDialogProps {
 
 /**
  * DeleteUserDialog - Apple Style
- * 刪除用戶確認對話框
+ * Delete user confirmation dialog
  */
 export function DeleteUserDialog({ user, open, onOpenChange, onDelete }: DeleteUserDialogProps) {
   const [loading, setLoading] = useState(false)

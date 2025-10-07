@@ -29,7 +29,7 @@ interface ManagePermissionsDialogProps {
 
 /**
  * ManagePermissionsDialog - Apple Style
- * 管理角色權限對話框
+ * Manage role permissions dialog
  */
 export function ManagePermissionsDialog({ role, open, onOpenChange, onSave }: ManagePermissionsDialogProps) {
   const [loading, setLoading] = useState(false)

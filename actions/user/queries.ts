@@ -1,8 +1,8 @@
 /**
- * @fileoverview 使用者查詢相關的 Server Actions
+ * @fileoverview User query related Server Actions
  * @module actions/user/queries
- * @description 提供使用者資料查詢、更新、刪除等操作，包含存取控制和 React cache 機制
- * @note 符合 Next.js 15+ 和 React 19 最佳實踐
+ * @description Provides user data query, update, delete operations with access control and React cache mechanism
+ * @note Follows Next.js 15+ and React 19 best practices
  */
 
 "use server";
@@ -15,7 +15,7 @@ import { AuthorizationError } from "@/lib/errors/AppError";
 
 /**
  * @typedef {Object} UserWithLoginMethods
- * @description 包含登入方法的使用者類型
+ * @description User type including login methods
  */
 type UserWithLoginMethods = Prisma.UserGetPayload<{
   include: { loginMethods: true };
@@ -23,9 +23,9 @@ type UserWithLoginMethods = Prisma.UserGetPayload<{
 
 /**
  * @interface AccessOptions
- * @description 使用者資料存取選項配置
- * @property {boolean} [includeLoginMethods] - 是否包含登入方法
- * @property {boolean} [includeSensitiveData] - 是否包含敏感資料（如密碼）
+ * @description User data access option configuration
+ * @property {boolean} [includeLoginMethods] - Whether to include login methods
+ * @property {boolean} [includeSensitiveData] - Whether to include sensitive data (e.g. password)
  */
 interface AccessOptions {
   includeLoginMethods?: boolean;
@@ -34,7 +34,7 @@ interface AccessOptions {
 
 /**
  * @constant {AccessOptions}
- * @description 預設的存取選項
+ * @description Default access options
  */
 const DEFAULT_OPTIONS: AccessOptions = {
   includeLoginMethods: false,
@@ -42,14 +42,14 @@ const DEFAULT_OPTIONS: AccessOptions = {
 };
 
 /**
- * 驗證請求使用者是否有權存取目標使用者的資料
- * @param {Object} requestingUser - 發出請求的使用者
- * @param {string} requestingUser.id - 請求使用者的 ID
- * @param {string} requestingUser.role - 請求使用者的角色
- * @param {string} targetUserId - 目標使用者的 ID
- * @returns {boolean} - 如果允許存取則返回 true，否則返回 false
+ * Validate if requesting user has permission to access target user's data
+ * @param {Object} requestingUser - The user making the request
+ * @param {string} requestingUser.id - Requesting user's ID
+ * @param {string} requestingUser.role - Requesting user's role
+ * @param {string} targetUserId - Target user's ID
+ * @returns {boolean} - Returns true if access is allowed, otherwise returns false
  * @description
- * 管理員和系統使用者擁有完全存取權限。一般使用者只能存取自己的資料。
+ * Admin and system users have full access. Regular users can only access their own data.
  */
 const validateAccess = (
   requestingUser: { id: string; role: string },
@@ -61,13 +61,13 @@ const validateAccess = (
 };
 
 /**
- * 清理使用者資料，移除敏感欄位
- * @param {UserWithLoginMethods} user - 要清理的使用者物件
- * @param {boolean} includeSensitiveData - 是否包含敏感資料
- * @returns {Partial<UserWithLoginMethods>} - 清理後的使用者物件
+ * Sanitize user data, remove sensitive fields
+ * @param {UserWithLoginMethods} user - User object to sanitize
+ * @param {boolean} includeSensitiveData - Whether to include sensitive data
+ * @returns {Partial<UserWithLoginMethods>} - Sanitized user object
  * @description
- * 除非明確要求，否則移除密碼等敏感欄位。
- * 即使不包含敏感資料，也保留密碼欄位但設為 undefined（用於檢查密碼是否存在）。
+ * Removes sensitive fields like password unless explicitly requested.
+ * Even if not including sensitive data, password field is kept but set to undefined (for checking if password exists).
  */
 const sanitizeUserData = (
   user: UserWithLoginMethods,
@@ -80,13 +80,13 @@ const sanitizeUserData = (
 };
 
 /**
- * @description 使用者資料快取策略
- * @note 使用 React cache() 在單次請求內緩存數據，符合 Next.js 15+ serverless 環境
- * React cache 自動處理請求生命週期，無需手動清理
+ * @description User data caching strategy
+ * @note Uses React cache() to cache data within a single request, compatible with Next.js 15+ serverless environment
+ * React cache automatically handles request lifecycle, no manual cleanup needed
  */
 
 /**
- * 內部函數：根據電子郵件地址取得使用者資料（不含快取）
+ * Internal function: Get user data by email address (without cache)
  * @private
  */
 const _getUserByEmailInternal = async (
@@ -95,12 +95,12 @@ const _getUserByEmailInternal = async (
   options: AccessOptions = DEFAULT_OPTIONS
 ): Promise<Partial<UserWithLoginMethods> | null> => {
   if (!db) {
-    logger.error("資料庫連線未建立（根據電子郵件查詢使用者時）");
-    throw new Error("資料庫連線未建立");
+    logger.error("Database connection not established (when querying user by email)");
+    throw new Error("Database connection not established");
   }
 
   try {
-    logger.info("根據電子郵件查詢使用者", {
+    logger.info("Querying user by email", {
       email,
       requestingUserId: requestingUser.id,
     });
@@ -113,27 +113,27 @@ const _getUserByEmailInternal = async (
     });
 
     if (!user) {
-      logger.info("根據電子郵件未找到使用者", { email });
+      logger.info("User not found by email", { email });
       return null;
     }
 
     if (!validateAccess(requestingUser, user.id)) {
-      logger.warn("未授權存取使用者資料的嘗試", {
+      logger.warn("Unauthorized attempt to access user data", {
         requestingUserId: requestingUser.id,
         targetUserId: user.id,
       });
-      throw new AuthorizationError("未授權存取使用者資料");
+      throw new AuthorizationError("Unauthorized access to user data");
     }
 
     const sanitizedUser = sanitizeUserData(
       user as UserWithLoginMethods,
       options.includeSensitiveData || false
     );
-    logger.info("根據電子郵件找到使用者", { email, userId: user.id });
+    logger.info("User found by email", { email, userId: user.id });
     return sanitizedUser;
   } catch (error) {
     const typedError = error as Error;
-    logger.error("根據電子郵件取得使用者時發生錯誤:", {
+    logger.error("Error getting user by email:", {
       error: typedError.message,
       stack: typedError.stack,
     });
@@ -145,25 +145,25 @@ const _getUserByEmailInternal = async (
 };
 
 /**
- * 根據電子郵件地址取得使用者資料（使用 React cache）
+ * Get user data by email address (using React cache)
  * @async
  * @function getUserByEmail
- * @param {string} email - 要查詢的電子郵件地址
- * @param {Object} requestingUser - 發出請求的使用者
- * @param {string} requestingUser.id - 請求使用者的 ID
- * @param {string} requestingUser.role - 請求使用者的角色
- * @param {AccessOptions} [options=DEFAULT_OPTIONS] - 資料包含選項
- * @returns {Promise<Partial<UserWithLoginMethods>|null>} - 找到時返回使用者物件，否則返回 null
- * @throws {AuthorizationError} 當嘗試未授權存取時拋出
- * @throws {Error} 當資料庫連線失敗時拋出
+ * @param {string} email - Email address to query
+ * @param {Object} requestingUser - The user making the request
+ * @param {string} requestingUser.id - Requesting user's ID
+ * @param {string} requestingUser.role - Requesting user's role
+ * @param {AccessOptions} [options=DEFAULT_OPTIONS] - Data inclusion options
+ * @returns {Promise<Partial<UserWithLoginMethods>|null>} - Returns user object if found, otherwise returns null
+ * @throws {AuthorizationError} Throws when unauthorized access is attempted
+ * @throws {Error} Throws when database connection fails
  * @description
- * 使用 React cache 在單次請求內緩存資料。根據選項包含登入方法和敏感資料。
- * 在返回資料前驗證存取權限。符合 Next.js 15+ serverless 環境。
+ * Uses React cache to cache data within a single request. Includes login methods and sensitive data based on options.
+ * Validates access permissions before returning data. Compatible with Next.js 15+ serverless environment.
  */
 export const getUserByEmail = cache(_getUserByEmailInternal);
 
 /**
- * 內部函數：根據 ID 取得使用者資料（不含快取）
+ * Internal function: Get user data by ID (without cache)
  * @private
  */
 const _getUserByIdInternal = async (
@@ -172,12 +172,12 @@ const _getUserByIdInternal = async (
   options: AccessOptions = DEFAULT_OPTIONS
 ): Promise<Partial<UserWithLoginMethods> | null> => {
   if (!db) {
-    logger.error("資料庫連線未建立（根據 ID 查詢使用者時）");
-    throw new Error("資料庫連線未建立");
+    logger.error("Database connection not established (when querying user by ID)");
+    throw new Error("Database connection not established");
   }
 
   try {
-    logger.info("根據 ID 查詢使用者", {
+    logger.info("Querying user by ID", {
       id,
       requestingUserId: requestingUser.id,
     });
@@ -190,27 +190,27 @@ const _getUserByIdInternal = async (
     });
 
     if (!user) {
-      logger.info("根據 ID 未找到使用者", { id });
+      logger.info("User not found by ID", { id });
       return null;
     }
 
     if (!validateAccess(requestingUser, user.id)) {
-      logger.warn("未授權存取使用者資料的嘗試", {
+      logger.warn("Unauthorized attempt to access user data", {
         requestingUserId: requestingUser.id,
         targetUserId: user.id,
       });
-      throw new AuthorizationError("未授權存取使用者資料");
+      throw new AuthorizationError("Unauthorized access to user data");
     }
 
     const sanitizedUser = sanitizeUserData(
       user as UserWithLoginMethods,
       options.includeSensitiveData || false
     );
-    logger.info("根據 ID 找到使用者", { id });
+    logger.info("User found by ID", { id });
     return sanitizedUser;
   } catch (error) {
     const typedError = error as Error;
-    logger.error("根據 ID 取得使用者時發生錯誤:", {
+    logger.error("Error getting user by ID:", {
       error: typedError.message,
       stack: typedError.stack,
     });
@@ -222,38 +222,38 @@ const _getUserByIdInternal = async (
 };
 
 /**
- * 根據 ID 取得使用者資料（使用 React cache）
+ * Get user data by ID (using React cache)
  * @async
  * @function getUserById
- * @param {string} id - 要查詢的使用者 ID
- * @param {Object} requestingUser - 發出請求的使用者
- * @param {string} requestingUser.id - 請求使用者的 ID
- * @param {string} requestingUser.role - 請求使用者的角色
- * @param {AccessOptions} [options=DEFAULT_OPTIONS] - 資料包含選項
- * @returns {Promise<Partial<UserWithLoginMethods>|null>} - 找到時返回使用者物件，否則返回 null
- * @throws {AuthorizationError} 當嘗試未授權存取時拋出
- * @throws {Error} 當資料庫連線失敗時拋出
+ * @param {string} id - User ID to query
+ * @param {Object} requestingUser - The user making the request
+ * @param {string} requestingUser.id - Requesting user's ID
+ * @param {string} requestingUser.role - Requesting user's role
+ * @param {AccessOptions} [options=DEFAULT_OPTIONS] - Data inclusion options
+ * @returns {Promise<Partial<UserWithLoginMethods>|null>} - Returns user object if found, otherwise returns null
+ * @throws {AuthorizationError} Throws when unauthorized access is attempted
+ * @throws {Error} Throws when database connection fails
  * @description
- * 使用 React cache 在單次請求內緩存資料。根據選項包含登入方法和敏感資料。
- * 在返回資料前驗證存取權限。符合 Next.js 15+ serverless 環境。
+ * Uses React cache to cache data within a single request. Includes login methods and sensitive data based on options.
+ * Validates access permissions before returning data. Compatible with Next.js 15+ serverless environment.
  */
 export const getUserById = cache(_getUserByIdInternal);
 
 /**
- * 更新使用者資訊（含存取控制）
+ * Update user information (with access control)
  * @async
  * @function updateUser
- * @param {string} id - 要更新的使用者 ID
- * @param {Object} requestingUser - 發出請求的使用者
- * @param {string} requestingUser.id - 請求使用者的 ID
- * @param {string} requestingUser.role - 請求使用者的角色
- * @param {Partial<Prisma.UserUpdateInput>} data - 要更新的資料
- * @returns {Promise<Partial<UserWithLoginMethods>>} - 更新後的使用者物件
- * @throws {AuthorizationError} 當嘗試未授權存取時拋出
- * @throws {Error} 當資料庫連線失敗或更新失敗時拋出
+ * @param {string} id - User ID to update
+ * @param {Object} requestingUser - The user making the request
+ * @param {string} requestingUser.id - Requesting user's ID
+ * @param {string} requestingUser.role - Requesting user's role
+ * @param {Partial<Prisma.UserUpdateInput>} data - Data to update
+ * @returns {Promise<Partial<UserWithLoginMethods>>} - Updated user object
+ * @throws {AuthorizationError} Throws when unauthorized access is attempted
+ * @throws {Error} Throws when database connection fails or update fails
  * @description
- * 驗證存取權限後更新使用者資料。成功更新後更新快取。
- * 僅允許使用者更新自己的資料，除非是管理員或系統使用者。
+ * Updates user data after validating access permissions. Updates cache after successful update.
+ * Only allows users to update their own data, unless they are admin or system users.
  */
 export const updateUser = async (
   id: string,
@@ -261,19 +261,19 @@ export const updateUser = async (
   data: Partial<Prisma.UserUpdateInput>
 ): Promise<Partial<UserWithLoginMethods>> => {
   if (!db) {
-    logger.error("資料庫連線未建立（更新使用者時）");
-    throw new Error("資料庫連線未建立");
+    logger.error("Database connection not established (when updating user)");
+    throw new Error("Database connection not established");
   }
 
   try {
-    logger.info("更新使用者", { id, requestingUserId: requestingUser.id });
+    logger.info("Updating user", { id, requestingUserId: requestingUser.id });
 
     if (!validateAccess(requestingUser, id)) {
-      logger.warn("未授權更新使用者資料的嘗試", {
+      logger.warn("Unauthorized attempt to update user data", {
         requestingUserId: requestingUser.id,
         targetUserId: id,
       });
-      throw new AuthorizationError("未授權更新使用者資料");
+      throw new AuthorizationError("Unauthorized update to user data");
     }
 
     const updatedUser = await db.user.update({
@@ -285,71 +285,71 @@ export const updateUser = async (
     });
 
     const sanitizedUser = sanitizeUserData(updatedUser, false);
-    logger.info("使用者更新成功", { id });
+    logger.info("User updated successfully", { id });
     return sanitizedUser;
   } catch (error) {
     const typedError = error as Error;
-    logger.error("更新使用者時發生錯誤:", {
+    logger.error("Error updating user:", {
       error: typedError.message,
       stack: typedError.stack,
     });
     if (error instanceof AuthorizationError) {
       throw error;
     }
-    throw new Error("更新使用者失敗");
+    throw new Error("Failed to update user");
   }
 };
 
 /**
- * 刪除使用者帳號（含存取控制）
+ * Delete user account (with access control)
  * @async
  * @function deleteUser
- * @param {string} id - 要刪除的使用者 ID
- * @param {Object} requestingUser - 發出請求的使用者
- * @param {string} requestingUser.id - 請求使用者的 ID
- * @param {string} requestingUser.role - 請求使用者的角色
+ * @param {string} id - User ID to delete
+ * @param {Object} requestingUser - The user making the request
+ * @param {string} requestingUser.id - Requesting user's ID
+ * @param {string} requestingUser.role - Requesting user's role
  * @returns {Promise<void>}
- * @throws {AuthorizationError} 當嘗試未授權存取時拋出
- * @throws {Error} 當資料庫連線失敗或刪除失敗時拋出
+ * @throws {AuthorizationError} Throws when unauthorized access is attempted
+ * @throws {Error} Throws when database connection fails or deletion fails
  * @description
- * 驗證存取權限後永久移除使用者帳號。
- * 僅允許使用者刪除自己的帳號，除非是管理員或系統使用者。
- * 同時從資料庫和快取中移除使用者資料。
+ * Permanently removes user account after validating access permissions.
+ * Only allows users to delete their own account, unless they are admin or system users.
+ * Removes user data from both database and cache.
  */
 export const deleteUser = async (
   id: string,
   requestingUser: { id: string; role: string }
 ): Promise<void> => {
   if (!db) {
-    logger.error("資料庫連線未建立（刪除使用者時）");
-    throw new Error("資料庫連線未建立");
+    logger.error("Database connection not established (when deleting user)");
+    throw new Error("Database connection not established");
   }
 
   try {
-    logger.info("刪除使用者", { id, requestingUserId: requestingUser.id });
+    logger.info("Deleting user", { id, requestingUserId: requestingUser.id });
 
     if (!validateAccess(requestingUser, id)) {
-      logger.warn("未授權刪除使用者的嘗試", {
+      logger.warn("Unauthorized attempt to delete user", {
         requestingUserId: requestingUser.id,
         targetUserId: id,
       });
-      throw new AuthorizationError("未授權刪除使用者");
+      throw new AuthorizationError("Unauthorized deletion of user");
     }
 
     await db.user.delete({
       where: { id },
     });
 
-    logger.info("使用者刪除成功", { id });
+    logger.info("User deleted successfully", { id });
   } catch (error) {
     const typedError = error as Error;
-    logger.error("刪除使用者時發生錯誤:", {
+    logger.error("Error deleting user:", {
       error: typedError.message,
       stack: typedError.stack,
     });
     if (error instanceof AuthorizationError) {
       throw error;
     }
-    throw new Error("刪除使用者失敗");
+    throw new Error("Failed to delete user");
   }
 };

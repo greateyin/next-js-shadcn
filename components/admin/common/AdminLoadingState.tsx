@@ -7,9 +7,9 @@ interface AdminLoadingStateProps {
 }
 
 /**
- * Admin 加载状态组件
+ * Admin loading state component
  * 
- * 提供统一的加载状态显示，包含旋转图标和可选文字
+ * Provides unified loading state display with spinner icon and optional text
  * 
  * @example
  * <AdminLoadingState />

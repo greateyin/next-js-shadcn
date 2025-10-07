@@ -4,7 +4,7 @@ import { db } from "@/lib/db"
 
 /**
  * GET /api/admin/roles
- * 獲取所有角色
+ * Get all roles
  */
 export async function GET() {
   try {
@@ -39,7 +39,7 @@ export async function GET() {
 
 /**
  * POST /api/admin/roles
- * 創建新角色
+ * Create new role
  */
 export async function POST(req: Request) {
   try {
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
     const body = await req.json()
     const { name, description } = body
 
-    // 檢查角色名稱是否已存在
+    // Check if role name already exists
     const existingRole = await db.role.findUnique({
       where: { name }
     })
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Role name already exists" }, { status: 400 })
     }
 
-    // 創建角色
+    // Create role
     const role = await db.role.create({
       data: {
         name: name.toLowerCase().trim(),

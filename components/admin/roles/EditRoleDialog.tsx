@@ -26,7 +26,7 @@ interface EditRoleDialogProps {
 
 /**
  * EditRoleDialog - Apple Style
- * 角色編輯對話框
+ * Role edit dialog
  */
 export function EditRoleDialog({ role, open, onOpenChange, onSave }: EditRoleDialogProps) {
   const [loading, setLoading] = useState(false)

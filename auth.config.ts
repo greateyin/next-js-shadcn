@@ -136,10 +136,10 @@ export const authConfig: NextAuthConfig = {
   ],
   callbacks: {
     /**
-     * 安全的重定向回调 - 只允许重定向到白名单中的域名
+     * Safe redirect callback - only allows redirects to whitelisted domains
      */
     async redirect({ url, baseUrl }) {
-      // 允许的子域列表（从环境变量读取，默认只允许当前域）
+      // List of allowed subdomains (read from environment variable, defaults to current domain only)
       const allowedDomains = process.env.ALLOWED_DOMAINS
         ? process.env.ALLOWED_DOMAINS.split(",").map(d => d.trim())
         : [new URL(baseUrl).hostname];
@@ -148,14 +148,14 @@ export const authConfig: NextAuthConfig = {
         const urlObj = new URL(url, baseUrl);
         const baseUrlObj = new URL(baseUrl);
         
-        // 检查是否是允许的域名
+        // Check if domain is allowed
         const isAllowedDomain = allowedDomains.some(domain => {
-          // 精确匹配或子域匹配
+          // Exact match or subdomain match
           return urlObj.hostname === domain || 
                  urlObj.hostname.endsWith(`.${domain}`);
         });
         
-        // 检查是否是同一父域
+        // Check if same parent domain
         const isSameParentDomain = process.env.COOKIE_DOMAIN && 
           urlObj.hostname.endsWith(process.env.COOKIE_DOMAIN);
         
@@ -163,7 +163,7 @@ export const authConfig: NextAuthConfig = {
           return urlObj.toString();
         }
         
-        // 如果都不匹配，返回 baseUrl
+        // If no match, return baseUrl
         console.warn(`Redirect blocked: ${url} is not in allowed domains`);
         return baseUrl;
       } catch (error) {
@@ -289,7 +289,7 @@ export const authConfig: NextAuthConfig = {
   },
   cookies: {
     sessionToken: {
-      // 使用 __Secure- 前缀提高安全性（生产环境）
+      // Use __Secure- prefix for enhanced security (production environment)
       name: process.env.NODE_ENV === "production"
         ? "__Secure-authjs.session-token"
         : "authjs.session-token",
@@ -298,7 +298,7 @@ export const authConfig: NextAuthConfig = {
         sameSite: "lax" as const,
         path: "/",
         secure: process.env.NODE_ENV === "production",
-        // 👇 关键：跨子域共享 Cookie
+        // 👇 Key: Share cookies across subdomains
         domain: process.env.COOKIE_DOMAIN || undefined
       }
     }

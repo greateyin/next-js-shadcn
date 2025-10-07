@@ -4,7 +4,7 @@ import { db } from "@/lib/db"
 
 /**
  * GET /api/admin/menu-items
- * 獲取所有選單項目
+ * Get all menu items
  */
 export async function GET() {
   try {

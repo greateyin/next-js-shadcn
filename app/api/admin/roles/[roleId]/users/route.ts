@@ -4,7 +4,7 @@ import { db } from "@/lib/db"
 
 /**
  * GET /api/admin/roles/[roleId]/users
- * 獲取角色的用戶
+ * Get role's users
  */
 export async function GET(
   req: Request,
@@ -36,7 +36,7 @@ export async function GET(
 
 /**
  * PUT /api/admin/roles/[roleId]/users
- * 更新角色的用戶（完全替換）
+ * Update role's users (complete replacement)
  */
 export async function PUT(
   req: Request,
@@ -54,16 +54,16 @@ export async function PUT(
       return NextResponse.json({ error: "Invalid user IDs" }, { status: 400 })
     }
 
-    // 使用事務來確保數據一致性
+    // Use transaction to ensure data consistency
     await db.$transaction(async (tx: typeof db) => {
-      // 刪除現有的所有用戶關聯
+      // Delete all existing user associations
       await tx.userRole.deleteMany({
         where: {
           roleId
         }
       })
 
-      // 創建新的用戶關聯
+      // Create new user associations
       if (userIds.length > 0) {
         await tx.userRole.createMany({
           data: userIds.map((userId: string) => ({

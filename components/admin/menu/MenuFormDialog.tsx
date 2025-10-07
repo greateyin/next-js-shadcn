@@ -39,7 +39,7 @@ import { CreateMenuItemSchema } from "@/schemas/menu";
 import * as LucideIcons from "lucide-react";
 
 /**
- * MenuItem 介面定義
+ * MenuItem interface definition
  */
 interface MenuItem {
   id: string;
@@ -57,7 +57,7 @@ interface MenuItem {
 }
 
 /**
- * Application 介面定義
+ * Application interface definition
  */
 interface Application {
   id: string;
@@ -78,7 +78,7 @@ interface MenuFormDialogProps {
 }
 
 /**
- * 獲取常用的 Lucide 圖標列表
+ * Get list of commonly used Lucide icons
  */
 const getCommonIcons = () => {
   return [
@@ -186,8 +186,8 @@ const getCommonIcons = () => {
 };
 
 /**
- * MenuFormDialog 組件
- * 用於創建或編輯選單項目
+ * MenuFormDialog component
+ * Used to create or edit menu items
  */
 export function MenuFormDialog({
   open,
@@ -201,7 +201,7 @@ export function MenuFormDialog({
   const [selectedApplication, setSelectedApplication] = useState<string | null>(null);
   const isEditMode = !!menuItem;
 
-  // 表單定義
+  // Form definition
   const form = useForm<z.infer<typeof CreateMenuItemSchema>>({
     resolver: zodResolver(CreateMenuItemSchema),
     defaultValues: {
@@ -219,7 +219,7 @@ export function MenuFormDialog({
     },
   });
 
-  // 當對話框打開或 menuItem 改變時，重置表單
+  // Reset form when dialog opens or menuItem changes
   useEffect(() => {
     if (open) {
       if (menuItem) {
@@ -257,13 +257,13 @@ export function MenuFormDialog({
   }, [open, menuItem, form]);
 
   /**
-   * 處理表單提交
+   * Handle form submission
    */
   const onSubmit = async (data: z.infer<typeof CreateMenuItemSchema>) => {
     setIsSubmitting(true);
 
     try {
-      // 處理空字串轉為 null
+      // Convert empty strings to null
       const processedData = {
         ...data,
         description: data.description || null,
@@ -297,19 +297,19 @@ export function MenuFormDialog({
   };
 
   /**
-   * 獲取可用的父選單項目（排除自己和自己的子項目）
+   * Get available parent menu items (excluding self and own children)
    */
   const getAvailableParentItems = () => {
     if (!selectedApplication) return [];
 
     return menuItems.filter((item) => {
-      // 必須屬於相同應用程式
+      // Must belong to the same application
       if (item.applicationId !== selectedApplication) return false;
 
-      // 編輯模式下，排除自己
+      // In edit mode, exclude self
       if (isEditMode && menuItem && item.id === menuItem.id) return false;
 
-      // 排除分隔線類型
+      // Exclude divider type
       if (item.type === "DIVIDER") return false;
 
       return true;
@@ -317,7 +317,7 @@ export function MenuFormDialog({
   };
 
   /**
-   * 渲染圖標預覽
+   * Render icon preview
    */
   const renderIconPreview = (iconName: string) => {
     if (!iconName) return null;
@@ -344,7 +344,7 @@ export function MenuFormDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* 應用程式選擇 */}
+            {/* Application selection */}
             <FormField
               control={form.control}
               name="applicationId"
@@ -377,7 +377,7 @@ export function MenuFormDialog({
               )}
             />
 
-            {/* 名稱 */}
+            {/* Name */}
             <FormField
               control={form.control}
               name="name"
@@ -399,7 +399,7 @@ export function MenuFormDialog({
               )}
             />
 
-            {/* 顯示名稱 */}
+            {/* Display name */}
             <FormField
               control={form.control}
               name="displayName"
@@ -421,7 +421,7 @@ export function MenuFormDialog({
               )}
             />
 
-            {/* 描述 */}
+            {/* Description */}
             <FormField
               control={form.control}
               name="description"
@@ -440,7 +440,7 @@ export function MenuFormDialog({
               )}
             />
 
-            {/* 路徑 */}
+            {/* Path */}
             <FormField
               control={form.control}
               name="path"
@@ -462,7 +462,7 @@ export function MenuFormDialog({
               )}
             />
 
-            {/* 圖標 */}
+            {/* Icon */}
             <FormField
               control={form.control}
               name="icon"
@@ -505,7 +505,7 @@ export function MenuFormDialog({
               )}
             />
 
-            {/* 類型 */}
+            {/* Type */}
             <FormField
               control={form.control}
               name="type"
@@ -530,7 +530,7 @@ export function MenuFormDialog({
               )}
             />
 
-            {/* 父選單項目 */}
+            {/* Parent menu item */}
             <FormField
               control={form.control}
               name="parentId"
@@ -564,7 +564,7 @@ export function MenuFormDialog({
               )}
             />
 
-            {/* 順序 */}
+            {/* Order */}
             <FormField
               control={form.control}
               name="order"
@@ -588,7 +588,7 @@ export function MenuFormDialog({
               )}
             />
 
-            {/* 可見性 */}
+            {/* Visibility */}
             <FormField
               control={form.control}
               name="isVisible"
@@ -616,7 +616,7 @@ export function MenuFormDialog({
               )}
             />
 
-            {/* 禁用狀態 */}
+            {/* Enabled status */}
             <FormField
               control={form.control}
               name="isDisabled"

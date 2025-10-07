@@ -1,7 +1,7 @@
 /**
- * @fileoverview 電子郵件驗證令牌相關的 Server Actions
+ * @fileoverview Email verification token related Server Actions
  * @module actions/auth/verification
- * @description 處理電子郵件驗證令牌的查詢和管理
+ * @description Handles querying and management of email verification tokens
  */
 
 "use server";
@@ -11,32 +11,32 @@ import { logger } from "@/lib/serverLogger";
 import { VerificationToken } from "@prisma/client";
 
 /**
- * 根據令牌值取得驗證令牌
+ * Get verification token by token value
  * @async
  * @function getVerificationTokenByToken
- * @param {string} token - 要查詢的令牌值
- * @returns {Promise<VerificationToken|null>} 找到時返回令牌物件，否則返回 null
- * @throws {Error} 當資料庫連線未建立時拋出
+ * @param {string} token - Token value to query
+ * @returns {Promise<VerificationToken|null>} Returns token object if found, otherwise returns null
+ * @throws {Error} Throws when database connection is not established
  * @description
- * 從資料庫中查詢指定的電子郵件驗證令牌。
- * 記錄查詢過程和結果，錯誤時返回 null。
+ * Queries the specified email verification token from the database.
+ * Logs query process and results, returns null on error.
  */
 export const getVerificationTokenByToken = async (
   token: string
 ): Promise<VerificationToken | null> => {
   if (!db) {
-    logger.error("資料庫連線未建立（查詢令牌時）");
-    throw new Error("資料庫連線未建立");
+    logger.error("Database connection not established (when querying token)");
+    throw new Error("Database connection not established");
   }
 
   try {
-    logger.info("查詢驗證令牌", { token });
+    logger.info("Querying verification token", { token });
     
     const verificationToken = await db.verificationToken.findUnique({
       where: { token },
     });
     
-    logger.info("驗證令牌查詢結果", {
+    logger.info("Verification token query result", {
       token,
       found: !!verificationToken,
     });
@@ -44,7 +44,7 @@ export const getVerificationTokenByToken = async (
     return verificationToken;
   } catch (error) {
     const typedError = error as Error;
-    logger.error("根據令牌取得驗證令牌時發生錯誤:", {
+    logger.error("Error getting verification token by token:", {
       error: typedError.message,
       stack: typedError.stack,
     });
@@ -53,32 +53,32 @@ export const getVerificationTokenByToken = async (
 };
 
 /**
- * 根據電子郵件地址取得驗證令牌
+ * Get verification token by email address
  * @async
  * @function getVerificationTokenByEmail
- * @param {string} email - 要查詢的電子郵件地址
- * @returns {Promise<VerificationToken|null>} 找到時返回令牌物件，否則返回 null
- * @throws {Error} 當資料庫連線未建立時拋出
+ * @param {string} email - Email address to query
+ * @returns {Promise<VerificationToken|null>} Returns token object if found, otherwise returns null
+ * @throws {Error} Throws when database connection is not established
  * @description
- * 從資料庫中查詢與指定電子郵件關聯的驗證令牌。
- * 使用 findFirst 因為可能存在多個令牌（雖然應該只保留最新的）。
+ * Queries the verification token associated with the specified email from the database.
+ * Uses findFirst because multiple tokens may exist (although only the latest should be kept).
  */
 export const getVerificationTokenByEmail = async (
   email: string
 ): Promise<VerificationToken | null> => {
   if (!db) {
-    logger.error("資料庫連線未建立（根據電子郵件查詢令牌時）");
-    throw new Error("資料庫連線未建立");
+    logger.error("Database connection not established (when querying token by email)");
+    throw new Error("Database connection not established");
   }
 
   try {
-    logger.info("根據電子郵件查詢驗證令牌", { email });
+    logger.info("Querying verification token by email", { email });
     
     const verificationToken = await db.verificationToken.findFirst({
       where: { email },
     });
     
-    logger.info("根據電子郵件查詢驗證令牌結果", {
+    logger.info("Verification token query result by email", {
       email,
       found: !!verificationToken,
     });
@@ -86,7 +86,7 @@ export const getVerificationTokenByEmail = async (
     return verificationToken;
   } catch (error) {
     const typedError = error as Error;
-    logger.error("根據電子郵件取得驗證令牌時發生錯誤:", {
+    logger.error("Error getting verification token by email:", {
       error: typedError.message,
       stack: typedError.stack,
     });
@@ -95,33 +95,33 @@ export const getVerificationTokenByEmail = async (
 };
 
 /**
- * 從令牌取得關聯的電子郵件地址
+ * Get associated email address from token
  * @async
  * @function getEmailFromToken
- * @param {string} token - 驗證令牌值
- * @returns {Promise<string|undefined>} 找到時返回電子郵件地址，否則返回 undefined
- * @throws {Error} 當資料庫連線未建立時拋出
+ * @param {string} token - Verification token value
+ * @returns {Promise<string|undefined>} Returns email address if found, otherwise returns undefined
+ * @throws {Error} Throws when database connection is not established
  * @description
- * 從驗證令牌中提取關聯的電子郵件地址。
- * 僅選擇 email 欄位以優化查詢效能。
+ * Extracts the associated email address from the verification token.
+ * Only selects the email field to optimize query performance.
  */
 export const getEmailFromToken = async (
   token: string
 ): Promise<string | undefined> => {
   if (!db) {
-    logger.error("資料庫連線未建立（從令牌查詢電子郵件時）");
-    throw new Error("資料庫連線未建立");
+    logger.error("Database connection not established (when querying email from token)");
+    throw new Error("Database connection not established");
   }
 
   try {
-    logger.info("從令牌查詢電子郵件", { token });
+    logger.info("Querying email from token", { token });
     
     const verificationToken = await db.verificationToken.findUnique({
       where: { token },
-      select: { email: true }, // 僅選擇 email 欄位
+      select: { email: true }, // Only select email field
     });
     
-    logger.info("從令牌查詢電子郵件結果", {
+    logger.info("Email query result from token", {
       token,
       found: !!verificationToken,
     });
@@ -129,7 +129,7 @@ export const getEmailFromToken = async (
     return verificationToken?.email;
   } catch (error) {
     const typedError = error as Error;
-    logger.error("從令牌取得電子郵件時發生錯誤:", {
+    logger.error("Error getting email from token:", {
       error: typedError.message,
       stack: typedError.stack,
     });

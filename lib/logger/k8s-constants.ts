@@ -33,16 +33,16 @@ export const HEALTH_METADATA = {
 
 /** Default Kubernetes configuration */
 export const K8S_CONFIG = {
-    // 使用環境變數，這些變數在 K8s 中會自動注入
+    // Use environment variables, these are automatically injected in K8s
     NAMESPACE: process.env.K8S_NAMESPACE || 'default',
     POD_NAME: process.env.K8S_POD_NAME || 'unknown',
     NODE_NAME: process.env.K8S_NODE_NAME || 'unknown',
     CONTAINER_NAME: process.env.K8S_CONTAINER_NAME || 'unknown',
-    // 日誌相關配置
-    LOG_FORMAT: 'json',  // K8s 建議使用 JSON 格式
-    STDOUT_ENABLED: true,  // 在 K8s 中，日誌應該輸出到 stdout
-    MAX_SIZE: process.env.LOG_MAX_SIZE || '100m',  // 單個日誌文件最大大小
-    MAX_FILES: process.env.LOG_MAX_FILES || '5',   // 保留的日誌文件數量
+    // Logging configuration
+    LOG_FORMAT: 'json',  // K8s recommends using JSON format
+    STDOUT_ENABLED: true,  // In K8s, logs should be output to stdout
+    MAX_SIZE: process.env.LOG_MAX_SIZE || '100m',  // Maximum size of a single log file
+    MAX_FILES: process.env.LOG_MAX_FILES || '5',   // Number of log files to retain
 } as const;
 
 /** Prometheus metrics configuration */

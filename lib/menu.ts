@@ -28,15 +28,15 @@ export interface MenuItemWithChildren {
  * Get menu items for a specific user based on their roles
  * 
  * @description
- * 查詢邏輯：
- * 1. 取得用戶的所有角色
- * 2. 透過角色取得可見的選單項目（DISTINCT）
- * 3. 過濾掉不可見或禁用的項目
- * 4. 按照 order 排序
+ * Query logic:
+ * 1. Get all roles of the user
+ * 2. Get visible menu items through roles (DISTINCT)
+ * 3. Filter out invisible or disabled items
+ * 4. Sort by order
  * 
- * 權限邏輯：
- * - 如果選單項目沒有設定任何角色權限 → 所有人可見
- * - 如果選單項目有設定角色權限 → 只有擁有該角色且 canView=true 的用戶可見
+ * Permission logic:
+ * - If menu item has no role permissions set → visible to everyone
+ * - If menu item has role permissions set → only visible to users with that role and canView=true
  * 
  * @param userId - User ID
  * @param applicationId - Application ID (optional, if not provided returns all apps)
@@ -46,7 +46,7 @@ export async function getUserMenuItems(
   userId: string,
   applicationId?: string
 ): Promise<MenuItemWithChildren[]> {
-  // 1. 取得用戶的所有角色 ID
+  // 1. Get all role IDs of the user
   const userRoles = await db.userRole.findMany({
     where: { userId },
     select: { roleId: true },
@@ -54,25 +54,25 @@ export async function getUserMenuItems(
 
   const roleIds = userRoles.map((ur) => ur.roleId);
 
-  // 如果用戶沒有任何角色，返回沒有權限限制的選單
+  // If user has no roles, return menu items with no permission restrictions
   if (roleIds.length === 0) {
     return getPublicMenuItems(applicationId);
   }
 
-  // 2. 查詢選單項目（考慮權限）
+  // 2. Query menu items (considering permissions)
   const menuItems = await db.menuItem.findMany({
     where: {
       ...(applicationId && { applicationId }),
       isVisible: true,
       isDisabled: false,
       OR: [
-        // 情況 A：沒有設定任何角色權限（公開選單）
+        // Case A: No role permissions set (public menu)
         {
           roleAccess: {
             none: {},
           },
         },
-        // 情況 B：用戶的角色有權限查看
+        // Case B: User's role has permission to view
         {
           roleAccess: {
             some: {
@@ -102,7 +102,7 @@ export async function getUserMenuItems(
     ],
   });
 
-  // 3. 建立階層式結構
+  // 3. Build hierarchical structure
   return buildMenuTree(menuItems);
 }
 
@@ -121,7 +121,7 @@ export async function getPublicMenuItems(
       isVisible: true,
       isDisabled: false,
       roleAccess: {
-        none: {}, // 只返回沒有角色限制的選單
+        none: {}, // Only return menus with no role restrictions
       },
     },
     select: {
@@ -162,7 +162,7 @@ function buildMenuTree(
   const itemMap = new Map<string, MenuItemWithChildren>();
   const rootItems: MenuItemWithChildren[] = [];
 
-  // 第一次遍歷：建立所有節點
+  // First pass: create all nodes
   items.forEach((item) => {
     const menuItem: MenuItemWithChildren = {
       ...item,
@@ -171,7 +171,7 @@ function buildMenuTree(
     itemMap.set(item.id, menuItem);
   });
 
-  // 第二次遍歷：建立父子關係
+  // Second pass: establish parent-child relationships
   items.forEach((item) => {
     const menuItem = itemMap.get(item.id)!;
 
@@ -183,7 +183,7 @@ function buildMenuTree(
         }
         parent.children.push(menuItem);
       } else {
-        // 如果找不到父節點，視為根節點
+        // If parent node not found, treat as root node
         rootItems.push(menuItem);
       }
     } else {
@@ -205,7 +205,7 @@ export async function canUserAccessMenuItem(
   userId: string,
   menuItemId: string
 ): Promise<boolean> {
-  // 1. 取得選單項目
+  // 1. Get menu item
   const menuItem = await db.menuItem.findUnique({
     where: { id: menuItemId },
     include: {
@@ -217,17 +217,17 @@ export async function canUserAccessMenuItem(
     return false;
   }
 
-  // 2. 如果選單被禁用或不可見
+  // 2. If menu is disabled or not visible
   if (menuItem.isDisabled || !menuItem.isVisible) {
     return false;
   }
 
-  // 3. 如果沒有角色限制，所有人都可以存取
+  // 3. If no role restrictions, everyone can access
   if (menuItem.roleAccess.length === 0) {
     return true;
   }
 
-  // 4. 檢查用戶角色
+  // 4. Check user roles
   const userRoles = await db.userRole.findMany({
     where: { userId },
     select: { roleId: true },
@@ -235,7 +235,7 @@ export async function canUserAccessMenuItem(
 
   const roleIds = userRoles.map((ur) => ur.roleId);
 
-  // 5. 檢查是否有權限存取
+  // 5. Check if has access permission
   const hasAccess = menuItem.roleAccess.some(
     (access) => roleIds.includes(access.roleId) && access.canAccess
   );
@@ -293,13 +293,13 @@ export async function getMenuItemsByRole(
       isVisible: true,
       isDisabled: false,
       OR: [
-        // 沒有角色限制的選單
+        // Menu with no role restrictions
         {
           roleAccess: {
             none: {},
           },
         },
-        // 該角色有權限的選單
+        // Menu that the role has permission to
         {
           roleAccess: {
             some: {

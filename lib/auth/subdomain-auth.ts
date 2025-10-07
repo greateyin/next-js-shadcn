@@ -1,9 +1,9 @@
 /**
- * 轻量级 Auth 工具 - 用于子应用读取跨域 Session
+ * Lightweight Auth utility - for sub-applications to read cross-domain Session
  * 
- * 使用场景：
- * - 当应用部署在子域名（如 admin.example.com, dashboard.example.com）
- * - 需要读取由 auth.example.com 创建的 session cookie
+ * Use cases:
+ * - When application is deployed on subdomain (e.g. admin.example.com, dashboard.example.com)
+ * - Need to read session cookie created by auth.example.com
  * 
  * @module lib/auth/subdomain-auth
  */
@@ -12,7 +12,7 @@ import { cookies } from "next/headers";
 import { db } from "@/lib/db";
 
 /**
- * 从 Cookie 中获取 session token 名称
+ * Get session token name from Cookie
  */
 function getSessionTokenName(): string {
   return process.env.NODE_ENV === "production"
@@ -21,13 +21,13 @@ function getSessionTokenName(): string {
 }
 
 /**
- * 轻量级 auth 函数 - 从数据库读取 session
+ * Lightweight auth function - read session from database
  * 
- * @returns Session 对象或 null
+ * @returns Session object or null
  * 
  * @example
  * ```ts
- * // 在 Server Component 中使用
+ * // Use in Server Component
  * import { getSubdomainSession } from "@/lib/auth/subdomain-auth";
  * 
  * export default async function AdminPage() {
@@ -50,7 +50,7 @@ export async function getSubdomainSession() {
   }
   
   try {
-    // 从数据库读取 session（包含用户信息）
+    // Read session from database (including user information)
     const session = await db.session.findUnique({
       where: { sessionToken: sessionToken.value },
       include: {
@@ -75,12 +75,12 @@ export async function getSubdomainSession() {
       }
     });
     
-    // 检查 session 是否过期
+    // Check if session has expired
     if (!session || session.expires < new Date()) {
       return null;
     }
     
-    // 提取角色、权限、应用
+    // Extract roles, permissions, applications
     const roles = session.user.userRoles.map(ur => ur.role.name);
     const permissions = [
       ...new Set(
@@ -97,7 +97,7 @@ export async function getSubdomainSession() {
       )
     ];
     
-    // 返回格式化的 session
+    // Return formatted session
     return {
       user: {
         id: session.user.id,
@@ -119,7 +119,7 @@ export async function getSubdomainSession() {
 }
 
 /**
- * 检查用户是否有管理员权限
+ * Check if user has administrator permissions
  */
 export async function isAdmin(): Promise<boolean> {
   const session = await getSubdomainSession();
@@ -133,7 +133,7 @@ export async function isAdmin(): Promise<boolean> {
 }
 
 /**
- * 检查用户是否可以访问指定应用
+ * Check if user can access specified application
  */
 export async function canAccessApp(appPath: string): Promise<boolean> {
   const session = await getSubdomainSession();
@@ -142,18 +142,18 @@ export async function canAccessApp(appPath: string): Promise<boolean> {
     return false;
   }
   
-  // 管理员可以访问所有应用
+  // Admin can access all applications
   if (session.user.roles.includes("admin") || 
       session.user.roles.includes("super-admin")) {
     return true;
   }
   
-  // 检查是否在用户的应用列表中
+  // Check if in user's application list
   return session.user.applicationPaths.includes(appPath);
 }
 
 /**
- * 检查用户是否有指定权限
+ * Check if user has specified permission
  */
 export async function hasPermission(permissionName: string): Promise<boolean> {
   const session = await getSubdomainSession();
@@ -166,7 +166,7 @@ export async function hasPermission(permissionName: string): Promise<boolean> {
 }
 
 /**
- * 获取当前用户信息（用于 API 路由）
+ * Get current user information (for API routes)
  */
 export async function getCurrentUser() {
   const session = await getSubdomainSession();

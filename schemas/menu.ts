@@ -1,12 +1,12 @@
 import * as z from "zod";
 
 /**
- * 選單項目類型列舉
+ * Menu item type enumeration
  */
 export const MenuItemTypeEnum = z.enum(["LINK", "GROUP", "DIVIDER", "EXTERNAL"]);
 
 /**
- * 創建選單項目的驗證 Schema
+ * Validation schema for creating a menu item
  */
 export const CreateMenuItemSchema = z.object({
   name: z
@@ -42,7 +42,7 @@ export const CreateMenuItemSchema = z.object({
 });
 
 /**
- * 更新選單項目的驗證 Schema
+ * Validation schema for updating a menu item
  */
 export const UpdateMenuItemSchema = z.object({
   id: z.string().min(1, "Menu item ID is required"),
@@ -81,14 +81,14 @@ export const UpdateMenuItemSchema = z.object({
 });
 
 /**
- * 刪除選單項目的驗證 Schema
+ * Validation schema for deleting a menu item
  */
 export const DeleteMenuItemSchema = z.object({
   id: z.string().min(1, "Menu item ID is required"),
 });
 
 /**
- * 管理選單項目角色存取權限的驗證 Schema
+ * Validation schema for managing menu item role access permissions
  */
 export const ManageMenuItemRolesSchema = z.object({
   menuItemId: z.string().min(1, "Menu item ID is required"),
@@ -98,7 +98,7 @@ export const ManageMenuItemRolesSchema = z.object({
 });
 
 /**
- * 批量更新選單項目順序的驗證 Schema
+ * Validation schema for batch updating menu item order
  */
 export const UpdateMenuItemsOrderSchema = z.object({
   items: z.array(
@@ -110,7 +110,7 @@ export const UpdateMenuItemsOrderSchema = z.object({
 });
 
 /**
- * TypeScript 類型推導
+ * TypeScript type inference
  */
 export type CreateMenuItemInput = z.infer<typeof CreateMenuItemSchema>;
 export type UpdateMenuItemInput = z.infer<typeof UpdateMenuItemSchema>;
