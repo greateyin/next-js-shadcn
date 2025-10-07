@@ -5,29 +5,22 @@ import { DefaultSession } from "next-auth";
 import { AuthStatus } from "./next-auth";
 
 /**
- * Extended session user interface
- * Adds custom properties to the default NextAuth session user
+ * Note: Session and User type extensions are defined in next-auth.d.ts
+ * to avoid duplicate declarations
  */
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string;
-      email: string;
-      name: string | null;
-      role: UserRole;
-      status: AuthStatus;
-      image?: string | null;
-    }
-  }
-
-  interface User extends PrismaUser {}
-}
 
 /**
  * Type for database user
  * Extends Prisma User type with additional properties
  */
 export type DatabaseUser = PrismaUser;
+
+/**
+ * Safe user type (without password and with serialized dates)
+ */
+export interface SafeUser extends Omit<DatabaseUser, "password" | "emailVerified"> {
+  emailVerified: string | null;
+}
 
 /**
  * User with all relations type

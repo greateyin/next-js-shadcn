@@ -1,41 +1,14 @@
-import * as z from "zod";
+/**
+ * @fileoverview Unified export point for all schema definitions
+ * @module schemas
+ * @description Exports all Zod validation schemas used across the application
+ */
 
-export const LoginSchema = z.object({
-  email: z.string().email({
-    message: "Email is required",
-  }),
-  password: z.string().min(1, {
-    message: "Password is required",
-  }),
-  code: z.optional(z.string()),
-});
+// Authentication schemas
+export * from "./auth";
 
-export const RegisterSchema = z.object({
-  email: z.string().email({
-    message: "Email is required",
-  }),
-  password: z.string().min(6, {
-    message: "Minimum 6 characters required",
-  }),
-  name: z.string().min(1, {
-    message: "Name is required",
-  }),
-});
+// Application management schemas
+export * from "./application";
 
-export const ResetSchema = z.object({
-  email: z.string().email({
-    message: "Email is required",
-  }),
-});
-
-export const NewPasswordSchema = z.object({
-  password: z.string().min(6, {
-    message: "Minimum of 6 characters required",
-  }),
-});
-
-export const TwoFactorSchema = z.object({
-  code: z.string().min(6, {
-    message: "Code is required",
-  }),
-});
+// Menu management schemas
+export * from "./menu";

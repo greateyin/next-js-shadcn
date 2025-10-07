@@ -16,7 +16,7 @@ import { FormSuccess } from "@/components/auth/common/FormSuccess";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { RegisterSchema } from "@/schemas/authSchemas";
+import { RegisterSchema } from "@/schemas/auth";
 import { registerAction } from "@/actions/auth";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
