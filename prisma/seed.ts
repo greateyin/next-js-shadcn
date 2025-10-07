@@ -28,9 +28,13 @@ async function main() {
       skipDuplicates: true
     })
 
-    const adminRole = await prisma.role.findUnique({ where: { name: 'admin' } })!
-    const userRole = await prisma.role.findUnique({ where: { name: 'user' } })!
-    const moderatorRole = await prisma.role.findUnique({ where: { name: 'moderator' } })!
+    const adminRole = await prisma.role.findUnique({ where: { name: 'admin' } })
+    const userRole = await prisma.role.findUnique({ where: { name: 'user' } })
+    const moderatorRole = await prisma.role.findUnique({ where: { name: 'moderator' } })
+    
+    if (!adminRole || !userRole || !moderatorRole) {
+      throw new Error('Failed to create default roles');
+    }
     
     console.log(`   ✅ Created roles: admin, user, moderator`)
 
@@ -119,8 +123,12 @@ async function main() {
       skipDuplicates: true
     })
 
-    const dashboardApp = await prisma.application.findUnique({ where: { name: 'dashboard' } })!
-    const adminApp = await prisma.application.findUnique({ where: { name: 'admin' } })!
+    const dashboardApp = await prisma.application.findUnique({ where: { name: 'dashboard' } })
+    const adminApp = await prisma.application.findUnique({ where: { name: 'admin' } })
+    
+    if (!dashboardApp || !adminApp) {
+      throw new Error('Failed to create default applications');
+    }
     
     console.log(`   ✅ Created applications: dashboard, admin`)
 
@@ -151,7 +159,7 @@ async function main() {
         description: 'Main dashboard overview',
         path: '/dashboard',
         icon: 'LayoutDashboard',
-        type: 'LINK',
+        type: 'LINK' as const,
         order: 0,
         isVisible: true,
         isDisabled: false,
@@ -163,7 +171,7 @@ async function main() {
         description: 'View and edit your profile',
         path: '/dashboard/profile',
         icon: 'UserCircle',
-        type: 'LINK',
+        type: 'LINK' as const,
         order: 1,
         isVisible: true,
         isDisabled: false,
@@ -175,7 +183,7 @@ async function main() {
         description: 'Manage users (Admin only)',
         path: '/dashboard/users',
         icon: 'Users',
-        type: 'LINK',
+        type: 'LINK' as const,
         order: 2,
         isVisible: true,
         isDisabled: false,
@@ -187,7 +195,7 @@ async function main() {
         description: 'Application settings',
         path: '/dashboard/settings',
         icon: 'Settings',
-        type: 'LINK',
+        type: 'LINK' as const,
         order: 3,
         isVisible: true,
         isDisabled: false,
@@ -214,16 +222,20 @@ async function main() {
     // Get created menu items
     const dashboardMenuItem = await prisma.menuItem.findFirst({
       where: { name: 'dashboard', applicationId: dashboardApp.id }
-    })!
+    })
     const profileMenuItem = await prisma.menuItem.findFirst({
       where: { name: 'profile', applicationId: dashboardApp.id }
-    })!
+    })
     const usersMenuItem = await prisma.menuItem.findFirst({
       where: { name: 'users', applicationId: dashboardApp.id }
-    })!
+    })
     const settingsMenuItem = await prisma.menuItem.findFirst({
       where: { name: 'settings', applicationId: dashboardApp.id }
-    })!
+    })
+    
+    if (!dashboardMenuItem || !profileMenuItem || !usersMenuItem || !settingsMenuItem) {
+      throw new Error('Failed to create menu items');
+    }
     
     // === 7. Assign Menu Item Permissions ===
     console.log('\n🔐 Step 7: Assigning menu item permissions...')

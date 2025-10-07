@@ -9,7 +9,7 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import GitHub from "next-auth/providers/github";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { LoginSchema } from "@/schemas";
+import { LoginSchema } from "./schemas";
 import { db } from "@/lib/db";
 import { verifyPassword } from "@/lib/crypto";
 import { User, UserStatus } from "@prisma/client";
@@ -61,7 +61,7 @@ export const authConfig: NextAuthConfig = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" }
       },
-      async authorize(credentials): Promise<User | null> {
+      async authorize(credentials) {
         try {
           
           // Parse and validate credentials
@@ -108,14 +108,14 @@ export const authConfig: NextAuthConfig = {
           
           
           // Create simplified user object with type safety
-          const safeUser: User = {
+          const safeUser = {
             id: user.id,
             email: user.email,
             name: user.name ?? null,
             emailVerified: user.emailVerified ?? null,
             image: user.image ?? null,
-            role: user.role,
-            status: user.status,
+            role: 'user', // Default role, will be populated in JWT callback
+            status: mapStatus(user.status),
             password: null, // Don't pass the password back
             isTwoFactorEnabled: user.isTwoFactorEnabled ?? false,
             createdAt: user.createdAt,
@@ -124,7 +124,7 @@ export const authConfig: NextAuthConfig = {
             loginAttemptsResetAt: user.loginAttemptsResetAt ?? null,
             lastLoginAttempt: user.lastLoginAttempt ?? new Date(),
             lastSuccessfulLogin: user.lastSuccessfulLogin ?? new Date()
-          };
+          } as any;
           
           return safeUser;
         } catch (error) {
@@ -265,14 +265,25 @@ export const authConfig: NextAuthConfig = {
         session.user.role = token.role as string;
         
         // Add simplified role data to session
-        session.user.roleNames = token.roleNames || [];
-        session.user.permissionNames = token.permissionNames || [];
-        session.user.applicationPaths = token.applicationPaths || [];
+        session.user.roleNames = (token.roleNames as string[]) || [];
+        session.user.permissionNames = (token.permissionNames as string[]) || [];
+        session.user.applicationPaths = (token.applicationPaths as string[]) || [];
         
         // For compatibility with existing code
-        session.user.roles = session.user.roleNames.map(name => ({ name }));
-        session.user.permissions = session.user.permissionNames.map(name => ({ name }));
-        session.user.applications = session.user.applicationPaths.map(path => ({ path }));
+        session.user.roles = session.user.roleNames.map(name => ({ name, id: '', createdAt: new Date(), updatedAt: new Date() }));
+        session.user.permissions = session.user.permissionNames.map(name => ({ name, id: '', createdAt: new Date(), updatedAt: new Date(), description: undefined }));
+        session.user.applications = session.user.applicationPaths.map(path => ({ 
+          path, 
+          id: '', 
+          name: '', 
+          displayName: '', 
+          isActive: true, 
+          createdAt: new Date(), 
+          updatedAt: new Date(),
+          description: undefined,
+          icon: undefined,
+          order: 0
+        }));
         
       }
       return session;
