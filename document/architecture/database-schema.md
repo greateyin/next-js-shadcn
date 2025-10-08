@@ -1,42 +1,55 @@
-generator client {
-  provider = "prisma-client-js"
-}
+# Database Schema
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
+Complete documentation of the PostgreSQL database schema for the Next.js 15 + Auth.js v5 application.
+
+## 📊 Schema Overview
+
+The database uses Prisma ORM with a comprehensive schema supporting:
+
+- **User Management** - Authentication and user profiles
+- **Role-Based Access Control** - Flexible permission system
+- **Multi-Application Support** - Multiple applications with shared authentication
+- **Dynamic Menu System** - Configurable navigation menus
+- **Audit Logging** - Security and compliance tracking
+
+## 🗃️ Core Tables
+
+### User Management
+
+#### `User` Table
+
+```prisma
 model User {
   /// User's unique identifier
   id                    String                 @id @default(cuid())
-  /// User name
+  /// User's name
   name                  String?
-  /// User's email address, must be unique
+  /// User's email address (must be unique)
   email                 String                 @unique
   /// Email verification timestamp
   emailVerified         DateTime?
   /// User's avatar URL
   image                 String?
-  /// User's phone number
-  phoneNumber              String?
-  /// User's password
+  /// User's password (hashed)
   password              String?
   /// User's status
   status                UserStatus             @default(pending)
   /// Whether two-factor authentication is enabled
   isTwoFactorEnabled    Boolean                @default(false)
-  /// Number of login attempts
+  /// Login attempt count
   loginAttempts         Int                    @default(0)
-  /// Last login attempt time
+  /// Last login attempt timestamp
   lastLoginAttempt      DateTime?
-  /// Last successful login time
+  /// Last successful login timestamp
   lastSuccessfulLogin   DateTime?
-  /// Login attempts reset time
+  /// Login attempts reset timestamp
   loginAttemptsResetAt  DateTime?
-  /// User's creation time
+  /// User creation timestamp
   createdAt             DateTime               @default(now())
-  /// User's last update time
+  /// User last update timestamp
   updatedAt             DateTime               @updatedAt
+
+  // Relationships
   accounts              Account[]
   auditLogs             AuditLog[]
   loginMethods          LoginMethod[]
@@ -44,22 +57,32 @@ model User {
   sessions              Session[]
   twoFactorConfirmation TwoFactorConfirmation?
   twoFactorTokens       TwoFactorToken[]
-  userRoles             UserRole[]              // User to role associations
-  verificationTokens    VerificationToken[]     // Email verification tokens
+  userRoles             UserRole[]
+  verificationTokens    VerificationToken[]
 }
+```
 
+**Indexes:**
+- `email` (unique)
+- `status`
+- `createdAt`
+- `updatedAt`
+
+#### `Account` Table (OAuth)
+
+```prisma
 model Account {
   /// User identifier
   userId            String
   /// Account type
   type              String
-  /// Account provider (e.g., Google, Facebook)
+  /// Account provider (e.g., Google, GitHub)
   provider          String
   /// Provider-specific account identifier
   providerAccountId String
-  /// Refresh token (optional) - recommended to store encrypted
+  /// Refresh token (optional) - recommended to encrypt
   refresh_token     String?   @db.Text
-  /// Access token - recommended to store encrypted
+  /// Access token - recommended to encrypt
   access_token      String?   @db.Text
   /// Access token expiration time
   expires_at        Int?
@@ -67,99 +90,88 @@ model Account {
   token_type        String?
   /// Token scope
   scope             String?
-  /// Account's ID token (optional) - recommended to store encrypted
+  /// ID token (optional) - recommended to encrypt
   id_token          String?   @db.Text
   /// Session state
   session_state     String?
-  /// Account's creation time
+  /// Account creation timestamp
   createdAt         DateTime  @default(now())
-  /// Account's last update time - auto-updated
+  /// Account last update timestamp
   updatedAt         DateTime  @updatedAt
+  
   user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([provider, providerAccountId])
   @@index([userId])
 }
+```
 
+#### `Session` Table
+
+```prisma
 model Session {
-  /// Session's unique identifier
+  /// Session unique identifier
   id           String   @id @default(cuid())
-  /// Session token - used to identify the session
+  /// Session token - used to identify session
   sessionToken String   @unique
   /// User identifier
   userId       String
   /// Session expiration time
   expires      DateTime
-  /// Last activity time - used to track user activity
+  /// Last activity timestamp - for tracking user activity
   lastActivity DateTime @default(now())
   /// User agent - browser or device information
   userAgent    String?
-  /// IP address - used for security tracking
+  /// IP address - for security tracking
   ipAddress    String?
-  /// Session creation time
+  /// Session creation timestamp
   createdAt    DateTime @default(now())
-  /// Session last update time - auto-updated
+  /// Session last update timestamp
   updatedAt    DateTime @updatedAt
-  /// Device identifier - used for multi-device management
+  /// Device identifier - for multi-device management
   deviceId     String?
   /// Session type (web, mobile, api)
   sessionType  String   @default("web")
+  
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([deviceId])
-  @@index([expires])      // Used for periodic cleanup of expired sessions
-  @@index([lastActivity]) // Used for activity tracking queries
+  @@index([expires])      // For periodic cleanup of expired sessions
+  @@index([lastActivity]) // For activity tracking queries
 }
+```
 
-model TwoFactorConfirmation {
-  /// Two-factor confirmation's unique identifier
-  id        String   @id @default(cuid())
-  /// User identifier
-  userId    String   @unique
-  /// Creation time
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
+### Authentication Tokens
 
-model LoginMethod {
-  /// Login method's unique identifier
-  id        String   @id @default(cuid())
-  /// User identifier
-  userId    String
-  /// Login method type (e.g., "password", "google", "github")
-  method    String
-  /// Login method's creation time
-  createdAt DateTime @default(now())
-  /// Login method's last update time
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+#### `VerificationToken` Table
 
-  @@unique([userId, method])  // Prevent duplicate login methods for the same user
-  @@index([userId])
-}
-
+```prisma
 model VerificationToken {
-  /// Verification token's unique identifier
+  /// Verification token unique identifier
   id      String   @id @default(cuid())
-  /// Email address to be verified
+  /// Email address to verify
   email   String
   /// Verification token value
   token   String   @unique
   /// Token expiration time
   expires DateTime
-  /// Associated user ID (optional, used for tracking and cascading deletion)
+  /// Associated user ID (optional, for tracking and cascade delete)
   userId  String?
   /// Associated user
   user    User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([email, token])
-  @@index([userId])   // Used for user-related queries
-  @@index([expires])  // Used for periodic cleanup of expired tokens
+  @@index([userId])   // For user-related queries
+  @@index([expires])  // For periodic cleanup of expired tokens
 }
+```
 
+#### `PasswordResetToken` Table
+
+```prisma
 model PasswordResetToken {
-  /// Token's unique identifier
+  /// Token unique identifier
   id      String   @id @default(cuid())
   /// Associated email address
   email   String
@@ -173,12 +185,16 @@ model PasswordResetToken {
   user    User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([email])
-  @@index([userId])   // Used for user-related queries
-  @@index([expires])  // Used for periodic cleanup of expired tokens
+  @@index([userId])   // For user-related queries
+  @@index([expires])  // For periodic cleanup of expired tokens
 }
+```
 
+#### `TwoFactorToken` Table
+
+```prisma
 model TwoFactorToken {
-  /// Two-factor token's unique identifier
+  /// Two-factor token unique identifier
   id        String   @id @default(cuid())
   /// User identifier
   userId    String
@@ -186,75 +202,36 @@ model TwoFactorToken {
   token     String   @unique
   /// Token expiration time
   expires   DateTime
-  /// Whether it has been used - prevents reuse
+  /// Whether token has been used - prevent reuse
   used      Boolean  @default(false)
-  /// Creation time
+  /// Creation timestamp
   createdAt DateTime @default(now())
+  
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, token])
   @@index([userId])
-  @@index([expires])  // Used for periodic cleanup of expired tokens
+  @@index([expires])  // For periodic cleanup of expired tokens
 }
+```
 
-model AuditLog {
-  /// Audit log's unique identifier
-  id           String   @id @default(cuid())
-  /// Related user's identifier (can be null, indicating system operation)
-  userId       String?
-  /// Audit operation type (e.g., CREATE, UPDATE, DELETE)
-  action       String
-  /// Operation status (e.g., SUCCESS, FAILED)
-  status       String
-  /// Operation timestamp
-  timestamp    DateTime @default(now())
-  /// IP address - used for security tracking
-  ipAddress    String?
-  /// User agent - browser or device information
-  userAgent    String?
-  /// Target user identifier (if applicable)
-  targetUserId String?
-  /// Resource identifier (if applicable)
-  resourceId   String?
-  /// Resource type (if applicable, e.g., User, Role, Permission)
-  resourceType String?
-  /// Old value (JSON string, if applicable)
-  oldValue     String?  @db.Text
-  /// New value (JSON string, if applicable)
-  newValue     String?  @db.Text
-  /// Operation reason or notes
-  reason       String?
-  /// Additional metadata (JSON format)
-  metadata     Json?
-  /// Log priority (low, medium, high, critical)
-  priority     String   @default("low")
-  /// Related session ID (if applicable)
-  sessionId    String?
-  /// Associated user (set to null when user is deleted to preserve history)
-  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+### Role-Based Access Control
 
-  @@index([userId])
-  @@index([action])
-  @@index([timestamp])
-  @@index([targetUserId])
-  @@index([priority])
-  @@index([resourceType])           // Used for querying by resource type
-  @@index([sessionId])              // Used for tracking session-related logs
-  @@index([userId, timestamp])      // Composite index: user's time-series queries
-  @@index([action, timestamp])      // Composite index: operation type time-series queries
-}
+#### `Role` Table
 
+```prisma
 model Role {
-  /// Role's unique identifier
+  /// Role unique identifier
   id           String            @id @default(cuid())
   /// Role name
   name         String            @unique
   /// Role description
   description  String?
-  /// Creation time
+  /// Creation timestamp
   createdAt    DateTime          @default(now())
-  /// Update time
+  /// Update timestamp
   updatedAt    DateTime          @updatedAt
+  
   /// Users associated with this role
   users        UserRole[]
   /// Permissions associated with this role
@@ -264,33 +241,43 @@ model Role {
   /// Menu items associated with this role
   menuItems    MenuItemRole[]
 }
+```
 
+#### `Permission` Table
+
+```prisma
 model Permission {
-  /// Permission's unique identifier
+  /// Permission unique identifier
   id          String         @id @default(cuid())
   /// Permission name
   name        String         @unique
   /// Permission description
   description String?
-  /// Creation time
+  /// Creation timestamp
   createdAt   DateTime       @default(now())
-  /// Update time
+  /// Update timestamp
   updatedAt   DateTime       @updatedAt
+  
   /// Roles associated with this permission
   roles       RolePermission[]
 }
+```
 
+#### `UserRole` Table (Junction)
+
+```prisma
 model UserRole {
-  /// User-role association's unique identifier
+  /// User-role association unique identifier
   id        String   @id @default(cuid())
   /// User identifier
   userId    String
   /// Role identifier
   roleId    String
-  /// Creation time
+  /// Creation timestamp
   createdAt DateTime @default(now())
-  /// Update time
+  /// Update timestamp
   updatedAt DateTime @updatedAt
+  
   /// Associated user
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   /// Associated role
@@ -299,20 +286,25 @@ model UserRole {
   @@unique([userId, roleId])
   @@index([userId])
   @@index([roleId])
-  @@index([userId, roleId])  // Composite index: used for permission check queries
+  @@index([userId, roleId])  // Composite index: for permission check queries
 }
+```
 
+#### `RolePermission` Table (Junction)
+
+```prisma
 model RolePermission {
-  /// Role-permission association's unique identifier
+  /// Role-permission association unique identifier
   id           String     @id @default(cuid())
   /// Role identifier
   roleId       String
   /// Permission identifier
   permissionId String
-  /// Creation time
+  /// Creation timestamp
   createdAt    DateTime   @default(now())
-  /// Update time
+  /// Update timestamp
   updatedAt    DateTime   @updatedAt
+  
   /// Associated role
   role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
   /// Associated permission
@@ -321,11 +313,17 @@ model RolePermission {
   @@unique([roleId, permissionId])
   @@index([roleId])
   @@index([permissionId])
-  @@index([roleId, permissionId])  // Composite index: used for permission check queries
+  @@index([roleId, permissionId])  // Composite index: for permission check queries
 }
+```
 
+### Multi-Application Support
+
+#### `Application` Table
+
+```prisma
 model Application {
-  /// Application's unique identifier
+  /// Application unique identifier
   id          String             @id @default(cuid())
   /// Application name
   name        String             @unique
@@ -333,7 +331,7 @@ model Application {
   displayName String
   /// Application description
   description String?
-  /// Whether it is active
+  /// Whether application is active
   isActive    Boolean            @default(true)
   /// Application path
   path        String             @unique
@@ -341,27 +339,33 @@ model Application {
   icon        String?
   /// Sort order
   order       Int                @default(0)
-  /// Creation time
+  /// Creation timestamp
   createdAt   DateTime           @default(now())
-  /// Update time
+  /// Update timestamp
   updatedAt   DateTime           @updatedAt
+  
   /// Roles associated with this application
   roles       RoleApplication[]
   /// Menu items associated with this application
   menuItems   MenuItem[]
 }
+```
 
+#### `RoleApplication` Table (Junction)
+
+```prisma
 model RoleApplication {
-  /// Role-application association's unique identifier
+  /// Role-application association unique identifier
   id            String      @id @default(cuid())
   /// Role identifier
   roleId        String
   /// Application identifier
   applicationId String
-  /// Creation time
+  /// Creation timestamp
   createdAt     DateTime    @default(now())
-  /// Update time
+  /// Update timestamp
   updatedAt     DateTime    @updatedAt
+  
   /// Associated role
   role          Role        @relation(fields: [roleId], references: [id], onDelete: Cascade)
   /// Associated application
@@ -370,15 +374,21 @@ model RoleApplication {
   @@unique([roleId, applicationId])
   @@index([roleId])
   @@index([applicationId])
-  @@index([roleId, applicationId])  // Composite index: used for application access checks
+  @@index([roleId, applicationId])  // Composite index: for application access check
 }
+```
 
+### Dynamic Menu System
+
+#### `MenuItem` Table
+
+```prisma
 model MenuItem {
-  /// Menu item's unique identifier
+  /// Menu item unique identifier
   id            String          @id @default(cuid())
   /// Menu item name (internal use)
   name          String
-  /// Display name (shown in user interface)
+  /// Display name (user interface display)
   displayName   String
   /// Menu item description (tooltip text)
   description   String?
@@ -392,16 +402,17 @@ model MenuItem {
   parentId      String?
   /// Application identifier
   applicationId String
-  /// Sort order (sorting within the same level)
+  /// Sort order (within same level)
   order         Int             @default(0)
-  /// Whether it is visible (controls menu item visibility)
+  /// Whether to display (controls menu item visibility)
   isVisible     Boolean         @default(true)
-  /// Whether it is disabled
+  /// Whether disabled
   isDisabled    Boolean         @default(false)
-  /// Creation time
+  /// Creation timestamp
   createdAt     DateTime        @default(now())
-  /// Update time
+  /// Update timestamp
   updatedAt     DateTime        @updatedAt
+  
   /// Associated application
   application   Application     @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   /// Parent menu item
@@ -415,26 +426,31 @@ model MenuItem {
   @@unique([applicationId, path])  // Ensure path is unique within application
   @@index([applicationId])
   @@index([parentId])
-  @@index([parentId, order])       // Used for same-level sorting queries
-  @@index([isVisible, order])      // Used for querying visible menus with sorting
-  @@index([type])                  // Used for filtering by type
+  @@index([parentId, order])       // For same-level sorting queries
+  @@index([isVisible, order])      // For querying visible menus with sorting
+  @@index([type])                  // For filtering by type
 }
+```
 
+#### `MenuItemRole` Table (Junction)
+
+```prisma
 model MenuItemRole {
-  /// Menu item role association's unique identifier
+  /// Menu item-role association unique identifier
   id         String   @id @default(cuid())
   /// Menu item identifier
   menuItemId String
   /// Role identifier
   roleId     String
-  /// Whether it can be viewed (displayed in menu)
+  /// Whether can view (display in menu)
   canView    Boolean  @default(true)
-  /// Whether it can be accessed (can be clicked to enter)
+  /// Whether can access (can click to enter)
   canAccess  Boolean  @default(true)
-  /// Creation time
+  /// Creation timestamp
   createdAt  DateTime @default(now())
-  /// Update time
+  /// Update timestamp
   updatedAt  DateTime @updatedAt
+  
   /// Associated menu item
   menuItem   MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
   /// Associated role
@@ -443,25 +459,69 @@ model MenuItemRole {
   @@unique([menuItemId, roleId])     // Ensure menu item and role combination is unique
   @@index([menuItemId])
   @@index([roleId])
-  @@index([roleId, canView])         // Used for querying visible menus for a role
-  @@index([menuItemId, canView])     // Used for querying visible roles for a menu item
+  @@index([roleId, canView])         // For querying role-visible menus
+  @@index([menuItemId, canView])     // For querying menu item visible roles
 }
+```
 
-/// Menu item type enumeration
-enum MenuItemType {
-  LINK       // Regular link
-  GROUP      // Group title (not clickable)
-  DIVIDER    // Divider line
-  EXTERNAL   // External link
+### Audit Logging
+
+#### `AuditLog` Table
+
+```prisma
+model AuditLog {
+  /// Audit log unique identifier
+  id           String   @id @default(cuid())
+  /// Related user identifier (can be null, indicating system operation)
+  userId       String?
+  /// Audit action type (e.g., CREATE, UPDATE, DELETE)
+  action       String
+  /// Operation status (e.g., SUCCESS, FAILED)
+  status       String
+  /// Operation timestamp
+  timestamp    DateTime @default(now())
+  /// IP address - for security tracking
+  ipAddress    String?
+  /// User agent - browser or device information
+  userAgent    String?
+  /// Target user identifier (if applicable)
+  targetUserId String?
+  /// Resource identifier (if applicable)
+  resourceId   String?
+  /// Resource type (if applicable, e.g., User, Role, Permission)
+  resourceType String?
+  /// Old value (JSON string, if applicable)
+  oldValue     String?  @db.Text
+  /// New value (JSON string, if applicable)
+  newValue     String?  @db.Text
+  /// Operation reason or note
+  reason       String?
+  /// Additional metadata (JSON format)
+  metadata     Json?
+  /// Log priority (low, medium, high, critical)
+  priority     String   @default("low")
+  /// Related session ID (if applicable)
+  sessionId    String?
+  /// Associated user (set to null when user deleted to preserve history)
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([timestamp])
+  @@index([targetUserId])
+  @@index([priority])
+  @@index([resourceType])           // For querying by resource type
+  @@index([sessionId])              // For tracking session-related logs
+  @@index([userId, timestamp])      // Composite index: user time series queries
+  @@index([action, timestamp])      // Composite index: action type time series queries
 }
+```
 
-/// Default role enumeration
-enum DefaultRole {
-  user   // Regular user
-  admin  // Administrator
-}
+## 🔄 Enumerations
 
-/// User status enumeration
+### User Status
+
+```prisma
 enum UserStatus {
   pending   // Pending verification
   active    // Active
@@ -470,3 +530,136 @@ enum UserStatus {
   deleted   // Deleted
   inactive  // Inactive
 }
+```
+
+### Menu Item Types
+
+```prisma
+enum MenuItemType {
+  LINK       // Regular link
+  GROUP      // Group header (non-clickable)
+  DIVIDER    // Divider line
+  EXTERNAL   // External link
+}
+```
+
+### Default Roles
+
+```prisma
+enum DefaultRole {
+  user   // Regular user
+  admin  // Administrator
+}
+```
+
+## 🔍 Query Patterns
+
+### User Permission Check
+
+```typescript
+// Check if user has specific permission
+async function userHasPermission(userId: string, permissionName: string) {
+  const user = await db.user.findUnique({
+    where: { id: userId },
+    include: {
+      userRoles: {
+        include: {
+          role: {
+            include: {
+              permissions: {
+                include: { permission: true }
+              }
+            }
+          }
+        }
+      }
+    }
+  });
+
+  return user?.userRoles.some(userRole =>
+    userRole.role.permissions.some(rp =>
+      rp.permission.name === permissionName
+    )
+  ) ?? false;
+}
+```
+
+### Get User Menu Items
+
+```typescript
+// Get menu items accessible to user
+async function getUserMenuItems(userId: string, applicationId: string) {
+  return await db.menuItem.findMany({
+    where: {
+      applicationId,
+      isVisible: true,
+      roleAccess: {
+        some: {
+          role: {
+            users: {
+              some: { userId }
+            }
+          },
+          canView: true
+        }
+      }
+    },
+    orderBy: [
+      { parentId: 'asc' },
+      { order: 'asc' }
+    ],
+    include: {
+      children: {
+        orderBy: { order: 'asc' }
+      }
+    }
+  });
+}
+```
+
+## 🛠️ Database Operations
+
+### Prisma Client Usage
+
+```typescript
+import { db } from '@/lib/db';
+
+// Create user
+const user = await db.user.create({
+  data: {
+    email: 'user@example.com',
+    name: 'John Doe',
+    password: await hashPassword('password123')
+  }
+});
+
+// Assign role to user
+await db.userRole.create({
+  data: {
+    userId: user.id,
+    roleId: role.id
+  }
+});
+
+// Query with relationships
+const userWithRoles = await db.user.findUnique({
+  where: { id: userId },
+  include: {
+    userRoles: {
+      include: {
+        role: {
+          include: {
+            permissions: {
+              include: { permission: true }
+            }
+          }
+        }
+      }
+    }
+  }
+});
+```
+
+---
+
+**Next**: [Authentication Flow](./authentication-flow.md) → Detailed Auth.js v5 implementation
