@@ -9,10 +9,10 @@ importers:
   .:
     dependencies:
       '@auth/core':
-        specifier: ^0.40.0
+        specifier: 0.40.0
         version: 0.40.0
       '@auth/prisma-adapter':
-        specifier: ^2.10.0
+        specifier: 2.10.0
         version: 2.10.0(@prisma/client@6.16.3(prisma@6.16.3(typescript@5.3.3))(typescript@5.3.3))
       '@hookform/resolvers':
         specifier: 4.1.2
@@ -105,7 +105,7 @@ importers:
         specifier: ^15.5.4
         version: 15.5.4(@babel/core@7.26.9)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       next-auth:
-        specifier: ^5.0.0-beta.29
+        specifier: 5.0.0-beta.29
         version: 5.0.0-beta.29(next@15.5.4(@babel/core@7.26.9)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0)
       next-themes:
         specifier: 0.4.4

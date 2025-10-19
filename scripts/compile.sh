@@ -27,7 +27,6 @@ rm -rf .next/
 rm -rf node_modules
 rm -f yarn.lock
 rm -f package-lock.json
-rm -f pnpm-lock.yaml
 
 # Clean pnpm cache
 pnpm store prune
@@ -44,7 +43,6 @@ npx prisma generate || handle_error "Failed to generate Prisma models"
 
 # Install and initialize shadcn-ui locally
 print_step "Installing and initializing shadcn-ui..."
-pnpm add next-auth@beta || handle_error "Failed to install next-auth"
 pnpm add -D @shadcn/ui || handle_error "Failed to install shadcn-ui"
 pnpm add -D @tailwindcss/postcss
 pnpm add -D @eslint/js typescript-eslint eslint-plugin-next
