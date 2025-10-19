@@ -21,23 +21,34 @@ set -e
 
 print_step "Starting clean installation process..."
 
-# Clean previous installation
+# Clean previous installation more thoroughly
 print_step "Cleaning previous installation..."
-rm -rf .next/ 
+rm -rf .next/
 rm -rf node_modules
 rm -f yarn.lock
 rm -f package-lock.json
-print_step "Removed .next/, node_modules directories."
+
+# Clean pnpm cache
+pnpm store prune
+
+print_step "Removed .next/, node_modules directories and cleaned pnpm cache."
 
 # Install dependencies
-print_step "Installing dependencies (respecting lockfile)..."
-pnpm install || handle_error "Failed to install dependencies"
+print_step "Installing dependencies..."
+pnpm install --force || handle_error "Failed to install dependencies"
 
 # Generate Prisma models
 print_step "Generating Prisma models..."
 npx prisma generate || handle_error "Failed to generate Prisma models"
 
-# Install and initialize shadcn-ui locally
+# Install shadcn-ui and related tooling locally
+print_step "Installing and initializing shadcn-ui..."
+pnpm add -D @shadcn/ui || handle_error "Failed to install shadcn-ui"
+pnpm add -D @tailwindcss/postcss
+pnpm add -D @eslint/js typescript-eslint eslint-plugin-next
+pnpm add -D globals @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint-config-prettier
+
+# Check and remove existing components.json
 print_step "Checking for existing components.json..."
 if [ -f "./components.json" ]; then
     print_step "Removing existing components.json..."
@@ -91,3 +102,4 @@ print_step "Building the project..."
 pnpm run build || handle_error "Failed to build the project"
 
 print_step "Installation completed successfully! 🎉"
+
