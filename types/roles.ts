@@ -44,7 +44,7 @@ export interface Application {
   description?: string;
   isActive: boolean;
   path: string;
-  icon?: string;
+  icon?: string | null;
   order: number;
   createdAt: Date;
   updatedAt: Date;
@@ -60,16 +60,21 @@ export interface RoleApplication {
   application: Application;
 }
 
+export type MenuItemType = "LINK" | "GROUP" | "DIVIDER" | "EXTERNAL";
+
 export interface MenuItem {
   id: string;
   name: string;
   displayName: string;
+  description?: string | null;
   path: string;
-  icon?: string;
+  icon?: string | null;
   parentId?: string;
   applicationId: string;
+  type: MenuItemType;
   order: number;
   isVisible: boolean;
+  isDisabled: boolean;
   createdAt: Date;
   updatedAt: Date;
   application: Application;

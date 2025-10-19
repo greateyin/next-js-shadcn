@@ -21,36 +21,23 @@ set -e
 
 print_step "Starting clean installation process..."
 
-# Clean previous installation more thoroughly
+# Clean previous installation
 print_step "Cleaning previous installation..."
 rm -rf .next/ 
 rm -rf node_modules
 rm -f yarn.lock
 rm -f package-lock.json
-rm -f pnpm-lock.yaml
-
-# Clean pnpm cache
-pnpm store prune
-
-print_step "Removed .next/, node_modules directories and cleaned pnpm cache."
+print_step "Removed .next/, node_modules directories."
 
 # Install dependencies
-print_step "Installing dependencies..."
-pnpm install --force || handle_error "Failed to install dependencies"
+print_step "Installing dependencies (respecting lockfile)..."
+pnpm install || handle_error "Failed to install dependencies"
 
 # Generate Prisma models
 print_step "Generating Prisma models..."
 npx prisma generate || handle_error "Failed to generate Prisma models"
 
 # Install and initialize shadcn-ui locally
-print_step "Installing and initializing shadcn-ui..."
-pnpm add next-auth@beta || handle_error "Failed to install next-auth"
-pnpm add -D @shadcn/ui || handle_error "Failed to install shadcn-ui"
-pnpm add -D @tailwindcss/postcss
-pnpm add -D @eslint/js typescript-eslint eslint-plugin-next
-pnpm add -D globals @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint-config-prettier
-
-# Check and remove existing components.json
 print_step "Checking for existing components.json..."
 if [ -f "./components.json" ]; then
     print_step "Removing existing components.json..."
@@ -58,8 +45,12 @@ if [ -f "./components.json" ]; then
 fi
 
 # Initialize shadcn
-print_step "Initializing shadcn-ui..."
-pnpm dlx shadcn@latest init || handle_error "Failed to initialize shadcn-ui"
+SHADCN_VERSION=$(node -p "const pkg=require('./package.json'); (pkg.devDependencies?.['@shadcn/ui'] ?? pkg.dependencies?.['@shadcn/ui'] ?? 'latest').replace(/^[^\\d]*/, '')")
+if [ -z "$SHADCN_VERSION" ]; then
+  SHADCN_VERSION="latest"
+fi
+print_step "Initializing shadcn-ui (version $SHADCN_VERSION)..."
+pnpm dlx "shadcn@${SHADCN_VERSION}" init || handle_error "Failed to initialize shadcn-ui"
 
 # Install shadcn-ui components
 print_step "Installing shadcn-ui components..."
@@ -92,7 +83,7 @@ components=(
 
 for component in "${components[@]}"; do
     print_step "Installing component: $component"
-    pnpm dlx shadcn@latest add "$component" -y --overwrite || handle_error "Failed to install $component"
+    pnpm dlx "shadcn@${SHADCN_VERSION}" add "$component" -y --overwrite || handle_error "Failed to install $component"
 done
 
 # Build the project
