@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
+import type { Session } from "next-auth";
 import {
   CreateMenuItemSchema,
   UpdateMenuItemSchema,
@@ -16,13 +17,30 @@ import {
 } from "@/schemas/menu";
 
 /**
+ * Validate that the current session has administrator privileges.
+ */
+function hasAdminAccess(session: Session | null): boolean {
+  if (!session?.user?.id) {
+    return false;
+  }
+
+  const roleNames = session.user.roleNames ?? [];
+
+  return (
+    session.user.role === "admin" ||
+    roleNames.includes("admin") ||
+    roleNames.includes("super-admin")
+  );
+}
+
+/**
  * Get all menu items
  * Includes associated applications, parent items, child items, and role access permissions
  */
 export async function getMenuItems() {
   try {
     const session = await auth();
-    if (!session?.user?.id || session.user.role !== "admin") {
+    if (!hasAdminAccess(session)) {
       return { error: "Unauthorized" };
     }
 
@@ -82,7 +100,7 @@ export async function getMenuItems() {
 export async function getMenuItemsByApplication(applicationId: string) {
   try {
     const session = await auth();
-    if (!session?.user?.id || session.user.role !== "admin") {
+    if (!hasAdminAccess(session)) {
       return { error: "Unauthorized" };
     }
 
@@ -131,7 +149,7 @@ export async function getMenuItemsByApplication(applicationId: string) {
 export async function createMenuItem(data: CreateMenuItemInput) {
   try {
     const session = await auth();
-    if (!session?.user?.id || session.user.role !== "admin") {
+    if (!hasAdminAccess(session)) {
       return { error: "Unauthorized" };
     }
 
@@ -224,7 +242,7 @@ export async function createMenuItem(data: CreateMenuItemInput) {
 export async function updateMenuItem(data: UpdateMenuItemInput) {
   try {
     const session = await auth();
-    if (!session?.user?.id || session.user.role !== "admin") {
+    if (!hasAdminAccess(session)) {
       return { error: "Unauthorized" };
     }
 
@@ -356,7 +374,7 @@ export async function updateMenuItem(data: UpdateMenuItemInput) {
 export async function deleteMenuItem(data: DeleteMenuItemInput) {
   try {
     const session = await auth();
-    if (!session?.user?.id || session.user.role !== "admin") {
+    if (!hasAdminAccess(session)) {
       return { error: "Unauthorized" };
     }
 
@@ -404,7 +422,7 @@ export async function deleteMenuItem(data: DeleteMenuItemInput) {
 export async function manageMenuItemRoles(data: ManageMenuItemRolesInput) {
   try {
     const session = await auth();
-    if (!session?.user?.id || session.user.role !== "admin") {
+    if (!hasAdminAccess(session)) {
       return { error: "Unauthorized" };
     }
 
@@ -453,7 +471,7 @@ export async function manageMenuItemRoles(data: ManageMenuItemRolesInput) {
 export async function updateMenuItemsOrder(data: UpdateMenuItemsOrderInput) {
   try {
     const session = await auth();
-    if (!session?.user?.id || session.user.role !== "admin") {
+    if (!hasAdminAccess(session)) {
       return { error: "Unauthorized" };
     }
 
@@ -483,7 +501,7 @@ export async function updateMenuItemsOrder(data: UpdateMenuItemsOrderInput) {
 export async function toggleMenuVisibility(data: { id: string; isVisible: boolean }) {
   try {
     const session = await auth();
-    if (!session?.user?.id || session.user.role !== "admin") {
+    if (!hasAdminAccess(session)) {
       return { error: "Unauthorized" };
     }
 
@@ -508,7 +526,7 @@ export async function toggleMenuVisibility(data: { id: string; isVisible: boolea
 export async function toggleMenuDisabled(data: { id: string; isDisabled: boolean }) {
   try {
     const session = await auth();
-    if (!session?.user?.id || session.user.role !== "admin") {
+    if (!hasAdminAccess(session)) {
       return { error: "Unauthorized" };
     }
 

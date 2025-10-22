@@ -1,12 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RecentActivity } from "@/components/admin/dashboard/RecentActivity";
-import { Overview } from "@/components/admin/dashboard/Overview";
+import { Overview, type OverviewDatum } from "@/components/admin/dashboard/Overview";
 import { Users, AppWindow, Activity, Shield, Menu, Database, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+
+interface AuditLogEntry {
+  id: string;
+  action: string;
+  status?: string | null;
+  timestamp: string;
+  user?: {
+    id?: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  } | null;
+}
 
 interface StatsData {
   users: {
@@ -40,7 +53,7 @@ interface StatsData {
     total: number;
   };
   auditLogs: {
-    recent: any[];
+    recent: AuditLogEntry[];
     failed24h: number;
     critical24h: number;
   };
@@ -54,6 +67,32 @@ interface StatsData {
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const overviewData = useMemo<OverviewDatum[]>(() => {
+    if (!stats) {
+      return [];
+    }
+
+    const inactiveUsers = Math.max(stats.users.total - stats.users.active, 0);
+
+    return [
+      {
+        name: "Total",
+        users: stats.users.total,
+        applications: stats.applications.total,
+      },
+      {
+        name: "Active",
+        users: stats.users.active,
+        applications: stats.applications.active,
+      },
+      {
+        name: "Inactive",
+        users: inactiveUsers,
+        applications: stats.applications.inactive,
+      },
+    ];
+  }, [stats]);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -262,7 +301,7 @@ export default function AdminDashboardPage() {
                 <CardTitle className="text-lg font-semibold text-gray-900">Overview</CardTitle>
               </CardHeader>
               <CardContent className="pl-2">
-                <Overview />
+                <Overview data={overviewData} isLoading={loading} />
               </CardContent>
             </Card>
             <Card className="col-span-3 border-gray-200/50 shadow-sm bg-white/80 backdrop-blur-sm">

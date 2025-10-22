@@ -1,41 +1,32 @@
 'use client'
 
+import { Skeleton } from "@/components/ui/skeleton"
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts"
 
-const data = [
-  {
-    name: "Jan",
-    users: 25,
-    applications: 5,
-  },
-  {
-    name: "Feb",
-    users: 35,
-    applications: 8,
-  },
-  {
-    name: "Mar",
-    users: 45,
-    applications: 10,
-  },
-  {
-    name: "Apr",
-    users: 55,
-    applications: 12,
-  },
-  {
-    name: "May",
-    users: 65,
-    applications: 15,
-  },
-  {
-    name: "Jun",
-    users: 75,
-    applications: 18,
-  },
-]
+export interface OverviewDatum {
+  name: string
+  users: number
+  applications: number
+}
 
-export function Overview() {
+interface OverviewProps {
+  data: OverviewDatum[]
+  isLoading?: boolean
+}
+
+export function Overview({ data, isLoading = false }: OverviewProps) {
+  if (isLoading) {
+    return <Skeleton className="h-[350px] w-full" />
+  }
+
+  if (!data.length) {
+    return (
+      <div className="flex h-[350px] items-center justify-center text-sm text-muted-foreground">
+        No data available.
+      </div>
+    )
+  }
+
   return (
     <ResponsiveContainer width="100%" height={350}>
       <BarChart data={data}>

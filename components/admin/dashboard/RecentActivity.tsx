@@ -2,94 +2,95 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-interface Activity {
-  id: string
-  user: {
-    name: string
-    image?: string
-  }
-  action: string
-  timestamp: string
+interface RecentActivityUser {
+  id?: string
+  name?: string | null
+  email?: string | null
+  image?: string | null
 }
 
-const recentActivities: Activity[] = [
-  {
-    id: "1",
-    user: {
-      name: "Admin User",
-      image: "",
-    },
-    action: "Created a new role: Editor",
-    timestamp: "2023-11-09T12:45:00Z"
-  },
-  {
-    id: "2",
-    user: {
-      name: "John Doe",
-      image: "",
-    },
-    action: "Updated user permissions",
-    timestamp: "2023-11-09T11:30:00Z"
-  },
-  {
-    id: "3",
-    user: {
-      name: "Jane Smith",
-      image: "",
-    },
-    action: "Disabled application: Reports",
-    timestamp: "2023-11-09T10:15:00Z"
-  },
-  {
-    id: "4",
-    user: {
-      name: "Admin User",
-      image: "",
-    },
-    action: "Added new user: marketing@example.com",
-    timestamp: "2023-11-09T09:00:00Z"
-  },
-  {
-    id: "5",
-    user: {
-      name: "John Doe",
-      image: "",
-    },
-    action: "Updated menu structure",
-    timestamp: "2023-11-08T16:45:00Z"
-  }
-]
+interface RecentActivityLog {
+  id: string
+  action: string
+  status?: string | null
+  timestamp: string
+  user?: RecentActivityUser | null
+}
 
-function formatDate(dateString: string): string {
+interface RecentActivityProps {
+  auditLogs?: RecentActivityLog[] | null
+}
+
+function formatDate(dateString?: string | null): string {
+  if (!dateString) {
+    return "Unknown time"
+  }
+
   const date = new Date(dateString)
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
+
+  if (Number.isNaN(date.getTime())) {
+    return "Unknown time"
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
   }).format(date)
 }
 
-export function RecentActivity() {
+function getUserDisplayName(user?: RecentActivityUser | null): string {
+  if (!user) {
+    return "System"
+  }
+
+  return user.name || user.email || "Unknown user"
+}
+
+export function RecentActivity({ auditLogs }: RecentActivityProps) {
+  const activities = auditLogs?.filter((log): log is RecentActivityLog => Boolean(log)) ?? []
+
+  if (activities.length === 0) {
+    return (
+      <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
+        No recent activity found.
+      </div>
+    )
+  }
+
   return (
-    <div className="space-y-8">
-      {recentActivities.map((activity) => (
-        <div key={activity.id} className="flex items-start gap-4">
-          <Avatar className="h-9 w-9">
-            <AvatarImage src={activity.user.image} alt={activity.user.name} />
-            <AvatarFallback>{activity.user.name[0]}</AvatarFallback>
-          </Avatar>
-          <div className="space-y-1">
-            <p className="text-sm font-medium leading-none">{activity.user.name}</p>
-            <p className="text-sm text-muted-foreground">
-              {activity.action}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {formatDate(activity.timestamp)}
-            </p>
+    <div className="space-y-6">
+      {activities.map((activity) => {
+        const displayName = getUserDisplayName(activity.user)
+        const avatarInitial = displayName.charAt(0).toUpperCase()
+
+        return (
+          <div key={activity.id} className="flex items-start gap-4">
+            <Avatar className="h-9 w-9">
+              <AvatarImage
+                src={activity.user?.image ?? undefined}
+                alt={displayName}
+              />
+              <AvatarFallback>{avatarInitial}</AvatarFallback>
+            </Avatar>
+            <div className="space-y-1">
+              <p className="text-sm font-medium leading-none">{displayName}</p>
+              <p className="text-sm text-muted-foreground">
+                {activity.action}
+                {activity.status ? (
+                  <span className="ml-2 inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium capitalize text-muted-foreground">
+                    {activity.status.toLowerCase()}
+                  </span>
+                ) : null}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {formatDate(activity.timestamp)}
+              </p>
+            </div>
           </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
