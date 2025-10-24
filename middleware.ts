@@ -22,8 +22,8 @@
 
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { getToken } from "next-auth/jwt"
-import type { JWT } from "next-auth/jwt"
+import NextAuth from "next-auth"
+import { authConfig } from "./auth.config"
 import type { AuthStatus } from "@/types/next-auth"
 
 // =============================================================================
@@ -44,10 +44,10 @@ const ADMIN_ROLES = ['admin', 'super-admin'] as const
 // =============================================================================
 
 /**
- * Extended JWT interface with RBAC properties
- * Matches the structure created in auth.config.ts jwt() callback
+ * Extended JWT type with RBAC data
+ * Contains all authorization info needed for middleware checks
  */
-interface AuthJWT extends JWT {
+interface AuthJWT {
   /** User ID */
   id?: string
   /** User email */
@@ -143,55 +143,33 @@ export function hasApplicationAccess(token: AuthJWT | null, appPath: string): bo
  * @param request - Next.js request object
  * @returns NextResponse (redirect or next())
  */
-export async function middleware(request: NextRequest) {
+const { auth } = NextAuth(authConfig)
+
+// Extend NextRequest to include auth property
+interface AuthenticatedRequest extends NextRequest {
+  auth: AuthJWT | null
+}
+
+export default auth(async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // =========================================================================
   // 1. GET JWT TOKEN (Edge Runtime Compatible)
   // =========================================================================
 
-  // Debug: Check all cookies
-  let cookieNames = 'ERROR';
-  let authCookieName = 'ERROR';
-  let authCookieValue = 'NONE';
-
-  try {
-    const allCookies = request.cookies.getAll();
-    cookieNames = allCookies.map(c => c.name).join(',') || 'EMPTY';
-
-    const authCookie = request.cookies.get('authjs.session-token') ||
-                       request.cookies.get('__Secure-authjs.session-token');
-    authCookieName = authCookie?.name || 'NONE';
-    if (authCookie?.value) {
-      authCookieValue = `${authCookie.value.substring(0, 20)}...${authCookie.value.length}`;
-    }
-  } catch (e) {
-    cookieNames = 'EXCEPTION';
-    authCookieName = 'EXCEPTION';
-  }
-
-  // Try to get token with different approaches
-  let token: AuthJWT | null = null;
-  let tokenStatus = 'ERROR';
-  let secretInfo = 'UNKNOWN';
-
-  try {
-    secretInfo = `${process.env.AUTH_SECRET?.substring(0, 10)}...L${process.env.AUTH_SECRET?.length}`;
-    token = await getToken({
-      req: request,
-      secret: process.env.AUTH_SECRET,
-    }) as AuthJWT | null;
-    tokenStatus = token ? 'YES' : 'NO';
-  } catch (error) {
-    tokenStatus = 'EXCEPTION';
-    secretInfo = 'ERR';
-  }
-
+  // ✅ Auth.js V5: Get session from request.auth (provided by auth() wrapper)
+  const token = (request as AuthenticatedRequest).auth
   const isAuthenticated = !!token
   const userHasAdminPrivileges = hasAdminPrivileges(token)
 
-  console.log(`[MW] ${pathname} | AuthCookie:${authCookieName}(${authCookieValue}) | Token:${tokenStatus} | Secret:${secretInfo} | Auth:${isAuthenticated}`);
-
+  console.log('[Middleware] Request:', {
+    pathname,
+    isAuthenticated,
+    hasToken: !!token,
+    tokenEmail: token?.email,
+    tokenRoles: token?.roleNames,
+    userHasAdminPrivileges
+  })
 
   // =========================================================================
   // 2. DEFINE ROUTE TYPES
@@ -209,10 +187,7 @@ export async function middleware(request: NextRequest) {
   // redirect them to their appropriate dashboard
   
   if (isAuthenticated && isAuthPage) {
-    // If user is authenticated and on auth page, redirect to appropriate dashboard
-    const callbackUrl = request.nextUrl.searchParams.get('callbackUrl')
-    const target = callbackUrl || (userHasAdminPrivileges ? ADMIN_LOGIN_REDIRECT : DEFAULT_LOGIN_REDIRECT)
-    console.log('[Middleware] Authenticated user on auth page, redirecting to:', target)
+    const target = userHasAdminPrivileges ? ADMIN_LOGIN_REDIRECT : DEFAULT_LOGIN_REDIRECT
     return NextResponse.redirect(new URL(target, request.url))
   }
   
@@ -269,7 +244,7 @@ export async function middleware(request: NextRequest) {
   // Public routes or authenticated users accessing allowed pages
   
   return NextResponse.next()
-}
+})
 
 /**
  * Middleware configuration
