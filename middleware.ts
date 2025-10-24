@@ -144,53 +144,52 @@ export function hasApplicationAccess(token: AuthJWT | null, appPath: string): bo
  * @returns NextResponse (redirect or next())
  */
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // =========================================================================
+  // 1. GET JWT TOKEN (Edge Runtime Compatible)
+  // =========================================================================
+
+  // Debug: Check all cookies
+  let cookieNames = 'ERROR';
+  let authCookieName = 'ERROR';
+
   try {
-    const { pathname } = request.nextUrl
+    const allCookies = request.cookies.getAll();
+    cookieNames = allCookies.map(c => c.name).join(',') || 'EMPTY';
 
-    // =========================================================================
-    // 1. GET JWT TOKEN (Edge Runtime Compatible)
-    // =========================================================================
+    const authCookie = request.cookies.get('authjs.session-token') ||
+                       request.cookies.get('__Secure-authjs.session-token');
+    authCookieName = authCookie?.name || 'NONE';
+  } catch (e) {
+    cookieNames = 'EXCEPTION';
+    authCookieName = 'EXCEPTION';
+  }
 
-    // Debug: Check all cookies
-    let cookieNames = 'ERROR';
-    let authCookieName = 'ERROR';
+  // Try to get token with different approaches
+  let token: AuthJWT | null = null;
+  let tokenStatus = 'ERROR';
 
-    try {
-      const allCookies = request.cookies.getAll();
-      cookieNames = allCookies.map(c => c.name).join(',') || 'EMPTY';
+  try {
+    token = await getToken({
+      req: request,
+      secret: process.env.AUTH_SECRET,
+    }) as AuthJWT | null;
+    tokenStatus = token ? 'YES' : 'NO';
+  } catch (error) {
+    tokenStatus = 'EXCEPTION';
+  }
 
-      const authCookie = request.cookies.get('authjs.session-token') ||
-                         request.cookies.get('__Secure-authjs.session-token');
-      authCookieName = authCookie?.name || 'NONE';
-    } catch (e) {
-      cookieNames = 'EXCEPTION';
-      authCookieName = 'EXCEPTION';
-    }
+  const isAuthenticated = !!token
+  const userHasAdminPrivileges = hasAdminPrivileges(token)
 
-    // Try to get token with different approaches
-    let token: AuthJWT | null = null;
-    let tokenStatus = 'ERROR';
+  console.log(`[MW] ${pathname} | Cookies:${cookieNames} | AuthCookie:${authCookieName} | Token:${tokenStatus} | Auth:${isAuthenticated}`);
 
-    try {
-      token = await getToken({
-        req: request,
-        secret: process.env.AUTH_SECRET,
-      }) as AuthJWT | null;
-      tokenStatus = token ? 'YES' : 'NO';
-    } catch (error) {
-      tokenStatus = 'EXCEPTION';
-    }
 
-    const isAuthenticated = !!token
-    const userHasAdminPrivileges = hasAdminPrivileges(token)
-
-    console.log(`[MW] ${pathname} | Cookies:${cookieNames} | AuthCookie:${authCookieName} | Token:${tokenStatus} | Auth:${isAuthenticated}`);
-
-  
   // =========================================================================
   // 2. DEFINE ROUTE TYPES
   // =========================================================================
-  
+
   const isAuthPage = pathname.startsWith('/auth')
   const isPublicRoute = pathname === '/' || pathname.startsWith('/api/public')
   const isAdminPage = pathname.startsWith('/admin')
