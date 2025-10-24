@@ -155,20 +155,8 @@ export async function middleware(request: NextRequest) {
   const authCookie = request.cookies.get('authjs.session-token') ||
                      request.cookies.get('__Secure-authjs.session-token');
 
-  console.log('[Middleware] Debug info:', {
-    hasAuthSecret: !!process.env.AUTH_SECRET,
-    authSecretLength: process.env.AUTH_SECRET?.length,
-    nodeEnv: process.env.NODE_ENV,
-    cookieDomain: process.env.COOKIE_DOMAIN,
-    allCookieNames: allCookies.map(c => c.name),
-    authCookieExists: !!authCookie,
-    authCookieName: authCookie?.name,
-    authCookieValue: authCookie?.value ? `${authCookie.value.substring(0, 20)}...` : 'none',
-  });
-
-  // Log raw cookie header
-  const cookieHeader = request.headers.get('cookie');
-  console.log('[Middleware] Cookie header:', cookieHeader ? `${cookieHeader.substring(0, 100)}...` : 'none');
+  console.log('[Middleware] Cookies found:', allCookies.map(c => c.name).join(', '));
+  console.log('[Middleware] Auth cookie:', authCookie?.name || 'NOT FOUND');
 
   // Try to get token with different approaches
   let token: AuthJWT | null = null;
@@ -178,18 +166,13 @@ export async function middleware(request: NextRequest) {
       req: request,
       secret: process.env.AUTH_SECRET,
     }) as AuthJWT | null;
+    console.log('[Middleware] getToken returned:', token ? 'TOKEN' : 'NULL');
   } catch (error) {
     console.error('[Middleware] getToken error:', error);
   }
 
   const isAuthenticated = !!token
   const userHasAdminPrivileges = hasAdminPrivileges(token)
-
-  console.log('[Middleware] getToken result:', {
-    tokenExists: !!token,
-    tokenType: typeof token,
-    tokenKeys: token ? Object.keys(token) : [],
-  });
 
   console.log('[Middleware] Request:', {
     pathname,
