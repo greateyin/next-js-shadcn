@@ -9,6 +9,7 @@ import NextAuth from "next-auth"
 import type { NextAuthConfig } from "next-auth"
 import Google from "next-auth/providers/google"
 import GitHub from "next-auth/providers/github"
+import { NextResponse } from "next/server"
 
 // Route constants - inlined for Edge Runtime compatibility
 const DEFAULT_LOGIN_REDIRECT = "/dashboard"
@@ -49,7 +50,6 @@ const { auth } = NextAuth(authConfigEdge)
  */
 export default auth((req) => {
   const { pathname } = req.nextUrl
-  const { NextResponse } = require("next/server")
   const user = req.auth?.user
 
   const userHasAdminPrivileges = Boolean(
