@@ -153,6 +153,7 @@ export async function middleware(request: NextRequest) {
   // Debug: Check all cookies
   let cookieNames = 'ERROR';
   let authCookieName = 'ERROR';
+  let authCookieValue = 'NONE';
 
   try {
     const allCookies = request.cookies.getAll();
@@ -161,6 +162,9 @@ export async function middleware(request: NextRequest) {
     const authCookie = request.cookies.get('authjs.session-token') ||
                        request.cookies.get('__Secure-authjs.session-token');
     authCookieName = authCookie?.name || 'NONE';
+    if (authCookie?.value) {
+      authCookieValue = `${authCookie.value.substring(0, 20)}...${authCookie.value.length}`;
+    }
   } catch (e) {
     cookieNames = 'EXCEPTION';
     authCookieName = 'EXCEPTION';
@@ -186,7 +190,7 @@ export async function middleware(request: NextRequest) {
   const isAuthenticated = !!token
   const userHasAdminPrivileges = hasAdminPrivileges(token)
 
-  console.log(`[MW] ${pathname} | Cookies:${cookieNames} | AuthCookie:${authCookieName} | Token:${tokenStatus} | Secret:${secretInfo} | Auth:${isAuthenticated}`);
+  console.log(`[MW] ${pathname} | AuthCookie:${authCookieName}(${authCookieValue}) | Token:${tokenStatus} | Secret:${secretInfo} | Auth:${isAuthenticated}`);
 
 
   // =========================================================================
