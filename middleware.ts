@@ -145,18 +145,27 @@ export function hasApplicationAccess(token: AuthJWT | null, appPath: string): bo
  */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-  
+
   // =========================================================================
   // 1. GET JWT TOKEN (Edge Runtime Compatible)
   // =========================================================================
-  
-  const token = await getToken({ 
+
+  const token = await getToken({
     req: request,
     secret: process.env.AUTH_SECRET,
   }) as AuthJWT | null
-  
+
   const isAuthenticated = !!token
   const userHasAdminPrivileges = hasAdminPrivileges(token)
+
+  console.log('[Middleware] Request:', {
+    pathname,
+    isAuthenticated,
+    hasToken: !!token,
+    tokenEmail: token?.email,
+    tokenRoles: token?.roleNames,
+    userHasAdminPrivileges
+  })
 
   
   // =========================================================================

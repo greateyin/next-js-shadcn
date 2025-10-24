@@ -139,8 +139,11 @@ export const authConfig: NextAuthConfig = {
      * Safe redirect callback - only allows redirects to whitelisted domains
      */
     async redirect({ url, baseUrl }) {
+      console.log('[Redirect Callback] Redirect requested:', { url, baseUrl });
+
       // Handle relative URLs (e.g., /dashboard) - these are always safe
       if (url.startsWith("/")) {
+        console.log('[Redirect Callback] Relative URL, returning:', url);
         return url;
       }
 
@@ -151,7 +154,6 @@ export const authConfig: NextAuthConfig = {
 
       try {
         const urlObj = new URL(url, baseUrl);
-        const baseUrlObj = new URL(baseUrl);
 
         // Check if domain is allowed
         const isAllowedDomain = allowedDomains.some(domain => {
@@ -165,14 +167,15 @@ export const authConfig: NextAuthConfig = {
           urlObj.hostname.endsWith(process.env.COOKIE_DOMAIN);
 
         if (isAllowedDomain || isSameParentDomain) {
+          console.log('[Redirect Callback] Domain allowed, returning:', urlObj.toString());
           return urlObj.toString();
         }
 
         // If no match, return baseUrl
-        console.warn(`Redirect blocked: ${url} is not in allowed domains`);
+        console.warn(`[Redirect Callback] Redirect blocked: ${url} is not in allowed domains`);
         return baseUrl;
       } catch (error) {
-        console.error("Redirect error:", error);
+        console.error("[Redirect Callback] Redirect error:", error);
         return baseUrl;
       }
     },
@@ -181,7 +184,7 @@ export const authConfig: NextAuthConfig = {
      * Called when a user signs in via OAuth provider
      * Handles automatic account creation and role assignment for OAuth users
      */
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account }) {
       // For OAuth providers, ensure user has active status and default role
       if (account?.provider !== "credentials") {
         try {
@@ -224,29 +227,38 @@ export const authConfig: NextAuthConfig = {
       return true;
     },
     
-    async jwt({ token, user, account }) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.status = user.status;
         token.email = user.email;
         token.name = user.name ?? null;
         token.picture = user.image ?? null;
-        
+
+        console.log('[JWT Callback] User logged in:', { userId: user.id, email: user.email });
+
         try {
           // Get user roles and permissions
           const userRolesAndPermissions = await getUserRolesAndPermissions(user.id);
-          
+
           // Simplify token data to reduce size
           // Store only role names and permission names instead of full objects
           token.roleNames = userRolesAndPermissions.roles.map(r => r.name);
           token.permissionNames = userRolesAndPermissions.permissions.map(p => p.name);
           token.applicationPaths = userRolesAndPermissions.applications.map(a => a.path);
-          
+
           // For backward compatibility
-          token.role = userRolesAndPermissions.roles.some(r => r.name === 'admin') 
-            ? 'admin' 
+          token.role = userRolesAndPermissions.roles.some(r => r.name === 'admin')
+            ? 'admin'
             : 'user';
-            
+
+          console.log('[JWT Callback] Token created:', {
+            userId: token.id,
+            roleNames: token.roleNames,
+            permissionNames: token.permissionNames?.length,
+            applicationPaths: token.applicationPaths
+          });
+
         } catch (error) {
           console.error("Error getting user roles:", error);
           token.roleNames = [];
@@ -265,25 +277,32 @@ export const authConfig: NextAuthConfig = {
         session.user.email = token.email as string;
         session.user.name = token.name ?? null;
         session.user.image = token.picture ?? null;
-        
+
         // For backward compatibility
         session.user.role = token.role as string;
-        
+
         // Add simplified role data to session
         session.user.roleNames = (token.roleNames as string[]) || [];
         session.user.permissionNames = (token.permissionNames as string[]) || [];
         session.user.applicationPaths = (token.applicationPaths as string[]) || [];
-        
+
+        console.log('[Session Callback] Session updated:', {
+          userId: session.user.id,
+          email: session.user.email,
+          roleNames: session.user.roleNames,
+          applicationPaths: session.user.applicationPaths
+        });
+
         // For compatibility with existing code
         session.user.roles = session.user.roleNames.map(name => ({ name, id: '', createdAt: new Date(), updatedAt: new Date() }));
         session.user.permissions = session.user.permissionNames.map(name => ({ name, id: '', createdAt: new Date(), updatedAt: new Date(), description: undefined }));
-        session.user.applications = session.user.applicationPaths.map(path => ({ 
-          path, 
-          id: '', 
-          name: '', 
-          displayName: '', 
-          isActive: true, 
-          createdAt: new Date(), 
+        session.user.applications = session.user.applicationPaths.map(path => ({
+          path,
+          id: '',
+          name: '',
+          displayName: '',
+          isActive: true,
+          createdAt: new Date(),
           updatedAt: new Date(),
           description: undefined,
           icon: undefined,

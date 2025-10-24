@@ -8,6 +8,7 @@
 export {
   loginAction,
   loginWithRedirectAction,
+  loginNoRedirectAction,
   logoutAction,
 } from "./login";
 

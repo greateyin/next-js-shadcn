@@ -128,6 +128,80 @@ export async function loginWithRedirectAction(
 }
 
 /**
+ * Login without automatic redirect - for client-side handling
+ * 
+ * @description
+ * Authenticates the user but does NOT automatically redirect.
+ * Returns success/error state to allow client-side redirect after cookie is set.
+ * This solves the cookie timing issue where middleware can't read newly set cookies.
+ * 
+ * @param {any} prevState - Previous form state (for useActionState)
+ * @param {FormData} formData - Form data containing email and password
+ * @returns {Promise<{success?: boolean; error?: string}>} Success or error state
+ * 
+ * @example
+ * ```tsx
+ * const [state, formAction] = useActionState(loginNoRedirectAction, undefined);
+ * 
+ * useEffect(() => {
+ *   if (state?.success) {
+ *     router.push('/dashboard');
+ *     router.refresh();
+ *   }
+ * }, [state]);
+ * ```
+ */
+export async function loginNoRedirectAction(
+  prevState: any,
+  formData: FormData
+): Promise<{ success?: boolean; error?: string }> {
+  const email = formData.get("email");
+  const password = formData.get("password");
+
+  // Validate input
+  const validatedFields = LoginSchema.safeParse({
+    email,
+    password,
+  });
+
+  if (!validatedFields.success) {
+    return { error: "Invalid credentials format" };
+  }
+
+  try {
+    // Sign in without automatic redirect
+    const result = await signIn("credentials", {
+      email: validatedFields.data.email,
+      password: validatedFields.data.password,
+      redirect: false,  // ← KEY: Don't auto-redirect
+    });
+
+    // Check if signIn returned an error
+    if (result?.error) {
+      return { error: "Invalid credentials" };
+    }
+
+    // Return success - let client handle redirect
+    return { success: true };
+  } catch (error) {
+    console.error("Login error:", error);
+    
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case "CredentialsSignin":
+          return { error: "Invalid credentials" };
+        case "CallbackRouteError":
+          return { error: "Authentication failed" };
+        default:
+          return { error: "Something went wrong" };
+      }
+    }
+    
+    return { error: "Something went wrong" };
+  }
+}
+
+/**
  * Logout Server Action
  * 
  * @description

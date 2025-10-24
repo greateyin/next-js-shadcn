@@ -9,14 +9,14 @@
 
 import { useEffect, useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { loginWithRedirectAction } from "@/actions/auth";
+import { loginNoRedirectAction } from "@/actions/auth";
 import { FormError } from "@/components/auth/common/FormError";
 import { FormSuccess } from "@/components/auth/common/FormSuccess";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SocialButtons } from "@/components/auth/social-buttons";
-import { useSearchParams } from "next/navigation";
 
 /**
  * Submit button component with loading state
@@ -37,9 +37,9 @@ function SubmitButton() {
  * @component
  * @description A form component that follows Auth.js V5 best practices:
  * - Uses Server Actions instead of client-side signIn()
- * - Automatic redirect handling by Auth.js
+ * - Client-side redirect after login to ensure cookie is set
  * - Better security (credentials never exposed to client)
- * - Works seamlessly with middleware redirects
+ * - Fixes cookie timing issue with middleware
  * 
  * @example
  * ```tsx
@@ -58,25 +58,25 @@ function SubmitButton() {
  * ```
  */
 export function LoginForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl");
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
 
-  // Create a wrapper action that includes the callbackUrl
-  const loginActionWithUrl = async (prevState: any, formData: FormData) => {
-    if (callbackUrl) {
-      formData.append("redirectTo", callbackUrl);
-    }
-    return loginWithRedirectAction(formData, callbackUrl || undefined);
-  };
+  const [state, formAction] = useActionState(loginNoRedirectAction, undefined);
 
-  const [state, formAction] = useActionState(loginActionWithUrl, undefined);
-
-  // Show error or success toast when state changes
+  // Handle login success/error with client-side redirect
   useEffect(() => {
-    if (state?.error) {
+    if (state?.success) {
+      toast.success("Login successful!");
+      // Use setTimeout to ensure cookie is fully set before redirect
+      setTimeout(() => {
+        router.push(callbackUrl);
+        router.refresh(); // Refresh to update session
+      }, 150);
+    } else if (state?.error) {
       toast.error(state.error);
     }
-  }, [state]);
+  }, [state, router, callbackUrl]);
 
   return (
     <div className="space-y-6">
