@@ -170,10 +170,17 @@ export async function middleware(request: NextRequest) {
   const cookieHeader = request.headers.get('cookie');
   console.log('[Middleware] Cookie header:', cookieHeader ? `${cookieHeader.substring(0, 100)}...` : 'none');
 
-  const token = await getToken({
-    req: request,
-    secret: process.env.AUTH_SECRET,
-  }) as AuthJWT | null
+  // Try to get token with different approaches
+  let token: AuthJWT | null = null;
+
+  try {
+    token = await getToken({
+      req: request,
+      secret: process.env.AUTH_SECRET,
+    }) as AuthJWT | null;
+  } catch (error) {
+    console.error('[Middleware] getToken error:', error);
+  }
 
   const isAuthenticated = !!token
   const userHasAdminPrivileges = hasAdminPrivileges(token)
