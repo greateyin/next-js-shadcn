@@ -122,4 +122,6 @@ export const config = {
      */
     '/((?!api/auth|_next/static|_next/image|favicon.ico).*)',
   ],
+  // Explicitly use Edge Runtime for better performance and compatibility
+  runtime: 'edge',
 }
