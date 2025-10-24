@@ -176,8 +176,12 @@ export async function middleware(request: NextRequest) {
       secret: process.env.AUTH_SECRET,
     }) as AuthJWT | null;
     tokenStatus = token ? 'YES' : 'NO';
+    if (!token) {
+      console.log('[MW] getToken returned null. Secret length:', process.env.AUTH_SECRET?.length);
+    }
   } catch (error) {
     tokenStatus = 'EXCEPTION';
+    console.error('[MW] getToken exception:', error instanceof Error ? error.message : String(error));
   }
 
   const isAuthenticated = !!token
