@@ -23,7 +23,7 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import NextAuth from "next-auth"
-import { authConfig } from "./auth.config"
+import { edgeAuthConfig } from "./auth.edge.config"
 import type { AuthStatus } from "@/types/next-auth"
 
 // =============================================================================
@@ -138,12 +138,12 @@ export function hasApplicationAccess(token: AuthJWT | null, appPath: string): bo
  * Next.js 15+ Middleware with Auth.js V5
  * 
  * Runs on Edge Runtime by default (no runtime export needed)
- * Uses getToken() for Edge-compatible JWT validation
+ * Uses lightweight edgeAuthConfig for minimal bundle size
  * 
  * @param request - Next.js request object
  * @returns NextResponse (redirect or next())
  */
-const { auth } = NextAuth(authConfig)
+const { auth } = NextAuth(edgeAuthConfig)
 
 // Extend NextRequest to include auth property
 interface AuthenticatedRequest extends NextRequest {
