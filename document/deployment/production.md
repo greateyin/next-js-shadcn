@@ -45,6 +45,34 @@ vercel --prod
 }
 ```
 
+#### Troubleshooting: `__dirname` is not defined
+
+Vercel runs server functions in an ES Modules (ESM) context. If any of your
+code still relies on CommonJS globals such as `__dirname` or `__filename` you
+will see a runtime error similar to:
+
+```
+ReferenceError: __dirname is not defined
+```
+
+Update those modules to derive the file system path from `import.meta.url`
+instead of `__dirname`. A typical pattern looks like:
+
+```ts
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+const filePath = fileURLToPath(import.meta.url);
+const currentDir = dirname(filePath);
+const assetPath = join(currentDir, "relative", "path", "to", "asset.json");
+```
+
+If migrating the whole project to ESM is not currently possible, you can fall
+back to CommonJS by removing the `"type": "module"` entry from `package.json`.
+However, adopting the `import.meta.url` approach keeps the project aligned with
+modern JavaScript module semantics and avoids future compatibility issues on
+Vercel.
+
 #### Environment Variables on Vercel
 
 ```env
