@@ -36,6 +36,14 @@ const mapStatus = (status: UserStatus): AuthStatus => {
   }
 };
 
+// Log AUTH_SECRET info at startup
+console.log('[Auth Config] Initializing with:', {
+  hasAuthSecret: !!process.env.AUTH_SECRET,
+  authSecretLength: process.env.AUTH_SECRET?.length,
+  authSecretPrefix: process.env.AUTH_SECRET?.substring(0, 10),
+  nodeEnv: process.env.NODE_ENV,
+});
+
 export const authConfig: NextAuthConfig = {
   debug: false, // Disable debug mode for production
   adapter: PrismaAdapter(db) as any,
