@@ -1,3 +1,5 @@
+// @ts-check
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // 圖片域名配置
@@ -71,22 +73,24 @@ const nextConfig = {
     '@elastic/elasticsearch',
     'editorconfig',
     '@one-ini/wasm',
+    'prettier',
+    'js-beautify',
   ],
 
   // Webpack 配置
   webpack: (config, { isServer, nextRuntime }) => {
-    // Edge Runtime 配置 - 排除使用 CommonJS 的套件
-    if (nextRuntime === 'edge' || nextRuntime === 'experimental-edge') {
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        // 排除在 Edge Runtime 中使用 __dirname 的套件
-        'winston': false,
-        'winston-elasticsearch': false,
-        '@elastic/elasticsearch': false,
-        'editorconfig': false,
-        '@one-ini/wasm': false,
-      };
-    }
+    // 為所有環境排除使用 CommonJS 的套件
+    // 設置為 false 會讓 webpack 完全忽略這些套件的 import
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'winston': false,
+      'winston-elasticsearch': false,
+      '@elastic/elasticsearch': false,
+      'editorconfig': false,
+      '@one-ini/wasm': false,
+      'prettier': false,
+      'js-beautify': false,
+    };
 
     // 客戶端 polyfills 配置
     if (!isServer) {
@@ -114,7 +118,7 @@ const nextConfig = {
 
       // 排除服務器端專用模組
       config.module.rules.push({
-        test: /winston|winston-elasticsearch|@elastic\/elasticsearch|editorconfig|@one-ini\/wasm/,
+        test: /winston|winston-elasticsearch|@elastic\/elasticsearch|editorconfig|@one-ini\/wasm|prettier|js-beautify/,
         use: 'null-loader',
       });
     }

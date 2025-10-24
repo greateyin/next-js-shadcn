@@ -110,6 +110,7 @@ export default auth((req) => {
 /**
  * Middleware configuration
  * Excludes API routes, static files, and Next.js internals
+ * Note: Middleware uses Edge Runtime by default in Next.js 15
  */
 export const config = {
   matcher: [
@@ -122,6 +123,4 @@ export const config = {
      */
     '/((?!api/auth|_next/static|_next/image|favicon.ico).*)',
   ],
-  // Explicitly use Edge Runtime for better performance and compatibility
-  runtime: 'experimental-edge',
 }
