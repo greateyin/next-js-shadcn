@@ -170,6 +170,8 @@ export async function middleware(request: NextRequest) {
   let token: AuthJWT | null = null;
   let tokenStatus = 'ERROR';
 
+  console.log('[MW] Before getToken - Secret:', process.env.AUTH_SECRET?.substring(0, 10), 'Length:', process.env.AUTH_SECRET?.length);
+
   try {
     token = await getToken({
       req: request,
@@ -177,7 +179,7 @@ export async function middleware(request: NextRequest) {
     }) as AuthJWT | null;
     tokenStatus = token ? 'YES' : 'NO';
     if (!token) {
-      console.log('[MW] getToken returned null. Secret length:', process.env.AUTH_SECRET?.length);
+      console.log('[MW] getToken returned null');
     }
   } catch (error) {
     tokenStatus = 'EXCEPTION';
