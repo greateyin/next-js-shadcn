@@ -3,12 +3,12 @@
 ## ✅ Changes Applied
 
 ### 1. `next.config.js`
-- ✅ Added `serverComponentsExternalPackages` to exclude CommonJS packages
+- ✅ Added `serverExternalPackages` (Next.js 15+) to exclude CommonJS packages
 - ✅ Added Edge Runtime webpack aliases to prevent bundling winston/editorconfig
 - ✅ Updated client-side null-loader to exclude additional packages
 
 ### 2. `middleware.ts`
-- ✅ Explicitly set `runtime: 'edge'` in config
+- ✅ Explicitly set `runtime: 'experimental-edge'` in config
 
 ### 3. Documentation
 - ✅ Created `document/VERCEL_EDGE_RUNTIME_FIX.md` with full explanation

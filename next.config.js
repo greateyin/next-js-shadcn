@@ -64,8 +64,8 @@ const nextConfig = {
     serverSourceMaps: true,
   },
 
-  // 防止這些套件被打包到 Edge Runtime
-  serverComponentsExternalPackages: [
+  // 防止這些套件被打包到 Edge Runtime (Next.js 15+)
+  serverExternalPackages: [
     'winston',
     'winston-elasticsearch',
     '@elastic/elasticsearch',
@@ -76,7 +76,7 @@ const nextConfig = {
   // Webpack 配置
   webpack: (config, { isServer, nextRuntime }) => {
     // Edge Runtime 配置 - 排除使用 CommonJS 的套件
-    if (nextRuntime === 'edge') {
+    if (nextRuntime === 'edge' || nextRuntime === 'experimental-edge') {
       config.resolve.alias = {
         ...config.resolve.alias,
         // 排除在 Edge Runtime 中使用 __dirname 的套件

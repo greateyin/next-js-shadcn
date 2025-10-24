@@ -20,10 +20,10 @@ This error occurs because:
 
 Added three layers of protection:
 
-#### A. `serverComponentsExternalPackages`
+#### A. `serverExternalPackages` (Next.js 15+)
 Prevents these packages from being bundled:
 ```js
-serverComponentsExternalPackages: [
+serverExternalPackages: [
   'winston',
   'winston-elasticsearch',
   '@elastic/elasticsearch',
@@ -60,13 +60,13 @@ if (!isServer) {
 
 ### 2. Updated `middleware.ts`
 
-Explicitly declared Edge Runtime:
+Explicitly declared Edge Runtime (experimental in Next.js 15):
 ```ts
 export const config = {
   matcher: [
     '/((?!api/auth|_next/static|_next/image|favicon.ico).*)',
   ],
-  runtime: 'edge',
+  runtime: 'experimental-edge',
 }
 ```
 
