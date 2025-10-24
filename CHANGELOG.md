@@ -1,5 +1,86 @@
 # 專案變更日誌 (CHANGELOG)
 
+## [v0.01] - 2024-12-19 🎉
+
+### Initial Release - Next.js ShadCN Template with Auth.js v5
+
+第一個穩定版本發布，包含完整的 Auth.js v5 整合和現代化開發堆疊。
+
+#### ✨ 新增功能
+
+**認證系統**
+- ✅ Auth.js v5 整合 - 最新認證框架與會話管理
+- ✅ Google OAuth - Google 帳號登入支援與 RBAC
+- ✅ GitHub OAuth - GitHub 帳號登入支援
+- ✅ 動態管理員重定向 - 智能重定向處理
+- ✅ 角色權限控制 (RBAC) - 完整權限系統
+- ✅ Edge Runtime 兼容 - Vercel Edge 函數優化
+
+**UI/UX 框架**
+- ✅ ShadCN UI 組件 - 完整現代化組件庫
+- ✅ Tailwind CSS - 實用程式優先的 CSS 框架
+- ✅ 深色/淺色主題 - 主題切換與系統偏好檢測
+- ✅ 響應式設計 - 行動優先的響應式佈局
+- ✅ TypeScript 整合 - 完整的類型安全
+
+**管理員儀表板**
+- ✅ 管理面板 - 完整的管理介面
+- ✅ 用戶管理 - 用戶 CRUD 操作與正確路由
+- ✅ 儀表板分析 - 概覽和指標顯示
+- ✅ 選單系統 - 階層式導航與範圍分離
+- ✅ RBAC 實施 - 基於角色的選單可見性
+
+**技術架構**
+- ✅ Next.js 15 - 最新 React 框架與 App Router
+- ✅ React 19 - 尖端 React 功能與優化
+- ✅ TypeScript 5 - 進階類型檢查
+- ✅ Prisma 準備 - 資料庫 ORM 整合預備
+- ✅ ESLint & Prettier - 代碼品質與格式化工具
+
+#### 🔧 技術實現
+
+**前端架構**
+- App Router - Next.js 13+ 基於檔案的路由
+- Server Components - 優化的伺服器端渲染
+- Layout System - 嵌套佈局與認證守衛
+
+**認證流程**
+- Session Management - 安全的會話處理與 JWE tokens
+- Cookie Configuration - 安全的 cookie 設定
+- Callback URL Handling - 認證後動態重定向
+- Token Validation - 基於中間件的 token 驗證
+
+#### 🛡️ 安全功能
+
+**認證安全**
+- OAuth 2.0 整合 - 行業標準認證協議
+- CSRF 保護 - 跨站請求偽造保護
+- 安全會話 - 加密會話 tokens 與輪換
+- 角色權限 - 細粒度存取控制系統
+
+#### 🚀 效能優化
+
+**構建優化**
+- Code Splitting - 自動基於路由的代碼分割
+- Tree Shaking - 死代碼消除
+- Bundle Analysis - 優化的套件大小
+- Image Optimization - Next.js 自動圖片優化
+
+#### 🐛 錯誤修復
+
+**認證問題**
+- 修復中間件大小 - 減少到 <200KB 以符合 edge 兼容性
+- 修復管理員重定向 - 正確的動態重定向處理
+- 修復選單路由 - 糾正用戶選單路徑從 `/dashboard/users` 到 `/admin/users`
+- 增強 token 處理 - 改進 getToken 錯誤處理和日誌記錄
+
+**配置問題**
+- ESM/CommonJS 兼容性 - 解決模組系統衝突
+- 配置檔案標準化 - 統一配置方法
+- Edge runtime 優化 - 完整 Vercel Edge 兼容性
+
+---
+
 ## 📅 最新版本
 2025-10-24
 
