@@ -1,4 +1,19 @@
 {
   "buildCommand": "prisma generate && next build",
-  "installCommand": "pnpm install"
+  "installCommand": "pnpm install",
+  "framework": "nextjs",
+  "functions": {
+    "app/api/**/*.ts": {
+      "memory": 1024,
+      "maxDuration": 10
+    },
+    "app/api/admin/**/*.ts": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  },
+  "regions": ["hnd1"],
+  "env": {
+    "SKIP_ENV_VALIDATION": "1"
+  }
 }

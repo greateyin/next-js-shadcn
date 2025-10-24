@@ -56,14 +56,13 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
 
-  // React Strict Mode
-  reactStrictMode: false,
+  // React Strict Mode (建議開啟以捕獲潛在問題)
+  reactStrictMode: true,
 
   // 實驗性功能
   experimental: {
-    optimizePackageImports: [],
-    serverMinification: false,
-    serverSourceMaps: true,
+    // 優化套件導入以減少 bundle 大小
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   },
 
   // 防止這些套件被打包到 Edge Runtime (Next.js 15+)
@@ -77,50 +76,16 @@ const nextConfig = {
     'js-beautify',
   ],
 
-  // Webpack 配置
-  webpack: (config, { isServer, nextRuntime }) => {
-    // 為所有環境排除使用 CommonJS 的套件
-    // 設置為 false 會讓 webpack 完全忽略這些套件的 import
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      'winston': false,
-      'winston-elasticsearch': false,
-      '@elastic/elasticsearch': false,
-      'editorconfig': false,
-      '@one-ini/wasm': false,
-      'prettier': false,
-      'js-beautify': false,
-    };
-
-    // 客戶端 polyfills 配置
+  // Webpack 配置（簡化版，更適合 Edge Runtime）
+  webpack: (config, { isServer }) => {
+    // 只在客戶端排除 Node.js 模組
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
-        // Node.js 內建模組設置為 false（客戶端不需要）
         fs: false,
         net: false,
         tls: false,
-        os: false,
-        path: false,
-        zlib: false,
-        console: false,
-        diagnostics_channel: false,
-        // 使用 browserify polyfills
-        crypto: "crypto-browserify",
-        stream: "stream-browserify",
-        buffer: "buffer",
-        util: "util",
-        http: "stream-http",
-        https: "https-browserify",
-        url: false,
-        querystring: false,
       };
-
-      // 排除服務器端專用模組
-      config.module.rules.push({
-        test: /winston|winston-elasticsearch|@elastic\/elasticsearch|editorconfig|@one-ini\/wasm|prettier|js-beautify/,
-        use: 'null-loader',
-      });
     }
 
     return config;
