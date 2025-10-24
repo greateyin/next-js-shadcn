@@ -150,6 +150,21 @@ export async function middleware(request: NextRequest) {
   // 1. GET JWT TOKEN (Edge Runtime Compatible)
   // =========================================================================
 
+  // Debug: Check all cookies
+  const allCookies = request.cookies.getAll();
+  const authCookie = request.cookies.get('authjs.session-token') ||
+                     request.cookies.get('__Secure-authjs.session-token');
+
+  console.log('[Middleware] Debug info:', {
+    hasAuthSecret: !!process.env.AUTH_SECRET,
+    authSecretLength: process.env.AUTH_SECRET?.length,
+    nodeEnv: process.env.NODE_ENV,
+    cookieDomain: process.env.COOKIE_DOMAIN,
+    allCookieNames: allCookies.map(c => c.name),
+    authCookieExists: !!authCookie,
+    authCookieName: authCookie?.name,
+  });
+
   const token = await getToken({
     req: request,
     secret: process.env.AUTH_SECRET,
@@ -184,12 +199,11 @@ export async function middleware(request: NextRequest) {
   // redirect them to their appropriate dashboard
   
   if (isAuthenticated && isAuthPage) {
-    // Don't redirect if there's a callbackUrl - Auth.js will handle it
-    const hasCallbackUrl = request.nextUrl.searchParams.has('callbackUrl')
-    if (!hasCallbackUrl) {
-      const target = userHasAdminPrivileges ? ADMIN_LOGIN_REDIRECT : DEFAULT_LOGIN_REDIRECT
-      return NextResponse.redirect(new URL(target, request.url))
-    }
+    // If user is authenticated and on auth page, redirect to appropriate dashboard
+    const callbackUrl = request.nextUrl.searchParams.get('callbackUrl')
+    const target = callbackUrl || (userHasAdminPrivileges ? ADMIN_LOGIN_REDIRECT : DEFAULT_LOGIN_REDIRECT)
+    console.log('[Middleware] Authenticated user on auth page, redirecting to:', target)
+    return NextResponse.redirect(new URL(target, request.url))
   }
   
   // =========================================================================
