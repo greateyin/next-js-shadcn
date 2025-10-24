@@ -9,7 +9,7 @@
 
 import { useFormStatus } from "react-dom";
 import { useSearchParams } from "next/navigation";
-import { loginWithRedirectAction } from "@/actions/auth";
+import { loginFormAction } from "@/actions/auth/login-action-wrapper";
 import { FormError } from "@/components/auth/common/FormError";
 import { FormSuccess } from "@/components/auth/common/FormSuccess";
 import { Button } from "@/components/ui/button";
@@ -74,16 +74,11 @@ export function LoginForm() {
         </div>
       </div>
 
-      <form 
-        action={async (formData) => {
-          'use server'
-          const redirect = callbackUrl || "/dashboard";
-          formData.append("redirectTo", redirect);
-          // ✅ 不使用 try-catch - 讓 redirect() 自然拋出 NEXT_REDIRECT
-          await loginWithRedirectAction(formData, redirect);
-        }} 
-        className="space-y-6"
-      >
+      <form action={loginFormAction} className="space-y-6">
+        {/* Hidden field for callbackUrl */}
+        {callbackUrl && (
+          <input type="hidden" name="callbackUrl" value={callbackUrl} />
+        )}
         <div className="space-y-4">
           <Input
             name="email"

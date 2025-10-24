@@ -12,6 +12,8 @@ export {
   logoutAction,
 } from "./login";
 
+export { loginFormAction } from "./login-action-wrapper";
+
 // User registration related
 export {
   registerAction,
