@@ -163,7 +163,12 @@ export async function middleware(request: NextRequest) {
     allCookieNames: allCookies.map(c => c.name),
     authCookieExists: !!authCookie,
     authCookieName: authCookie?.name,
+    authCookieValue: authCookie?.value ? `${authCookie.value.substring(0, 20)}...` : 'none',
   });
+
+  // Log raw cookie header
+  const cookieHeader = request.headers.get('cookie');
+  console.log('[Middleware] Cookie header:', cookieHeader ? `${cookieHeader.substring(0, 100)}...` : 'none');
 
   const token = await getToken({
     req: request,
@@ -172,6 +177,12 @@ export async function middleware(request: NextRequest) {
 
   const isAuthenticated = !!token
   const userHasAdminPrivileges = hasAdminPrivileges(token)
+
+  console.log('[Middleware] getToken result:', {
+    tokenExists: !!token,
+    tokenType: typeof token,
+    tokenKeys: token ? Object.keys(token) : [],
+  });
 
   console.log('[Middleware] Request:', {
     pathname,

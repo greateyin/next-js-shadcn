@@ -334,9 +334,9 @@ export const authConfig: NextAuthConfig = {
         path: "/",
         secure: process.env.NODE_ENV === "production",
         // 👇 Key: Share cookies across subdomains
-        // Only set domain if explicitly configured (for cross-domain scenarios)
-        // Leave undefined for single domain (Vercel default)
-        domain: process.env.COOKIE_DOMAIN ? process.env.COOKIE_DOMAIN : undefined
+        // For Vercel: Only set domain if explicitly configured
+        // Otherwise, let the browser use the current domain
+        domain: process.env.COOKIE_DOMAIN || undefined
       }
     }
   },
