@@ -235,7 +235,12 @@ export const authConfig: NextAuthConfig = {
         token.name = user.name ?? null;
         token.picture = user.image ?? null;
 
-        console.log('[JWT Callback] User logged in:', { userId: user.id, email: user.email });
+        console.log('[JWT Callback] User logged in:', {
+          userId: user.id,
+          email: user.email,
+          nodeEnv: process.env.NODE_ENV,
+          cookieName: process.env.NODE_ENV === "production" ? "__Secure-authjs.session-token" : "authjs.session-token",
+        });
 
         try {
           // Get user roles and permissions
@@ -330,13 +335,16 @@ export const authConfig: NextAuthConfig = {
         : "authjs.session-token",
       options: {
         httpOnly: true,
+        // Use "strict" for better security, but "lax" for better compatibility
         sameSite: "lax" as const,
         path: "/",
         secure: process.env.NODE_ENV === "production",
         // 👇 Key: Share cookies across subdomains
         // For Vercel: Only set domain if explicitly configured
         // Otherwise, let the browser use the current domain
-        domain: process.env.COOKIE_DOMAIN || undefined
+        domain: process.env.COOKIE_DOMAIN || undefined,
+        // Add maxAge to ensure cookie is set with expiration
+        maxAge: 30 * 24 * 60 * 60, // 30 days in seconds
       }
     }
   },
