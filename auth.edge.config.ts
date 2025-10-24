@@ -73,13 +73,43 @@ export const edgeAuthConfig: NextAuthConfig = {
     },
   },
   
-  // ✅ Minimal callbacks - no database operations
+  // ✅ Callbacks with RBAC data - Essential for middleware
   callbacks: {
-    // These will be overridden by full config in auth.ts
-    async jwt({ token }) {
+    async jwt({ token, user, trigger }) {
+      // On sign in, user object contains RBAC data from authorize()
+      if (user) {
+        const extendedUser = user as any
+        
+        token.id = user.id
+        token.email = user.email
+        token.name = user.name
+        token.picture = user.image
+        token.status = extendedUser.status
+        token.role = extendedUser.role
+        
+        // ⚠️ Critical: RBAC data from full auth.config.ts
+        token.roleNames = extendedUser.roleNames || []
+        token.permissionNames = extendedUser.permissionNames || []
+        token.applicationPaths = extendedUser.applicationPaths || []
+      }
+      
       return token
     },
-    async session({ session }) {
+    
+    async session({ session, token }) {
+      if (token && session.user) {
+        session.user.id = token.id as string
+        session.user.email = token.email as string
+        session.user.name = token.name as string | null
+        session.user.image = token.picture as string | null
+        session.user.status = token.status as any
+        session.user.role = token.role as string
+        
+        // ⚠️ Critical: Pass RBAC data to session
+        session.user.roleNames = (token.roleNames as string[]) || []
+        session.user.permissionNames = (token.permissionNames as string[]) || []
+        session.user.applicationPaths = (token.applicationPaths as string[]) || []
+      }
       return session
     },
   },
