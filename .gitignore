@@ -60,3 +60,4 @@ components.json
 *.temp
 *.bak
 .cache/
+.vercel

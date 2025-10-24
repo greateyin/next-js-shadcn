@@ -2,19 +2,22 @@
  * @fileoverview Next.js Middleware for authentication and authorization
  * @module middleware
  * @description Auth.js V5+ middleware with role-based access control
+ * Edge Runtime compatible - uses JWT sessions only
  */
 
-import { NextResponse } from "next/server"
-import type { NextRequest } from "next/server"
-import { auth } from "@/auth"
+import NextAuth from "next-auth"
+import { authConfigEdge } from "@/auth.config.edge"
 import { ADMIN_LOGIN_REDIRECT, DEFAULT_LOGIN_REDIRECT } from "@/routes"
+
+const { auth } = NextAuth(authConfigEdge)
 
 /**
  * Authentication and authorization middleware
  * Implements Auth.js V5 recommended pattern for Next.js 15+ App Router
  */
-export default auth(async (req) => {
+export default auth((req) => {
   const { pathname } = req.nextUrl
+  const { NextResponse } = require("next/server")
   const user = req.auth?.user
 
   const userHasAdminPrivileges = Boolean(
