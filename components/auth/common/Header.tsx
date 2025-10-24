@@ -5,18 +5,7 @@
  * styling for authentication-related pages
  */
 
-import { Poppins } from "next/font/google";
 import { cn } from "@/lib/utils";
-
-/**
- * Poppins font configuration for the header
- * @constant
- * @type {NextFont}
- */
-const font = Poppins({
-  subsets: ["latin"],
-  weight: ["600"],
-});
 
 /**
  * Props for the Header component
@@ -31,7 +20,7 @@ interface HeaderProps {
  * Header component for authentication pages
  * @component
  * @description A header component that:
- * - Uses Poppins font for consistent branding
+ * - Applies consistent typographic styling with the app's sans-serif font
  * - Displays the application logo/name
  * - Shows a customizable label text
  * - Centers content with consistent spacing
@@ -60,7 +49,7 @@ interface HeaderProps {
 export function Header({ label }: HeaderProps) {
   return (
     <div className="w-full flex flex-col gap-y-4 items-center justify-center">
-      <h1 className={cn("text-3xl font-semibold tracking-tight text-gray-900", font.className)}>
+      <h1 className={cn("text-3xl font-semibold tracking-tight text-gray-900 font-sans")}> 
         🔐 Auth
       </h1>
       <p className="text-gray-600 text-sm">

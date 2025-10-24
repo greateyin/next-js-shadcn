@@ -2,38 +2,78 @@
  * @fileoverview Database configuration using Prisma ORM
  * @module lib/db
  * @description Configures and exports a singleton Prisma client instance
- * following Next.js best practices for connection management
+ * following Next.js best practices for connection management. When Prisma
+ * has not been generated (e.g. in an offline environment), a descriptive
+ * stub client is provided so the application can still build.
  */
 
-import { PrismaClient } from "@prisma/client";
+import { createRequire } from "module";
+import { existsSync } from "fs";
+import path from "path";
 
-/**
- * Global type declaration for PrismaClient
- * @global
- * @description Extends the global namespace to include prisma client type
- */
+type PrismaClientLike = Record<string, unknown>;
+
 declare global {
   // eslint-disable-next-line no-var
-  var prisma: PrismaClient | undefined;
+  var prisma: PrismaClientLike | undefined;
 }
 
-/**
- * Singleton PrismaClient instance
- * @constant
- * @type {PrismaClient}
- * @description PrismaClient is attached to the `global` object in development to prevent
- * exhausting your database connection limit.
- * @see {@link https://pris.ly/d/help/next-js-best-practices|Prisma Best Practices}
- * 
- * @example
- * ```ts
- * // Using the db client
- * const user = await db.user.findUnique({
- *   where: { email: 'user@example.com' }
- * });
- * ```
- */
-export const db = globalThis.prisma || new PrismaClient();
+const require = createRequire(import.meta.url);
 
-// Prevent multiple instances of Prisma Client in development
-if (process.env.NODE_ENV !== "production") globalThis.prisma = db;
+const prismaClientPath = path.join(process.cwd(), "node_modules", ".prisma", "client", "default.js");
+const hasGeneratedClient = existsSync(prismaClientPath);
+
+const prismaNotGeneratedMessage =
+  "Prisma Client has not been generated. Run `pnpm prisma:generate` to enable database access.";
+
+const createPrismaStub = (): PrismaClientLike => {
+  const callableProxy = new Proxy(function () {
+    /* noop */
+  }, {
+    apply() {
+      throw new Error(prismaNotGeneratedMessage);
+    },
+    get() {
+      return callableProxy;
+    },
+  });
+
+  return new Proxy(
+    {},
+    {
+      get(_target, property) {
+        if (property === "$connect" || property === "$disconnect" || property === "$transaction") {
+          return async () => {
+            throw new Error(prismaNotGeneratedMessage);
+          };
+        }
+
+        return callableProxy;
+      },
+    },
+  ) as PrismaClientLike;
+};
+
+const createPrismaClient = (): PrismaClientLike => {
+  if (!hasGeneratedClient) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(prismaNotGeneratedMessage);
+    }
+    return createPrismaStub();
+  }
+
+  if (globalThis.prisma) {
+    return globalThis.prisma;
+  }
+
+  const { PrismaClient } = require("@prisma/client");
+  const client = new PrismaClient();
+
+  if (process.env.NODE_ENV !== "production") {
+    globalThis.prisma = client;
+  }
+
+  return client as PrismaClientLike;
+};
+
+export const db: PrismaClientLike = createPrismaClient();
