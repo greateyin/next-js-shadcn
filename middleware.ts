@@ -7,7 +7,10 @@
 
 import NextAuth from "next-auth"
 import { authConfigEdge } from "@/auth.config.edge"
-import { ADMIN_LOGIN_REDIRECT, DEFAULT_LOGIN_REDIRECT } from "@/routes"
+
+// Route constants - inlined for Edge Runtime compatibility
+const DEFAULT_LOGIN_REDIRECT = "/dashboard"
+const ADMIN_LOGIN_REDIRECT = "/admin"
 
 const { auth } = NextAuth(authConfigEdge)
 
