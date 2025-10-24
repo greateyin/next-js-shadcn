@@ -1,12 +1,19 @@
 import { db } from "@/lib/db";
 import { UserWithRoles } from "@/types/roles";
+import { permissionCache } from "@/lib/auth/permissionCache";
 
 /**
- * Gets all roles and permissions for a user
+ * Gets all roles and permissions for a user (with caching)
  * @param userId - The user ID
  * @returns UserWithRoles object containing roles, permissions, and applications
  */
 export async function getUserRolesAndPermissions(userId: string): Promise<UserWithRoles> {
+  // Check cache first
+  const cached = permissionCache.get(userId);
+  if (cached) {
+    return cached;
+  }
+
   // Get user with roles, including related roles, permissions, and applications
   const user = await db.user.findUnique({
     where: { id: userId },
@@ -38,12 +45,12 @@ export async function getUserRolesAndPermissions(userId: string): Promise<UserWi
 
   // Extract roles, permissions, and applications
   const roles = user.userRoles.map(userRole => userRole.role);
-  
-  const permissions = user.userRoles.flatMap(userRole => 
+
+  const permissions = user.userRoles.flatMap(userRole =>
     userRole.role.permissions.map(rolePermission => rolePermission.permission)
   );
-  
-  const applications = user.userRoles.flatMap(userRole => 
+
+  const applications = user.userRoles.flatMap(userRole =>
     userRole.role.applications
       .filter(roleApp => roleApp.application.isActive)
       .map(roleApp => roleApp.application)
@@ -53,12 +60,12 @@ export async function getUserRolesAndPermissions(userId: string): Promise<UserWi
   const uniquePermissions = Array.from(
     new Map(permissions.map(item => [item.id, item])).values()
   );
-  
+
   const uniqueApplications = Array.from(
     new Map(applications.map(item => [item.id, item])).values()
   );
 
-  return {
+  const result: UserWithRoles = {
     id: user.id,
     email: user.email,
     name: user.name || undefined,
@@ -66,6 +73,11 @@ export async function getUserRolesAndPermissions(userId: string): Promise<UserWi
     permissions: uniquePermissions,
     applications: uniqueApplications
   };
+
+  // Cache the result
+  permissionCache.set(userId, result);
+
+  return result;
 }
 
 /**
@@ -99,21 +111,54 @@ export function requirePermission(permissionCheck: string | string[] | ((permiss
   return async (userId: string) => {
     const userWithRoles = await getUserRolesAndPermissions(userId);
     const userPermissions = userWithRoles.permissions.map(p => p.name);
-    
+
     if (typeof permissionCheck === 'string') {
       return userPermissions.includes(permissionCheck);
     }
-    
+
     if (Array.isArray(permissionCheck)) {
       return permissionCheck.some(perm => userPermissions.includes(perm));
     }
-    
+
     if (typeof permissionCheck === 'function') {
       return permissionCheck(userPermissions);
     }
-    
+
     return false;
   };
+}
+
+/**
+ * Invalidate permission cache for a user
+ * Call this after updating user roles or permissions
+ * @param userId - The user ID
+ */
+export function invalidateUserPermissionCache(userId: string): void {
+  permissionCache.invalidate(userId);
+}
+
+/**
+ * Invalidate permission cache for multiple users
+ * Useful when updating a role that affects multiple users
+ * @param userIds - Array of user IDs
+ */
+export function invalidateUserPermissionCacheMany(userIds: string[]): void {
+  permissionCache.invalidateMany(userIds);
+}
+
+/**
+ * Invalidate permission cache for all users with a specific role
+ * @param roleId - The role ID
+ */
+export async function invalidateRolePermissionCache(roleId: string): Promise<void> {
+  // Find all users with this role
+  const userRoles = await db.userRole.findMany({
+    where: { roleId },
+    select: { userId: true }
+  });
+
+  const userIds = userRoles.map(ur => ur.userId);
+  permissionCache.invalidateMany(userIds);
 }
 
 /**

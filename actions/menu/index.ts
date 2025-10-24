@@ -15,6 +15,9 @@ import {
   type ManageMenuItemRolesInput,
   type UpdateMenuItemsOrderInput,
 } from "@/schemas/menu";
+import { checkCircularReference } from "@/lib/menu/circularReferenceCheck";
+import { incrementMenuItemVersion, incrementApplicationMenuVersion } from "@/lib/menu/menuVersion";
+import { logAuditSuccess, logAuditFailure } from "@/lib/audit/auditLogger";
 
 /**
  * Validate that the current session has administrator privileges.
@@ -222,12 +225,25 @@ export async function createMenuItem(data: CreateMenuItemInput) {
         order: validatedData.order,
         isVisible: validatedData.isVisible,
         isDisabled: validatedData.isDisabled,
+        version: 0,
       },
       include: {
         application: true,
         parent: true,
       },
     });
+
+    // Increment application menu version for cache invalidation
+    await incrementApplicationMenuVersion(validatedData.applicationId);
+
+    // Log audit
+    await logAuditSuccess(
+      session.user.id,
+      'CREATE',
+      'MENU_ITEM',
+      menuItem.id,
+      menuItem
+    );
 
     return { success: "Menu item created successfully", menuItem };
   } catch (error) {
@@ -305,30 +321,7 @@ export async function updateMenuItem(data: UpdateMenuItemInput) {
           return { error: "Parent menu item must belong to the same application" };
         }
 
-        // Check if will create circular reference (cannot set parent as itself or its own child)
-        if (validatedData.parentId === validatedData.id) {
-          return { error: "Menu item cannot be its own parent" };
-        }
-
-        // Recursively check child items
-        const checkCircularReference = async (itemId: string, targetId: string): Promise<boolean> => {
-          const children = await db.menuItem.findMany({
-            where: { parentId: itemId },
-            select: { id: true },
-          });
-
-          for (const child of children) {
-            if (child.id === targetId) {
-              return true;
-            }
-            if (await checkCircularReference(child.id, targetId)) {
-              return true;
-            }
-          }
-
-          return false;
-        };
-
+        // Check if will create circular reference (optimized iterative approach)
         const hasCircularReference = await checkCircularReference(
           validatedData.id,
           validatedData.parentId
@@ -354,12 +347,28 @@ export async function updateMenuItem(data: UpdateMenuItemInput) {
         ...(validatedData.order !== undefined && { order: validatedData.order }),
         ...(validatedData.isVisible !== undefined && { isVisible: validatedData.isVisible }),
         ...(validatedData.isDisabled !== undefined && { isDisabled: validatedData.isDisabled }),
+        // Increment version for cache invalidation
+        version: {
+          increment: 1
+        }
       },
       include: {
         application: true,
         parent: true,
       },
     });
+
+    // Increment application menu version for cache invalidation
+    await incrementApplicationMenuVersion(existingMenuItem.applicationId);
+
+    // Log audit
+    await logAuditSuccess(
+      session.user.id,
+      'UPDATE',
+      'MENU_ITEM',
+      updatedMenuItem.id,
+      updatedMenuItem
+    );
 
     return { success: "Menu item updated successfully", menuItem: updatedMenuItem };
   } catch (error) {

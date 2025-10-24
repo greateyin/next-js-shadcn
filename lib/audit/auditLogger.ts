@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { headers } from "next/headers";
 
 export interface AuditLogOptions {
   userId?: string;
@@ -15,7 +16,39 @@ export interface AuditLogOptions {
   userAgent?: string;
 }
 
+/**
+ * Get client IP address from request headers
+ */
+function getClientIp(): string | undefined {
+  try {
+    const headersList = headers();
+    return (
+      headersList.get('x-forwarded-for')?.split(',')[0] ||
+      headersList.get('x-real-ip') ||
+      headersList.get('cf-connecting-ip') ||
+      undefined
+    );
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Get user agent from request headers
+ */
+function getUserAgent(): string | undefined {
+  try {
+    const headersList = headers();
+    return headersList.get('user-agent') || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function createAuditLog(options: AuditLogOptions) {
+  const ipAddress = options.ipAddress || getClientIp();
+  const userAgent = options.userAgent || getUserAgent();
+
   return await db.auditLog.create({
     data: {
       userId: options.userId,
@@ -28,10 +61,52 @@ export async function createAuditLog(options: AuditLogOptions) {
       newValue: options.newValue,
       reason: options.reason,
       metadata: options.metadata,
-      ipAddress: options.ipAddress,
-      userAgent: options.userAgent,
+      ipAddress: ipAddress || null,
+      userAgent: userAgent || null,
       timestamp: new Date(),
     },
+  });
+}
+
+/**
+ * Convenience function for successful operations
+ */
+export async function logAuditSuccess(
+  userId: string,
+  action: string,
+  resourceType: string,
+  resourceId: string,
+  newValue?: any
+): Promise<void> {
+  await createAuditLog({
+    userId,
+    action,
+    resourceType,
+    resourceId,
+    newValue: newValue ? JSON.stringify(newValue) : undefined,
+    status: 'SUCCESS'
+  });
+}
+
+/**
+ * Convenience function for failed operations
+ */
+export async function logAuditFailure(
+  userId: string,
+  action: string,
+  resourceType: string,
+  resourceId: string,
+  error: string,
+  oldValue?: any
+): Promise<void> {
+  await createAuditLog({
+    userId,
+    action,
+    resourceType,
+    resourceId,
+    oldValue: oldValue ? JSON.stringify(oldValue) : undefined,
+    status: 'FAILED',
+    reason: error
   });
 }
 
@@ -40,6 +115,8 @@ export async function createAuditLog(options: AuditLogOptions) {
  */
 export const auditLogger = {
   log: createAuditLog,
+  success: logAuditSuccess,
+  failure: logAuditFailure,
 };
 
 export async function queryAuditLogs(filters: {

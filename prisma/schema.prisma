@@ -37,6 +37,8 @@ model User {
   createdAt             DateTime               @default(now())
   /// User's last update time
   updatedAt             DateTime               @updatedAt
+  /// Soft delete timestamp (null if not deleted)
+  deletedAt             DateTime?
   accounts              Account[]
   auditLogs             AuditLog[]
   loginMethods          LoginMethod[]
@@ -255,6 +257,8 @@ model Role {
   createdAt    DateTime          @default(now())
   /// Update time
   updatedAt    DateTime          @updatedAt
+  /// Soft delete timestamp (null if not deleted)
+  deletedAt    DateTime?
   /// Users associated with this role
   users        UserRole[]
   /// Permissions associated with this role
@@ -398,10 +402,14 @@ model MenuItem {
   isVisible     Boolean         @default(true)
   /// Whether it is disabled
   isDisabled    Boolean         @default(false)
+  /// Menu version (incremented on each update for cache invalidation)
+  version       Int             @default(0)
   /// Creation time
   createdAt     DateTime        @default(now())
   /// Update time
   updatedAt     DateTime        @updatedAt
+  /// Soft delete timestamp (null if not deleted)
+  deletedAt     DateTime?
   /// Associated application
   application   Application     @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   /// Parent menu item
