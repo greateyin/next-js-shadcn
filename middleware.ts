@@ -184,8 +184,12 @@ export async function middleware(request: NextRequest) {
   // redirect them to their appropriate dashboard
   
   if (isAuthenticated && isAuthPage) {
-    const target = userHasAdminPrivileges ? ADMIN_LOGIN_REDIRECT : DEFAULT_LOGIN_REDIRECT
-    return NextResponse.redirect(new URL(target, request.url))
+    // Don't redirect if there's a callbackUrl - Auth.js will handle it
+    const hasCallbackUrl = request.nextUrl.searchParams.has('callbackUrl')
+    if (!hasCallbackUrl) {
+      const target = userHasAdminPrivileges ? ADMIN_LOGIN_REDIRECT : DEFAULT_LOGIN_REDIRECT
+      return NextResponse.redirect(new URL(target, request.url))
+    }
   }
   
   // =========================================================================
