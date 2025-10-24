@@ -139,30 +139,35 @@ export const authConfig: NextAuthConfig = {
      * Safe redirect callback - only allows redirects to whitelisted domains
      */
     async redirect({ url, baseUrl }) {
+      // Handle relative URLs (e.g., /dashboard) - these are always safe
+      if (url.startsWith("/")) {
+        return url;
+      }
+
       // List of allowed subdomains (read from environment variable, defaults to current domain only)
       const allowedDomains = process.env.ALLOWED_DOMAINS
         ? process.env.ALLOWED_DOMAINS.split(",").map(d => d.trim())
         : [new URL(baseUrl).hostname];
-      
+
       try {
         const urlObj = new URL(url, baseUrl);
         const baseUrlObj = new URL(baseUrl);
-        
+
         // Check if domain is allowed
         const isAllowedDomain = allowedDomains.some(domain => {
           // Exact match or subdomain match
-          return urlObj.hostname === domain || 
+          return urlObj.hostname === domain ||
                  urlObj.hostname.endsWith(`.${domain}`);
         });
-        
+
         // Check if same parent domain
-        const isSameParentDomain = process.env.COOKIE_DOMAIN && 
+        const isSameParentDomain = process.env.COOKIE_DOMAIN &&
           urlObj.hostname.endsWith(process.env.COOKIE_DOMAIN);
-        
+
         if (isAllowedDomain || isSameParentDomain) {
           return urlObj.toString();
         }
-        
+
         // If no match, return baseUrl
         console.warn(`Redirect blocked: ${url} is not in allowed domains`);
         return baseUrl;
