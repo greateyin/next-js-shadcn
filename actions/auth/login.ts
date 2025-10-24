@@ -9,7 +9,8 @@
 import { signIn, signOut } from "@/auth";
 import { LoginSchema } from "@/schemas";
 import { AuthError } from "next-auth";
-import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
+import { DEFAULT_LOGIN_REDIRECT, ADMIN_LOGIN_REDIRECT } from "@/routes";
+import { db } from "@/lib/db";
 
 /**
  * Login Server Action
@@ -39,23 +40,47 @@ export async function loginAction(formData: FormData) {
 
   // Validate input
   const validatedFields = LoginSchema.safeParse({
-    email,
-    password,
+    email: formData.get("email"),
+    password: formData.get("password"),
   });
 
   if (!validatedFields.success) {
-    return {
-      error: "Invalid credentials format",
-    };
+    return { error: "Invalid credentials" };
   }
 
   try {
+    // Check user role BEFORE signing in to determine redirect target
+    const user = await db.user.findUnique({
+      where: { email: validatedFields.data.email },
+      include: {
+        userRoles: {
+          include: {
+            role: true
+          }
+        }
+      }
+    });
+
+    // Determine redirect based on user role
+    let redirectTarget = DEFAULT_LOGIN_REDIRECT;
+    
+    if (user) {
+      const hasAdminRole = user.userRoles.some(
+        ur => ur.role.name === 'admin' || ur.role.name === 'super-admin'
+      );
+      
+      if (hasAdminRole) {
+        redirectTarget = ADMIN_LOGIN_REDIRECT;
+        console.log('[Login Action] Admin user detected, redirecting to:', redirectTarget);
+      }
+    }
+
     // Auth.js will handle the redirect automatically
     // It will redirect to DEFAULT_LOGIN_REDIRECT or the callbackUrl
     await signIn("credentials", {
       email: validatedFields.data.email,
       password: validatedFields.data.password,
-      redirectTo: DEFAULT_LOGIN_REDIRECT,
+      redirectTo: redirectTarget,
     });
   } catch (error) {
     // Auth.js throws NEXT_REDIRECT error for successful redirects
@@ -106,10 +131,39 @@ export async function loginWithRedirectAction(
   }
 
   try {
+    // If no custom redirect, check user role to determine redirect target
+    let finalRedirect = customRedirect;
+    
+    if (!finalRedirect) {
+      const user = await db.user.findUnique({
+        where: { email: validatedFields.data.email },
+        include: {
+          userRoles: {
+            include: {
+              role: true
+            }
+          }
+        }
+      });
+
+      finalRedirect = DEFAULT_LOGIN_REDIRECT;
+      
+      if (user) {
+        const hasAdminRole = user.userRoles.some(
+          ur => ur.role.name === 'admin' || ur.role.name === 'super-admin'
+        );
+        
+        if (hasAdminRole) {
+          finalRedirect = ADMIN_LOGIN_REDIRECT;
+          console.log('[Login Redirect Action] Admin user detected, redirecting to:', finalRedirect);
+        }
+      }
+    }
+
     await signIn("credentials", {
       email: validatedFields.data.email,
       password: validatedFields.data.password,
-      redirectTo: customRedirect || DEFAULT_LOGIN_REDIRECT,
+      redirectTo: finalRedirect,
     });
   } catch (error) {
     if (error instanceof AuthError) {
