@@ -162,6 +162,26 @@ export function AdminSidebar({ applications, isOpen = false, onClose }: AdminSid
             />
           </div>
         </nav>
+        
+        {/* Footer with Dashboard Link */}
+        <div className="border-t border-gray-200/50 p-4 mt-auto space-y-2">
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100/50 p-3.5 shadow-sm hover:shadow-md transition-all group"
+          >
+            <svg className="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            <div className="flex-1">
+              <p className="text-xs font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
+                Back to Dashboard
+              </p>
+            </div>
+            <svg className="h-4 w-4 text-gray-400 group-hover:text-blue-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
+        </div>
       </div>
     </aside>
     </>

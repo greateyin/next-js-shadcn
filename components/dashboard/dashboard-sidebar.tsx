@@ -159,7 +159,28 @@ export function DashboardSidebar({ className, items, isOpen = false, onClose, ..
           </nav>
 
           {/* Footer Area - Apple Style */}
-          <div className="border-t border-gray-200/50 p-4">
+          <div className="border-t border-gray-200/50 p-4 space-y-3">
+            {/* Admin Panel Link (if user has access) */}
+            <Link
+              href="/admin"
+              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 p-3.5 shadow-sm hover:shadow-md transition-all group"
+            >
+              <svg className="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              <div className="flex-1">
+                <p className="text-xs font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
+                  Admin Panel
+                </p>
+                <p className="text-[10px] text-gray-500">
+                  Manage system settings
+                </p>
+              </div>
+              <svg className="h-4 w-4 text-gray-400 group-hover:text-blue-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+            
             <div className="rounded-xl bg-gradient-to-br from-gray-50 to-gray-100/50 p-3.5 shadow-sm">
               <p className="text-xs text-gray-600">
                 Need help?{" "}
