@@ -169,27 +169,24 @@ export async function middleware(request: NextRequest) {
   // Try to get token with different approaches
   let token: AuthJWT | null = null;
   let tokenStatus = 'ERROR';
-
-  console.log('[MW] Before getToken - Secret:', process.env.AUTH_SECRET?.substring(0, 10), 'Length:', process.env.AUTH_SECRET?.length);
+  let secretInfo = 'UNKNOWN';
 
   try {
+    secretInfo = `${process.env.AUTH_SECRET?.substring(0, 10)}...L${process.env.AUTH_SECRET?.length}`;
     token = await getToken({
       req: request,
       secret: process.env.AUTH_SECRET,
     }) as AuthJWT | null;
     tokenStatus = token ? 'YES' : 'NO';
-    if (!token) {
-      console.log('[MW] getToken returned null');
-    }
   } catch (error) {
     tokenStatus = 'EXCEPTION';
-    console.error('[MW] getToken exception:', error instanceof Error ? error.message : String(error));
+    secretInfo = 'ERR';
   }
 
   const isAuthenticated = !!token
   const userHasAdminPrivileges = hasAdminPrivileges(token)
 
-  console.log(`[MW] ${pathname} | Cookies:${cookieNames} | AuthCookie:${authCookieName} | Token:${tokenStatus} | Auth:${isAuthenticated}`);
+  console.log(`[MW] ${pathname} | Cookies:${cookieNames} | AuthCookie:${authCookieName} | Token:${tokenStatus} | Secret:${secretInfo} | Auth:${isAuthenticated}`);
 
 
   // =========================================================================
