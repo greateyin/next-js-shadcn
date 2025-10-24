@@ -6,11 +6,40 @@
  */
 
 import NextAuth from "next-auth"
-import { authConfigEdge } from "@/auth.config.edge"
+import type { NextAuthConfig } from "next-auth"
+import Google from "next-auth/providers/google"
+import GitHub from "next-auth/providers/github"
 
 // Route constants - inlined for Edge Runtime compatibility
 const DEFAULT_LOGIN_REDIRECT = "/dashboard"
 const ADMIN_LOGIN_REDIRECT = "/admin"
+
+// Edge-compatible auth configuration - inlined to avoid module resolution issues
+const authConfigEdge: NextAuthConfig = {
+  providers: [
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
+    GitHub({
+      clientId: process.env.GITHUB_CLIENT_ID!,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+    }),
+  ],
+  session: {
+    strategy: "jwt", // JWT is required for Edge Runtime
+  },
+  pages: {
+    signIn: "/auth/login",
+    error: "/auth/error",
+  },
+  callbacks: {
+    authorized: async ({ auth }) => {
+      // Basic auth check for middleware
+      return !!auth
+    },
+  },
+}
 
 const { auth } = NextAuth(authConfigEdge)
 
