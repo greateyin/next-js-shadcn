@@ -1,16 +1,4 @@
 {
-  "version": 2,
-  "buildCommand": "pnpm run build",
-  "installCommand": "pnpm install",
-  "framework": "nextjs",
-  "builds": [
-    {
-      "src": "next.config.js",
-      "use": "@vercel/next"
-    }
-  ],
-  "env": {
-    "NEXTAUTH_URL": "https://${VERCEL_URL}",
-    "VERCEL_URL": "${VERCEL_URL}"
-  }
+  "buildCommand": "prisma generate && next build",
+  "installCommand": "pnpm install"
 }
