@@ -144,39 +144,47 @@ export function hasApplicationAccess(token: AuthJWT | null, appPath: string): bo
  * @returns NextResponse (redirect or next())
  */
 export async function middleware(request: NextRequest) {
-  console.log('[MW] START', new Date().toISOString());
-
-  const { pathname } = request.nextUrl
-
-  // =========================================================================
-  // 1. GET JWT TOKEN (Edge Runtime Compatible)
-  // =========================================================================
-
-  // Debug: Check all cookies
-  const allCookies = request.cookies.getAll();
-  const authCookie = request.cookies.get('authjs.session-token') ||
-                     request.cookies.get('__Secure-authjs.session-token');
-
-  console.log('[MW] Cookies:', allCookies.map(c => c.name).join(','));
-  console.log('[MW] AuthCookie:', authCookie?.name || 'NONE');
-
-  // Try to get token with different approaches
-  let token: AuthJWT | null = null;
-
   try {
-    token = await getToken({
-      req: request,
-      secret: process.env.AUTH_SECRET,
-    }) as AuthJWT | null;
-    console.log('[MW] Token:', token ? 'YES' : 'NO');
-  } catch (error) {
-    console.error('[MW] TokenErr:', error);
-  }
+    const { pathname } = request.nextUrl
 
-  const isAuthenticated = !!token
-  const userHasAdminPrivileges = hasAdminPrivileges(token)
+    // =========================================================================
+    // 1. GET JWT TOKEN (Edge Runtime Compatible)
+    // =========================================================================
 
-  console.log('[MW] Path:', pathname, 'Auth:', isAuthenticated, 'Admin:', userHasAdminPrivileges);
+    // Debug: Check all cookies
+    let cookieNames = 'ERROR';
+    let authCookieName = 'ERROR';
+
+    try {
+      const allCookies = request.cookies.getAll();
+      cookieNames = allCookies.map(c => c.name).join(',') || 'EMPTY';
+
+      const authCookie = request.cookies.get('authjs.session-token') ||
+                         request.cookies.get('__Secure-authjs.session-token');
+      authCookieName = authCookie?.name || 'NONE';
+    } catch (e) {
+      cookieNames = 'EXCEPTION';
+      authCookieName = 'EXCEPTION';
+    }
+
+    // Try to get token with different approaches
+    let token: AuthJWT | null = null;
+    let tokenStatus = 'ERROR';
+
+    try {
+      token = await getToken({
+        req: request,
+        secret: process.env.AUTH_SECRET,
+      }) as AuthJWT | null;
+      tokenStatus = token ? 'YES' : 'NO';
+    } catch (error) {
+      tokenStatus = 'EXCEPTION';
+    }
+
+    const isAuthenticated = !!token
+    const userHasAdminPrivileges = hasAdminPrivileges(token)
+
+    console.log(`[MW] ${pathname} | Cookies:${cookieNames} | AuthCookie:${authCookieName} | Token:${tokenStatus} | Auth:${isAuthenticated}`);
 
   
   // =========================================================================
