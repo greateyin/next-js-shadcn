@@ -7,11 +7,9 @@
 
 "use client";
 
-import { useEffect, useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import { useRouter, useSearchParams } from "next/navigation";
-import { toast } from "sonner";
-import { loginNoRedirectAction } from "@/actions/auth";
+import { useSearchParams } from "next/navigation";
+import { loginWithRedirectAction } from "@/actions/auth";
 import { FormError } from "@/components/auth/common/FormError";
 import { FormSuccess } from "@/components/auth/common/FormSuccess";
 import { Button } from "@/components/ui/button";
@@ -58,25 +56,8 @@ function SubmitButton() {
  * ```
  */
 export function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
-
-  const [state, formAction] = useActionState(loginNoRedirectAction, undefined);
-
-  // Handle login success/error with client-side redirect
-  useEffect(() => {
-    if (state?.success) {
-      toast.success("Login successful!");
-      // Use setTimeout to ensure cookie is fully set before redirect
-      setTimeout(() => {
-        router.push(callbackUrl);
-        router.refresh(); // Refresh to update session
-      }, 150);
-    } else if (state?.error) {
-      toast.error(state.error);
-    }
-  }, [state, router, callbackUrl]);
+  const callbackUrl = searchParams.get("callbackUrl");
 
   return (
     <div className="space-y-6">
@@ -93,7 +74,16 @@ export function LoginForm() {
         </div>
       </div>
 
-      <form action={formAction} className="space-y-6">
+      <form 
+        action={async (formData) => {
+          'use server'
+          const redirect = callbackUrl || "/dashboard";
+          formData.append("redirectTo", redirect);
+          // ✅ 不使用 try-catch - 讓 redirect() 自然拋出 NEXT_REDIRECT
+          await loginWithRedirectAction(formData, redirect);
+        }} 
+        className="space-y-6"
+      >
         <div className="space-y-4">
           <Input
             name="email"
@@ -122,8 +112,6 @@ export function LoginForm() {
             </div>
           </div>
         </div>
-
-        {state?.error && <FormError message={state.error} />}
 
         <SubmitButton />
       </form>
