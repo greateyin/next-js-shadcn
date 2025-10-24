@@ -144,6 +144,8 @@ export function hasApplicationAccess(token: AuthJWT | null, appPath: string): bo
  * @returns NextResponse (redirect or next())
  */
 export async function middleware(request: NextRequest) {
+  console.log('[MW] START', new Date().toISOString());
+
   const { pathname } = request.nextUrl
 
   // =========================================================================
@@ -155,8 +157,8 @@ export async function middleware(request: NextRequest) {
   const authCookie = request.cookies.get('authjs.session-token') ||
                      request.cookies.get('__Secure-authjs.session-token');
 
-  console.log('[Middleware] Cookies found:', allCookies.map(c => c.name).join(', '));
-  console.log('[Middleware] Auth cookie:', authCookie?.name || 'NOT FOUND');
+  console.log('[MW] Cookies:', allCookies.map(c => c.name).join(','));
+  console.log('[MW] AuthCookie:', authCookie?.name || 'NONE');
 
   // Try to get token with different approaches
   let token: AuthJWT | null = null;
@@ -166,22 +168,15 @@ export async function middleware(request: NextRequest) {
       req: request,
       secret: process.env.AUTH_SECRET,
     }) as AuthJWT | null;
-    console.log('[Middleware] getToken returned:', token ? 'TOKEN' : 'NULL');
+    console.log('[MW] Token:', token ? 'YES' : 'NO');
   } catch (error) {
-    console.error('[Middleware] getToken error:', error);
+    console.error('[MW] TokenErr:', error);
   }
 
   const isAuthenticated = !!token
   const userHasAdminPrivileges = hasAdminPrivileges(token)
 
-  console.log('[Middleware] Request:', {
-    pathname,
-    isAuthenticated,
-    hasToken: !!token,
-    tokenEmail: token?.email,
-    tokenRoles: token?.roleNames,
-    userHasAdminPrivileges
-  })
+  console.log('[MW] Path:', pathname, 'Auth:', isAuthenticated, 'Admin:', userHasAdminPrivileges);
 
   
   // =========================================================================
