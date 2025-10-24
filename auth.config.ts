@@ -12,7 +12,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { LoginSchema } from "./schemas";
 import { db } from "@/lib/db";
 import { verifyPassword } from "@/lib/crypto";
-import { User, UserStatus } from "@prisma/client";
+import type { UserStatus } from "@prisma/client";
 import type { AuthStatus } from "@/types/next-auth";
 import { getUserRolesAndPermissions } from "@/lib/auth/roleService";
 
