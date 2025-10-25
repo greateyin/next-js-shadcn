@@ -22,8 +22,7 @@
 
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import NextAuth from "next-auth"
-import { edgeAuthConfig } from "./auth.edge.config"
+import { getToken } from "next-auth/jwt"
 import type { AuthStatus } from "@/types/next-auth"
 
 // =============================================================================
@@ -138,29 +137,26 @@ export function hasApplicationAccess(token: AuthJWT | null, appPath: string): bo
  * Next.js 15+ Middleware with Auth.js V5
  *
  * Runs on Edge Runtime by default (no runtime export needed)
- * Uses edgeAuthConfig for minimal bundle size (no Prisma/database)
+ * Uses getToken() for direct JWT access with all custom fields
  *
  * @param request - Next.js request object
  * @returns NextResponse (redirect or next())
  */
 
-// Create auth wrapper with edge-compatible config
-const { auth } = NextAuth(edgeAuthConfig)
-
-// Extend NextRequest to include auth property
-interface AuthenticatedRequest extends NextRequest {
-  auth: AuthJWT | null
-}
-
-export default auth(async function middleware(request: NextRequest) {
+export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // =========================================================================
   // 1. GET JWT TOKEN (Edge Runtime Compatible)
   // =========================================================================
 
-  // ✅ Auth.js V5: Get session from request.auth (provided by auth() wrapper)
-  const token = (request as AuthenticatedRequest).auth
+  // ✅ Use getToken() to access JWT directly with all custom fields
+  // This includes roleNames, permissionNames, applicationPaths
+  const token = await getToken({
+    req: request,
+    secret: process.env.AUTH_SECRET,
+  }) as AuthJWT | null
+
   const isAuthenticated = !!token
   const userHasAdminPrivileges = hasAdminPrivileges(token)
 
@@ -249,9 +245,9 @@ export default auth(async function middleware(request: NextRequest) {
   // 6. ALLOW ACCESS
   // =========================================================================
   // Public routes or authenticated users accessing allowed pages
-  
+
   return NextResponse.next()
-})
+}
 
 /**
  * Middleware configuration
