@@ -9,6 +9,7 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import GitHub from "next-auth/providers/github";
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import { baseAuthConfig } from "./auth.base.config";
 import { LoginSchema } from "./schemas";
 import { db } from "@/lib/db";
 import { verifyPassword } from "@/lib/crypto";
@@ -45,10 +46,15 @@ console.log('[Auth Config] Initializing with:', {
 });
 
 export const authConfig: NextAuthConfig = {
-  debug: false, // Disable debug mode for production
+  // ✅ Extend base configuration for consistency
+  ...baseAuthConfig,
+  
+  // ⚠️ Add Prisma adapter (NOT in edge config)
   adapter: PrismaAdapter(db) as any,
+  
+  // ⚠️ Override providers to add database-backed Credentials auth
   providers: [
-    // OAuth providers
+    // Inherit OAuth providers from base but ensure exact match
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
@@ -61,7 +67,7 @@ export const authConfig: NextAuthConfig = {
       allowDangerousEmailAccountLinking: true,
     }),
     
-    // Email/Password provider
+    // Email/Password provider with database authentication
     Credentials({
       id: "credentials",
       name: "Email & Password",
@@ -268,7 +274,7 @@ export const authConfig: NextAuthConfig = {
           console.log('[JWT Callback] Token created:', {
             userId: token.id,
             roleNames: token.roleNames,
-            permissionNames: token.permissionNames?.length,
+            permissionNames: Array.isArray(token.permissionNames) ? token.permissionNames.length : 0,
             applicationPaths: token.applicationPaths
           });
 
