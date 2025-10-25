@@ -22,8 +22,12 @@
 
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { getToken } from "next-auth/jwt"
+import NextAuth from "next-auth"
+import { edgeAuthConfig } from "./auth.edge.config"
 import type { AuthStatus } from "@/types/next-auth"
+
+// Create auth instance for middleware
+const { auth: authMiddleware } = NextAuth(edgeAuthConfig)
 
 // =============================================================================
 // CONSTANTS
@@ -143,7 +147,7 @@ export function hasApplicationAccess(token: AuthJWT | null, appPath: string): bo
  * @returns NextResponse (redirect or next())
  */
 
-export default async function middleware(request: NextRequest) {
+export default authMiddleware(async function middleware(request: NextRequest) {
   try {
     const { pathname } = request.nextUrl
 
@@ -151,42 +155,18 @@ export default async function middleware(request: NextRequest) {
     // 1. GET JWT TOKEN (Edge Runtime Compatible)
     // =========================================================================
 
-    // ✅ Use getToken() to access JWT directly with all custom fields
+    // ✅ Use auth() wrapper to access JWT with all custom fields
     // This includes roleNames, permissionNames, applicationPaths
+    // The auth() wrapper provides request.auth which contains the JWT token
 
-    // Debug: Check AUTH_SECRET and cookies
-    const authSecret = process.env.AUTH_SECRET
-    const cookieHeader = request.headers.get('cookie')
-    const sessionCookie = request.cookies.get(
-      process.env.NODE_ENV === "production"
-        ? "__Secure-authjs.session-token"
-        : "authjs.session-token"
-    )
+    const token = (request as any).auth as AuthJWT | null
 
-    console.log('[Middleware] Debug Info:', {
-      hasAuthSecret: !!authSecret,
-      authSecretLength: authSecret?.length,
-      hasCookieHeader: !!cookieHeader,
-      hasSessionCookie: !!sessionCookie,
-      sessionCookieValue: sessionCookie?.value?.substring(0, 20) + '...'
+    console.log('[Middleware] Token from auth():', {
+      hasToken: !!token,
+      email: token?.email,
+      roleNames: token?.roleNames,
+      applicationPaths: token?.applicationPaths
     })
-
-    console.log('[Middleware] About to call getToken...')
-
-    let token: AuthJWT | null = null
-    try {
-      token = await getToken({
-        req: request,
-        secret: authSecret,
-      }) as AuthJWT | null
-      console.log('[Middleware] getToken succeeded, token:', !!token)
-    } catch (getTokenError) {
-      console.error('[Middleware] getToken failed:', {
-        message: getTokenError instanceof Error ? getTokenError.message : String(getTokenError),
-        stack: getTokenError instanceof Error ? getTokenError.stack : undefined
-      })
-      token = null
-    }
 
     const isAuthenticated = !!token
     const userHasAdminPrivileges = hasAdminPrivileges(token)
@@ -286,7 +266,7 @@ export default async function middleware(request: NextRequest) {
     // Allow request to proceed even if middleware fails
     return NextResponse.next()
   }
-}
+})
 
 /**
  * Middleware configuration
