@@ -152,9 +152,27 @@ export default async function middleware(request: NextRequest) {
 
   // ✅ Use getToken() to access JWT directly with all custom fields
   // This includes roleNames, permissionNames, applicationPaths
+
+  // Debug: Check AUTH_SECRET and cookies
+  const authSecret = process.env.AUTH_SECRET
+  const cookieHeader = request.headers.get('cookie')
+  const sessionCookie = request.cookies.get(
+    process.env.NODE_ENV === "production"
+      ? "__Secure-authjs.session-token"
+      : "authjs.session-token"
+  )
+
+  console.log('[Middleware] Debug Info:', {
+    hasAuthSecret: !!authSecret,
+    authSecretLength: authSecret?.length,
+    hasCookieHeader: !!cookieHeader,
+    hasSessionCookie: !!sessionCookie,
+    sessionCookieValue: sessionCookie?.value?.substring(0, 20) + '...'
+  })
+
   const token = await getToken({
     req: request,
-    secret: process.env.AUTH_SECRET,
+    secret: authSecret,
   }) as AuthJWT | null
 
   const isAuthenticated = !!token
