@@ -8,7 +8,8 @@ import { loginWithRedirectAction } from "./login"
  */
 export async function loginFormAction(formData: FormData) {
   const callbackUrl = formData.get("callbackUrl") as string | undefined
-  
+  const sanitizedCallback = callbackUrl && callbackUrl.length > 0 ? callbackUrl : undefined
+
   // Don't use try-catch - let redirect() throw NEXT_REDIRECT naturally
-  await loginWithRedirectAction(formData, callbackUrl || "/dashboard")
+  await loginWithRedirectAction(formData, sanitizedCallback)
 }

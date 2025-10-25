@@ -34,6 +34,38 @@ import { db } from "@/lib/db";
  * </form>
  * ```
  */
+const ADMIN_ROLE_NAMES = new Set(["admin", "super-admin"]);
+
+async function determineRoleBasedRedirect(
+  email: string,
+  requestedRedirect?: string | null
+): Promise<string> {
+  if (requestedRedirect && requestedRedirect.length > 0) {
+    return requestedRedirect;
+  }
+
+  const user = await db.user.findUnique({
+    where: { email },
+    include: {
+      userRoles: {
+        include: {
+          role: true,
+        },
+      },
+    },
+  });
+
+  if (!user) {
+    return DEFAULT_LOGIN_REDIRECT;
+  }
+
+  const hasAdminRole = user.userRoles.some(({ role }) =>
+    ADMIN_ROLE_NAMES.has(role.name)
+  );
+
+  return hasAdminRole ? ADMIN_LOGIN_REDIRECT : DEFAULT_LOGIN_REDIRECT;
+}
+
 export async function loginAction(formData: FormData) {
   const email = formData.get("email");
   const password = formData.get("password");
@@ -50,30 +82,9 @@ export async function loginAction(formData: FormData) {
 
   try {
     // Check user role BEFORE signing in to determine redirect target
-    const user = await db.user.findUnique({
-      where: { email: validatedFields.data.email },
-      include: {
-        userRoles: {
-          include: {
-            role: true
-          }
-        }
-      }
-    });
-
-    // Determine redirect based on user role
-    let redirectTarget = DEFAULT_LOGIN_REDIRECT;
-    
-    if (user) {
-      const hasAdminRole = user.userRoles.some(
-        ur => ur.role.name === 'admin' || ur.role.name === 'super-admin'
-      );
-      
-      if (hasAdminRole) {
-        redirectTarget = ADMIN_LOGIN_REDIRECT;
-        console.log('[Login Action] Admin user detected, redirecting to:', redirectTarget);
-      }
-    }
+    const redirectTarget = await determineRoleBasedRedirect(
+      validatedFields.data.email
+    );
 
     // Auth.js will handle the redirect automatically
     // It will redirect to DEFAULT_LOGIN_REDIRECT or the callbackUrl
@@ -135,29 +146,9 @@ export async function loginWithRedirectAction(
     let finalRedirect = customRedirect;
     
     if (!finalRedirect) {
-      const user = await db.user.findUnique({
-        where: { email: validatedFields.data.email },
-        include: {
-          userRoles: {
-            include: {
-              role: true
-            }
-          }
-        }
-      });
-
-      finalRedirect = DEFAULT_LOGIN_REDIRECT;
-      
-      if (user) {
-        const hasAdminRole = user.userRoles.some(
-          ur => ur.role.name === 'admin' || ur.role.name === 'super-admin'
-        );
-        
-        if (hasAdminRole) {
-          finalRedirect = ADMIN_LOGIN_REDIRECT;
-          console.log('[Login Redirect Action] Admin user detected, redirecting to:', finalRedirect);
-        }
-      }
+      finalRedirect = await determineRoleBasedRedirect(
+        validatedFields.data.email
+      );
     }
 
     await signIn("credentials", {
@@ -208,7 +199,7 @@ export async function loginWithRedirectAction(
 export async function loginNoRedirectAction(
   prevState: any,
   formData: FormData
-): Promise<{ success?: boolean; error?: string }> {
+): Promise<{ success?: boolean; error?: string; redirectTo?: string }> {
   const email = formData.get("email");
   const password = formData.get("password");
 
@@ -235,8 +226,13 @@ export async function loginNoRedirectAction(
       return { error: "Invalid credentials" };
     }
 
-    // Return success - let client handle redirect
-    return { success: true };
+    const redirectTo = await determineRoleBasedRedirect(
+      validatedFields.data.email,
+      formData.get("redirectTo") as string | null
+    );
+
+    // Return success with recommended redirect target
+    return { success: true, redirectTo };
   } catch (error) {
     console.error("Login error:", error);
     
