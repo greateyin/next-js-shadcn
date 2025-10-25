@@ -73,39 +73,24 @@ export const edgeAuthConfig: NextAuthConfig = {
     },
   },
   
-  // ✅ Callbacks with RBAC data - Essential for middleware
+  // ✅ Callbacks - MUST NOT modify token in Edge config
+  // The token is already populated by auth.config.ts during login
+  // Edge config just reads and passes through the data
   callbacks: {
-    async jwt({ token, user, trigger }) {
-      // On sign in, user object contains RBAC data from authorize()
-      if (user) {
-        const extendedUser = user as any
-
-        token.id = user.id
-        token.email = user.email
-        token.name = user.name
-        token.picture = user.image
-        token.status = extendedUser.status
-        token.role = extendedUser.role
-
-        // ⚠️ Critical: RBAC data from full auth.config.ts
-        token.roleNames = extendedUser.roleNames || []
-        token.permissionNames = extendedUser.permissionNames || []
-        token.applicationPaths = extendedUser.applicationPaths || []
-      }
-
-      // ⚠️ Important: Preserve RBAC data on token refresh
-      // The token already contains RBAC data from auth.config.ts JWT callback
-      // We just need to ensure it's preserved during token updates
-      if (!token.roleNames) {
-        token.roleNames = []
-      }
-      if (!token.permissionNames) {
-        token.permissionNames = []
-      }
-      if (!token.applicationPaths) {
-        token.applicationPaths = []
-      }
-
+    async jwt({ token }) {
+      // ⚠️ CRITICAL: Do NOT modify token here!
+      // The token already contains all RBAC data from auth.config.ts
+      // Any modifications here can cause data loss during token refresh
+      
+      // Debug logging to verify token data
+      console.log('[Edge JWT Callback] Reading token:', {
+        id: token.id,
+        email: token.email,
+        roleNames: token.roleNames,
+        role: token.role,
+        hasRoleNames: !!(token as any).roleNames
+      })
+      
       return token
     },
 
