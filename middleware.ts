@@ -27,8 +27,8 @@ import { edgeAuthConfig } from "./auth.edge.config"
 import type { AuthStatus } from "@/types/next-auth"
 
 // Create auth instance for middleware
-// This provides request.auth with JWT token data
-const { auth } = NextAuth(edgeAuthConfig)
+// Using direct export pattern from Auth.js V5 docs
+const { auth: authMiddleware } = NextAuth(edgeAuthConfig)
 
 // =============================================================================
 // CONSTANTS
@@ -148,9 +148,8 @@ export function hasApplicationAccess(token: AuthJWT | null, appPath: string): bo
  * @returns NextResponse (redirect or next())
  */
 
-// Export middleware with auth() wrapper
-// The auth() function automatically injects req.auth with JWT token data
-export default auth(async (request: NextRequest) => {
+// Middleware function with custom logic
+async function middleware(request: NextRequest) {
   try {
     const { pathname } = request.nextUrl
 
@@ -274,7 +273,11 @@ export default auth(async (request: NextRequest) => {
     // Allow request to proceed even if middleware fails
     return NextResponse.next()
   }
-})
+}
+
+// Export middleware with auth() wrapper
+// This ensures request.auth is properly injected
+export default authMiddleware(middleware)
 
 /**
  * Middleware configuration
