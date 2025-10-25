@@ -171,10 +171,22 @@ export default async function middleware(request: NextRequest) {
       sessionCookieValue: sessionCookie?.value?.substring(0, 20) + '...'
     })
 
-    const token = await getToken({
-      req: request,
-      secret: authSecret,
-    }) as AuthJWT | null
+    console.log('[Middleware] About to call getToken...')
+
+    let token: AuthJWT | null = null
+    try {
+      token = await getToken({
+        req: request,
+        secret: authSecret,
+      }) as AuthJWT | null
+      console.log('[Middleware] getToken succeeded, token:', !!token)
+    } catch (getTokenError) {
+      console.error('[Middleware] getToken failed:', {
+        message: getTokenError instanceof Error ? getTokenError.message : String(getTokenError),
+        stack: getTokenError instanceof Error ? getTokenError.stack : undefined
+      })
+      token = null
+    }
 
     const isAuthenticated = !!token
     const userHasAdminPrivileges = hasAdminPrivileges(token)
