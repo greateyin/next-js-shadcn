@@ -3,6 +3,9 @@
  * @module auth.edge.config
  * @description Lightweight configuration for Edge Runtime (Middleware)
  * Does NOT include database adapter or any Node.js dependencies
+ * 
+ * CRITICAL: This config must be compatible with auth.config.ts to properly
+ * read JWT tokens created during login.
  */
 
 import type { NextAuthConfig } from "next-auth"
@@ -19,19 +22,22 @@ import GitHub from "next-auth/providers/github"
  * - No database operations
  * - Only JWT session strategy
  * - Minimal dependencies
+ * - JWT callback MUST preserve all token data (no modifications)
  */
 export const edgeAuthConfig: NextAuthConfig = {
   debug: false,
   
-  // ✅ Edge-compatible providers (minimal configuration)
+  // ✅ CRITICAL: Must match auth.config.ts providers exactly
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      allowDangerousEmailAccountLinking: true, // Must match
     }),
     GitHub({
       clientId: process.env.GITHUB_CLIENT_ID!,
       clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+      allowDangerousEmailAccountLinking: true, // Must match
     }),
     Credentials({
       id: "credentials",
@@ -55,8 +61,8 @@ export const edgeAuthConfig: NextAuthConfig = {
   
   session: {
     strategy: "jwt" as const,
-    maxAge: 30 * 24 * 60 * 60, // 30 days
-    updateAge: 24 * 60 * 60, // 24 hours
+    maxAge: 30 * 24 * 60 * 60, // 30 days - Must match
+    updateAge: 24 * 60 * 60, // 24 hours - Must match
   },
   
   cookies: {
@@ -69,28 +75,34 @@ export const edgeAuthConfig: NextAuthConfig = {
         sameSite: "lax",
         path: "/",
         secure: process.env.NODE_ENV === "production",
+        // ⚠️ CRITICAL: Must match auth.config.ts cookie domain
+        domain: process.env.COOKIE_DOMAIN || undefined,
+        maxAge: 30 * 24 * 60 * 60, // Must match
       },
     },
   },
   
-  // ✅ Callbacks - MUST NOT modify token in Edge config
+  // ✅ Callbacks - Read-only in Edge config
   // The token is already populated by auth.config.ts during login
-  // Edge config just reads and passes through the data
+  // Edge config ONLY reads and passes through the data
   callbacks: {
-    async jwt({ token }) {
-      // ⚠️ CRITICAL: Do NOT modify token here!
-      // The token already contains all RBAC data from auth.config.ts
-      // Any modifications here can cause data loss during token refresh
+    async jwt({ token, user, trigger }) {
+      // ⚠️ CRITICAL FIX: Preserve all token data during any trigger
+      // The token already contains roleNames, permissionNames, etc. from login
+      // DO NOT reset or modify these fields
       
-      // Debug logging to verify token data
-      console.log('[Edge JWT Callback] Reading token:', {
-        id: token.id,
-        email: token.email,
-        roleNames: token.roleNames,
-        role: token.role,
-        hasRoleNames: !!(token as any).roleNames
+      // Debug logging
+      console.log('[Edge JWT Callback]', {
+        trigger,
+        hasUser: !!user,
+        email: token?.email,
+        roleNames: token?.roleNames,
+        permissionNames: Array.isArray(token?.permissionNames) ? token.permissionNames.length : 0,
+        applicationPaths: token?.applicationPaths
       })
       
+      // Simply return token as-is
+      // All RBAC data is already in the token from login
       return token
     },
 
@@ -111,4 +123,7 @@ export const edgeAuthConfig: NextAuthConfig = {
       return session
     },
   },
+  
+  // ⚠️ CRITICAL: Use same trust host setting
+  trustHost: true,
 }
