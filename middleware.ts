@@ -144,127 +144,136 @@ export function hasApplicationAccess(token: AuthJWT | null, appPath: string): bo
  */
 
 export default async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
+  try {
+    const { pathname } = request.nextUrl
 
-  // =========================================================================
-  // 1. GET JWT TOKEN (Edge Runtime Compatible)
-  // =========================================================================
+    // =========================================================================
+    // 1. GET JWT TOKEN (Edge Runtime Compatible)
+    // =========================================================================
 
-  // ✅ Use getToken() to access JWT directly with all custom fields
-  // This includes roleNames, permissionNames, applicationPaths
+    // ✅ Use getToken() to access JWT directly with all custom fields
+    // This includes roleNames, permissionNames, applicationPaths
 
-  // Debug: Check AUTH_SECRET and cookies
-  const authSecret = process.env.AUTH_SECRET
-  const cookieHeader = request.headers.get('cookie')
-  const sessionCookie = request.cookies.get(
-    process.env.NODE_ENV === "production"
-      ? "__Secure-authjs.session-token"
-      : "authjs.session-token"
-  )
+    // Debug: Check AUTH_SECRET and cookies
+    const authSecret = process.env.AUTH_SECRET
+    const cookieHeader = request.headers.get('cookie')
+    const sessionCookie = request.cookies.get(
+      process.env.NODE_ENV === "production"
+        ? "__Secure-authjs.session-token"
+        : "authjs.session-token"
+    )
 
-  console.log('[Middleware] Debug Info:', {
-    hasAuthSecret: !!authSecret,
-    authSecretLength: authSecret?.length,
-    hasCookieHeader: !!cookieHeader,
-    hasSessionCookie: !!sessionCookie,
-    sessionCookieValue: sessionCookie?.value?.substring(0, 20) + '...'
-  })
+    console.log('[Middleware] Debug Info:', {
+      hasAuthSecret: !!authSecret,
+      authSecretLength: authSecret?.length,
+      hasCookieHeader: !!cookieHeader,
+      hasSessionCookie: !!sessionCookie,
+      sessionCookieValue: sessionCookie?.value?.substring(0, 20) + '...'
+    })
 
-  const token = await getToken({
-    req: request,
-    secret: authSecret,
-  }) as AuthJWT | null
+    const token = await getToken({
+      req: request,
+      secret: authSecret,
+    }) as AuthJWT | null
 
-  const isAuthenticated = !!token
-  const userHasAdminPrivileges = hasAdminPrivileges(token)
+    const isAuthenticated = !!token
+    const userHasAdminPrivileges = hasAdminPrivileges(token)
 
-  // Debug: Log full token to see what fields are present
-  if (isAuthenticated) {
-    console.log('[Middleware] Full token:', JSON.stringify(token, null, 2))
-  }
-
-  console.log('[Middleware] Request:', {
-    pathname,
-    isAuthenticated,
-    hasToken: !!token,
-    tokenEmail: token?.email,
-    tokenRoles: token?.roleNames,
-    userHasAdminPrivileges
-  })
-
-  // =========================================================================
-  // 2. DEFINE ROUTE TYPES
-  // =========================================================================
-
-  const isAuthPage = pathname.startsWith('/auth')
-  const isPublicRoute = pathname === '/' || pathname.startsWith('/api/public')
-  const isAdminPage = pathname.startsWith('/admin')
-  const isApiAdminRoute = pathname.startsWith('/api/admin')
-  
-  // =========================================================================
-  // 3. AUTHENTICATED USER ON AUTH PAGES
-  // =========================================================================
-  // If user is already logged in and tries to access login/register pages,
-  // redirect them to their appropriate dashboard
-  
-  if (isAuthenticated && isAuthPage) {
-    const target = userHasAdminPrivileges ? ADMIN_LOGIN_REDIRECT : DEFAULT_LOGIN_REDIRECT
-    return NextResponse.redirect(new URL(target, request.url))
-  }
-  
-  // =========================================================================
-  // 4. UNAUTHENTICATED USER ON PROTECTED ROUTES
-  // =========================================================================
-  // If user is not logged in and tries to access protected pages,
-  // redirect to login with callback URL
-  
-  if (!isAuthenticated && !isAuthPage && !isPublicRoute) {
-    const loginUrl = new URL('/auth/login', request.url)
-    loginUrl.searchParams.set('callbackUrl', pathname)
-    return NextResponse.redirect(loginUrl)
-  }
-  
-  // =========================================================================
-  // 5. ADMIN/API ADMIN ROUTES - RBAC ENFORCEMENT
-  // =========================================================================
-  // Three-tier access control:
-  // 1. Must be authenticated (checked above)
-  // 2. Must have admin role OR specific application access
-  // 3. Must have valid user ID in token
-  
-  if (isAuthenticated && (isAdminPage || isApiAdminRoute)) {
-    // Security check: Ensure token has user ID
-    if (!token?.id) {
-      console.warn('[Middleware] Token missing user ID, redirecting to login')
-      return NextResponse.redirect(new URL('/auth/login', request.url))
+    // Debug: Log full token to see what fields are present
+    if (isAuthenticated) {
+      console.log('[Middleware] Full token:', JSON.stringify(token, null, 2))
     }
-    
-    // Extract application path from URL
-    // Example: /admin/users/123 -> appPath = 'users'
-    const pathSegments = pathname.split('/')
-    const appPath = pathSegments[2] // /admin/[appPath]/...
-    
-    // Check 1: Admin privileges (full access)
-    if (userHasAdminPrivileges) {
-      return NextResponse.next()
-    }
-    
-    // Check 2: Application-specific access
-    if (appPath && hasApplicationAccess(token, appPath)) {
-      return NextResponse.next()
-    }
-    
-    // No access - redirect to no-access page
-    console.warn(`[Middleware] Access denied for user ${token.id} to ${pathname}`)
-    return NextResponse.redirect(new URL('/no-access', request.url))
-  }
-  
-  // =========================================================================
-  // 6. ALLOW ACCESS
-  // =========================================================================
-  // Public routes or authenticated users accessing allowed pages
 
-  return NextResponse.next()
+    console.log('[Middleware] Request:', {
+      pathname,
+      isAuthenticated,
+      hasToken: !!token,
+      tokenEmail: token?.email,
+      tokenRoles: token?.roleNames,
+      userHasAdminPrivileges
+    })
+
+    // =========================================================================
+    // 2. DEFINE ROUTE TYPES
+    // =========================================================================
+
+    const isAuthPage = pathname.startsWith('/auth')
+    const isPublicRoute = pathname === '/' || pathname.startsWith('/api/public')
+    const isAdminPage = pathname.startsWith('/admin')
+    const isApiAdminRoute = pathname.startsWith('/api/admin')
+
+    // =========================================================================
+    // 3. AUTHENTICATED USER ON AUTH PAGES
+    // =========================================================================
+    // If user is already logged in and tries to access login/register pages,
+    // redirect them to their appropriate dashboard
+
+    if (isAuthenticated && isAuthPage) {
+      const target = userHasAdminPrivileges ? ADMIN_LOGIN_REDIRECT : DEFAULT_LOGIN_REDIRECT
+      return NextResponse.redirect(new URL(target, request.url))
+    }
+
+    // =========================================================================
+    // 4. UNAUTHENTICATED USER ON PROTECTED ROUTES
+    // =========================================================================
+    // If user is not logged in and tries to access protected pages,
+    // redirect to login with callback URL
+
+    if (!isAuthenticated && !isAuthPage && !isPublicRoute) {
+      const loginUrl = new URL('/auth/login', request.url)
+      loginUrl.searchParams.set('callbackUrl', pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+
+    // =========================================================================
+    // 5. ADMIN/API ADMIN ROUTES - RBAC ENFORCEMENT
+    // =========================================================================
+    // Three-tier access control:
+    // 1. Must be authenticated (checked above)
+    // 2. Must have admin role OR specific application access
+    // 3. Must have valid user ID in token
+
+    if (isAuthenticated && (isAdminPage || isApiAdminRoute)) {
+      // Security check: Ensure token has user ID
+      if (!token?.id) {
+        console.warn('[Middleware] Token missing user ID, redirecting to login')
+        return NextResponse.redirect(new URL('/auth/login', request.url))
+      }
+
+      // Extract application path from URL
+      // Example: /admin/users/123 -> appPath = 'users'
+      const pathSegments = pathname.split('/')
+      const appPath = pathSegments[2] // /admin/[appPath]/...
+
+      // Check 1: Admin privileges (full access)
+      if (userHasAdminPrivileges) {
+        return NextResponse.next()
+      }
+
+      // Check 2: Application-specific access
+      if (appPath && hasApplicationAccess(token, appPath)) {
+        return NextResponse.next()
+      }
+
+      // No access - redirect to no-access page
+      console.warn(`[Middleware] Access denied for user ${token.id} to ${pathname}`)
+      return NextResponse.redirect(new URL('/no-access', request.url))
+    }
+
+    // =========================================================================
+    // 6. ALLOW ACCESS
+    // =========================================================================
+    // Public routes or authenticated users accessing allowed pages
+
+    return NextResponse.next()
+  } catch (error) {
+    console.error('[Middleware] Error:', {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    })
+    // Allow request to proceed even if middleware fails
+    return NextResponse.next()
+  }
 }
 
 /**
