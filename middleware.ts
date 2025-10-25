@@ -162,11 +162,16 @@ async function middleware(request: NextRequest) {
 
     const token = (request as any).auth as AuthJWT | null
 
+    // Debug: Log full token structure
+    console.log('[Middleware] Full token object:', JSON.stringify(token, null, 2))
+
     console.log('[Middleware] Token from auth():', {
       hasToken: !!token,
+      tokenKeys: token ? Object.keys(token) : [],
       email: token?.email,
       roleNames: token?.roleNames,
-      applicationPaths: token?.applicationPaths
+      applicationPaths: token?.applicationPaths,
+      id: token?.id
     })
 
     const isAuthenticated = !!token
