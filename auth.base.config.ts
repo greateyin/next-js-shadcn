@@ -25,6 +25,9 @@ import GitHub from "next-auth/providers/github"
 export const baseAuthConfig = {
   debug: false,
   
+  // ✅ CRITICAL: Explicit secret ensures both instances use the same encryption
+  secret: process.env.AUTH_SECRET,
+  
   // ✅ Providers - MUST be identical in both instances
   providers: [
     Google({
