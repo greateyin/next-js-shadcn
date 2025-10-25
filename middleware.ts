@@ -148,7 +148,9 @@ export function hasApplicationAccess(token: AuthJWT | null, appPath: string): bo
  * @returns NextResponse (redirect or next())
  */
 
-async function middleware(request: NextRequest) {
+// Export middleware with auth() wrapper
+// The auth() function automatically injects req.auth with JWT token data
+export default auth(async (request: NextRequest) => {
   try {
     const { pathname } = request.nextUrl
 
@@ -156,9 +158,9 @@ async function middleware(request: NextRequest) {
     // 1. GET JWT TOKEN (Edge Runtime Compatible)
     // =========================================================================
 
-    // ✅ Use auth() wrapper to access JWT with all custom fields
+    // ✅ Use request.auth to access JWT with all custom fields
     // This includes roleNames, permissionNames, applicationPaths
-    // The auth() wrapper provides request.auth which contains the JWT token
+    // The auth() wrapper automatically provides request.auth
 
     const token = (request as any).auth as AuthJWT | null
 
@@ -272,10 +274,7 @@ async function middleware(request: NextRequest) {
     // Allow request to proceed even if middleware fails
     return NextResponse.next()
   }
-}
-
-// Export middleware with auth() wrapper
-export default auth(middleware)
+})
 
 /**
  * Middleware configuration
