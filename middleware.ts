@@ -71,68 +71,16 @@ interface AuthJWT {
 }
 
 // =============================================================================
-// RBAC HELPER FUNCTIONS
+// NOTE: RBAC HELPER FUNCTIONS MOVED
 // =============================================================================
-
-/**
- * Check if user has admin privileges
- * Admins have unrestricted access to all admin routes
- * 
- * @param token - JWT token containing RBAC data
- * @returns true if user is admin or super-admin
- */
-export function hasAdminPrivileges(token: AuthJWT | null): boolean {
-  if (!token) return false
-  
-  // Check roleNames array (primary method)
-  if (Array.isArray(token.roleNames)) {
-    return token.roleNames.some(role => ADMIN_ROLES.includes(role as any))
-  }
-  
-  // Fallback to legacy role field
-  return ADMIN_ROLES.includes(token.role as any)
-}
-
-/**
- * Check if user has a specific permission
- * More granular than role-based checks
- * 
- * @param token - JWT token containing RBAC data
- * @param permission - Permission name (e.g., 'users.read', 'posts.write')
- * @returns true if user has the permission
- * 
- * @example
- * ```ts
- * if (hasPermission(token, 'users.delete')) {
- *   // User can delete users
- * }
- * ```
- */
-export function hasPermission(token: AuthJWT | null, permission: string): boolean {
-  if (!token?.permissionNames) return false
-  return token.permissionNames.includes(permission)
-}
-
-/**
- * Check if user has access to a specific application module
- * Used for application-level access control
- * 
- * @param token - JWT token containing RBAC data
- * @param appPath - Application path (e.g., 'users', 'settings')
- * @returns true if user has access to the application
- * 
- * @example
- * ```ts
- * // Check if user can access /admin/users
- * if (hasApplicationAccess(token, 'users')) {
- *   // User can access users module
- * }
- * ```
- */
-export function hasApplicationAccess(token: AuthJWT | null, appPath: string): boolean {
-  if (!token?.applicationPaths) return false
-  return token.applicationPaths.includes(appPath)
-}
+// RBAC helper functions have been moved to lib/auth/admin-check.ts
+// They are no longer used in middleware because custom JWT fields
+// (roleNames, permissionNames, applicationPaths) are not available in Edge Runtime.
+//
+// RBAC checks are now done in:
+// - Server Components (using auth() function)
+// - API routes (using auth() function)
+// - Layout components (using auth() function)
 
 // =============================================================================
 // MIDDLEWARE
@@ -157,39 +105,20 @@ async function middleware(request: NextRequest) {
     // 1. GET JWT TOKEN (Edge Runtime Compatible)
     // =========================================================================
 
-    // ✅ Use request.auth to access JWT with all custom fields
-    // This includes roleNames, permissionNames, applicationPaths
-    // The auth() wrapper automatically provides request.auth
+    // ✅ Use request.auth to access JWT
+    // NOTE: request.auth only contains standard JWT fields (sub, email, name, etc.)
+    // Custom fields (roleNames, permissionNames, applicationPaths) are NOT available in Edge Runtime
+    // RBAC checks must be done in Server Components or API routes instead
 
     const token = (request as any).auth as AuthJWT | null
-
-    // Debug: Log full token structure
-    console.log('[Middleware] Full token object:', JSON.stringify(token, null, 2))
-
-    console.log('[Middleware] Token from auth():', {
-      hasToken: !!token,
-      tokenKeys: token ? Object.keys(token) : [],
-      email: token?.email,
-      roleNames: token?.roleNames,
-      applicationPaths: token?.applicationPaths,
-      id: token?.id
-    })
-
     const isAuthenticated = !!token
-    const userHasAdminPrivileges = hasAdminPrivileges(token)
-
-    // Debug: Log full token to see what fields are present
-    if (isAuthenticated) {
-      console.log('[Middleware] Full token:', JSON.stringify(token, null, 2))
-    }
 
     console.log('[Middleware] Request:', {
       pathname,
       isAuthenticated,
       hasToken: !!token,
       tokenEmail: token?.email,
-      tokenRoles: token?.roleNames,
-      userHasAdminPrivileges
+      tokenSub: token?.sub
     })
 
     // =========================================================================
@@ -208,8 +137,8 @@ async function middleware(request: NextRequest) {
     // redirect them to their appropriate dashboard
 
     if (isAuthenticated && isAuthPage) {
-      const target = userHasAdminPrivileges ? ADMIN_LOGIN_REDIRECT : DEFAULT_LOGIN_REDIRECT
-      return NextResponse.redirect(new URL(target, request.url))
+      // Redirect authenticated users away from auth pages
+      return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, request.url))
     }
 
     // =========================================================================
@@ -225,38 +154,26 @@ async function middleware(request: NextRequest) {
     }
 
     // =========================================================================
-    // 5. ADMIN/API ADMIN ROUTES - RBAC ENFORCEMENT
+    // 5. ADMIN/API ADMIN ROUTES - BASIC AUTHENTICATION CHECK ONLY
     // =========================================================================
-    // Three-tier access control:
-    // 1. Must be authenticated (checked above)
-    // 2. Must have admin role OR specific application access
-    // 3. Must have valid user ID in token
+    // NOTE: RBAC checks are NOT done in middleware because custom JWT fields
+    // (roleNames, permissionNames, applicationPaths) are NOT available in Edge Runtime.
+    //
+    // Middleware only checks if user is authenticated.
+    // Detailed RBAC validation happens in:
+    // - Server Components (using auth() function)
+    // - API routes (using auth() function)
+    // - Layout components (using auth() function)
 
-    if (isAuthenticated && (isAdminPage || isApiAdminRoute)) {
-      // Security check: Ensure token has user ID
-      if (!token?.id) {
-        console.warn('[Middleware] Token missing user ID, redirecting to login')
-        return NextResponse.redirect(new URL('/auth/login', request.url))
+    if (isAdminPage || isApiAdminRoute) {
+      if (!isAuthenticated) {
+        const loginUrl = new URL('/auth/login', request.url)
+        loginUrl.searchParams.set('callbackUrl', pathname)
+        return NextResponse.redirect(loginUrl)
       }
-
-      // Extract application path from URL
-      // Example: /admin/users/123 -> appPath = 'users'
-      const pathSegments = pathname.split('/')
-      const appPath = pathSegments[2] // /admin/[appPath]/...
-
-      // Check 1: Admin privileges (full access)
-      if (userHasAdminPrivileges) {
-        return NextResponse.next()
-      }
-
-      // Check 2: Application-specific access
-      if (appPath && hasApplicationAccess(token, appPath)) {
-        return NextResponse.next()
-      }
-
-      // No access - redirect to no-access page
-      console.warn(`[Middleware] Access denied for user ${token.id} to ${pathname}`)
-      return NextResponse.redirect(new URL('/no-access', request.url))
+      // Allow authenticated users to proceed
+      // RBAC validation will happen in the page/route handler
+      return NextResponse.next()
     }
 
     // =========================================================================
