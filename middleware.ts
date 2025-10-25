@@ -162,6 +162,11 @@ export default auth(async function middleware(request: NextRequest) {
   const isAuthenticated = !!token
   const userHasAdminPrivileges = hasAdminPrivileges(token)
 
+  // Debug: Log full token to see what fields are present
+  if (isAuthenticated) {
+    console.log('[Middleware] Full token:', JSON.stringify(token, null, 2))
+  }
+
   console.log('[Middleware] Request:', {
     pathname,
     isAuthenticated,
