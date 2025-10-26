@@ -408,8 +408,21 @@ export const authConfig: NextAuthConfig = {
         // ✅ FIX: Use ISO strings instead of Date objects for serialization
         // This ensures session can be properly serialized and passed to client
         const now = new Date().toISOString();
-        session.user.roles = session.user.roleNames.map(name => ({ name, id: '', createdAt: now, updatedAt: now })) as any;
-        session.user.permissions = session.user.permissionNames.map(name => ({ name, id: '', createdAt: now, updatedAt: now, description: undefined })) as any;
+        session.user.roles = session.user.roleNames.map(name => ({
+          name,
+          id: '',
+          createdAt: now,
+          updatedAt: now
+        })) as any;
+
+        session.user.permissions = session.user.permissionNames.map(name => ({
+          name,
+          id: '',
+          createdAt: now,
+          updatedAt: now,
+          description: '' // ✅ Use empty string instead of undefined
+        })) as any;
+
         session.user.applications = session.user.applicationPaths.map(path => ({
           path,
           id: '',
@@ -418,8 +431,8 @@ export const authConfig: NextAuthConfig = {
           isActive: true,
           createdAt: now,
           updatedAt: now,
-          description: undefined,
-          icon: undefined,
+          description: '', // ✅ Use empty string instead of undefined
+          icon: '', // ✅ Use empty string instead of undefined
           order: 0
         })) as any;
         
