@@ -25,6 +25,15 @@ This is a comprehensive Next.js 15 template featuring Auth.js v5, PostgreSQL, Pr
 - **[Menu Management](./guides/menu-management/README.md)** - Dynamic menu system
 - **[Subdomain SSO](./guides/subdomain-sso/README.md)** - Cross-domain single sign-on
 
+### Incident & Timeline Archives
+- **[Admin & Dashboard Timeline](./history/admin-dashboard-timeline.md)**
+- **[Authentication Timeline](./history/authentication-timeline.md)**
+- **[Security & Compliance Records](./history/security-compliance-timeline.md)**
+- **[RBAC & Role Management Records](./history/access-control-timeline.md)**
+- **[Avatar & UX Remediation](./history/avatar-ux-timeline.md)**
+- **[Operations & QA Records](./history/operations-quality-timeline.md)**
+- **[Project Changelog](./history/project-changelog.md)**
+
 ### Architecture
 - **[System Architecture](./architecture/system-design.md)** - Overall system design
 - **[Database Schema](./architecture/database-schema.md)** - Complete database structure
