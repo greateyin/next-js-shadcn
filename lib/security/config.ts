@@ -2,6 +2,21 @@
  * Security configuration for the application
  */
 
+const oauthProviderMatrix: Array<{ name: string; env: [string, string] }> = [
+  { name: "google", env: ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"] },
+  { name: "github", env: ["GITHUB_CLIENT_ID", "GITHUB_CLIENT_SECRET"] },
+  { name: "facebook", env: ["FACEBOOK_CLIENT_ID", "FACEBOOK_CLIENT_SECRET"] },
+  { name: "apple", env: ["AUTH_APPLE_ID", "AUTH_APPLE_SECRET"] },
+  { name: "line", env: ["LINE_CLIENT_ID", "LINE_CLIENT_SECRET"] },
+]
+
+const enabledOAuthProviders = oauthProviderMatrix
+  .filter(({ env }) => env.every(key => {
+    const value = process.env[key]
+    return typeof value === "string" && value.length > 0
+  }))
+  .map(({ name }) => name)
+
 export const SECURITY_CONFIG = {
   // Rate limiting configuration
   rateLimit: {
@@ -60,7 +75,7 @@ export const SECURITY_CONFIG = {
 
   // OAuth configuration
   oauth: {
-    providers: ["github", "google"],
+    providers: enabledOAuthProviders,
     allowEmailLinking: true,
   },
 
