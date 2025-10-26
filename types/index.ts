@@ -33,6 +33,9 @@ export type UserWithRelations = PrismaUser & {
 
 /**
  * Base User type
+ *
+ * ⚠️ NOTE: User roles are stored in the UserRole join table, not as a scalar field.
+ * Use getUserRolesAndPermissions() to fetch user's roles and permissions.
  */
 export interface User {
   id: string;
@@ -41,7 +44,7 @@ export interface User {
   emailVerified?: Date | null;
   image?: string | null;
   password?: string | null;
-  role: UserRole;
+  // ⚠️ REMOVED: role field - roles are now stored in UserRole join table
   isTwoFactorEnabled: boolean;
   createdAt: Date;
   updatedAt: Date;

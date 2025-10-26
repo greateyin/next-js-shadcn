@@ -20,8 +20,9 @@ export async function checkAdminAuth() {
   }
 
   // Check if has administrator permissions
+  // ⚠️ SECURITY: Only check roleNames array (from UserRole join table)
+  // Do NOT fall back to user.role - it doesn't exist in the database
   const isAdmin =
-    session.user.role === "admin" ||
     session.user.roleNames?.includes("admin") ||
     session.user.roleNames?.includes("super-admin");
 
@@ -53,8 +54,9 @@ export function hasApplicationAccess(
   appPath: string
 ): boolean {
   // Admin has all permissions
+  // ⚠️ SECURITY: Only check roleNames array (from UserRole join table)
+  // Do NOT fall back to user.role - it doesn't exist in the database
   const isAdmin =
-    session.user.role === "admin" ||
     session.user.roleNames?.includes("admin") ||
     session.user.roleNames?.includes("super-admin");
 

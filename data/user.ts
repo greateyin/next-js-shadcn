@@ -11,7 +11,8 @@ export const createUser = async (data: {
       email: data.email,
       password: data.password,
       name: data.name || null,
-      role: "user" as UserRole,
+      // ⚠️ SECURITY: User status defaults to 'pending' - requires email verification
+      // Roles are assigned via UserRole join table, not as a scalar field
       status: "pending" as UserStatus,
     }
   });

@@ -102,14 +102,20 @@ export function RequireAuth({ children, requireRole }: RequireAuthProps) {
   /**
    * Check role requirement if specified
    */
-  if (requireRole && !session.user.role?.includes(requireRole)) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-destructive">
-          Access denied. Required role: {requireRole}
-        </p>
-      </div>
-    );
+  if (requireRole) {
+    // ⚠️ SECURITY: Check roleNames array (from UserRole join table)
+    // Do NOT use user.role - it doesn't exist in the database
+    const hasRequiredRole = session.user.roleNames?.includes(requireRole);
+
+    if (!hasRequiredRole) {
+      return (
+        <div className="flex items-center justify-center min-h-screen">
+          <p className="text-destructive">
+            Access denied. Required role: {requireRole}
+          </p>
+        </div>
+      );
+    }
   }
 
   /**

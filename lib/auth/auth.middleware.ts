@@ -56,11 +56,12 @@ export async function verifyAuth(request: NextRequest) {
     // Get user roles and permissions
     try {
       const userRolesAndPermissions = await getUserRolesAndPermissions(user.id);
-      
-      return { 
-        ...payload, 
-        user, 
-        role: user.role, // For backward compatibility
+
+      return {
+        ...payload,
+        user,
+        // ⚠️ SECURITY: Do NOT include user.role - it doesn't exist in the database
+        // Roles are stored in UserRole join table and returned in userRolesAndPermissions
         roles: userRolesAndPermissions.roles,
         permissions: userRolesAndPermissions.permissions,
         applications: userRolesAndPermissions.applications
@@ -70,12 +71,12 @@ export async function verifyAuth(request: NextRequest) {
         userId: user.id,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
-      
-      // Default to user role with empty permissions if role service fails
-      return { 
-        ...payload, 
-        user, 
-        role: user.role, 
+
+      // ⚠️ SECURITY: Return empty roles/permissions on error, not a fallback role
+      // This ensures users don't get unintended access if role lookup fails
+      return {
+        ...payload,
+        user,
         roles: [],
         permissions: [],
         applications: []

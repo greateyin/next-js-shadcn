@@ -54,7 +54,8 @@ export const edgeAuthConfig: NextAuthConfig = {
         session.user.name = token.name as string | null
         session.user.image = token.picture as string | null
         session.user.status = token.status as any
-        session.user.role = token.role as string
+        // ⚠️ SECURITY: Do NOT include user.role - it doesn't exist in the database
+        // Roles are stored in UserRole join table and returned in roleNames
 
         // ⚠️ Critical: Pass RBAC data to session
         session.user.roleNames = (token.roleNames as string[]) || []

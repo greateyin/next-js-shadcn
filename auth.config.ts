@@ -295,8 +295,8 @@ export const authConfig: NextAuthConfig = {
         session.user.name = token.name ?? null;
         session.user.image = token.picture ?? null;
 
-        // For backward compatibility
-        session.user.role = token.role as string;
+        // ⚠️ SECURITY: Do NOT include user.role - it doesn't exist in the database
+        // Roles are stored in UserRole join table and returned in roleNames
 
         // Add simplified role data to session
         session.user.roleNames = (token.roleNames as string[]) || [];
