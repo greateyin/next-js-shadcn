@@ -120,6 +120,15 @@ npm run dev -- -p 3000
 ### 📝 更新日志
 - **[WORK_COMPLETED_2025-10-05.md](./WORK_COMPLETED_2025-10-05.md)** - 最新工作完成总结
 
+### 🗂️ 歷程與修復紀錄
+- **[Admin 與 Dashboard 修復時間線](./document/history/admin-dashboard-timeline.md)** - 依時間整理的後台修復歷程
+- **[認證流程修復時間線](./document/history/authentication-timeline.md)** - 登入與 JWT 相關的分析與修復
+- **[安全性與合規修復紀錄](./document/history/security-compliance-timeline.md)** - Edge、Secrets 與稽核紀錄
+- **[存取控制與角色管理紀錄](./document/history/access-control-timeline.md)** - RBAC 與使用者角色調整
+- **[Avatar 與使用者體驗修復紀錄](./document/history/avatar-ux-timeline.md)** - Avatar 問題的診斷與修復
+- **[營運與品質保證紀錄](./document/history/operations-quality-timeline.md)** - 測試、驗證與線上修復摘要
+- **[專案變更記錄](./document/history/project-changelog.md)** - 原始 CHANGELOG 的整合版本
+
 ---
 
 ## 🏗️ 技术栈
