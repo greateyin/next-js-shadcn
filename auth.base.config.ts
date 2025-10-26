@@ -33,12 +33,16 @@ export const baseAuthConfig = {
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      allowDangerousEmailAccountLinking: true,
+      // ⚠️ SECURITY: Disabled dangerous email account linking
+      // Prevents account takeover via unverified email addresses
+      allowDangerousEmailAccountLinking: false,
     }),
     GitHub({
       clientId: process.env.GITHUB_CLIENT_ID!,
       clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-      allowDangerousEmailAccountLinking: true,
+      // ⚠️ SECURITY: Disabled dangerous email account linking
+      // Prevents account takeover via unverified email addresses
+      allowDangerousEmailAccountLinking: false,
     }),
     Credentials({
       id: "credentials",

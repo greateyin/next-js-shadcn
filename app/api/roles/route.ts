@@ -5,6 +5,9 @@ import { auth } from "@/auth";
 /**
  * GET /api/roles
  * Get all roles list
+ *
+ * ⚠️ SECURITY: Admin-only endpoint
+ * Requires user to have admin role
  */
 export async function GET() {
   try {
@@ -12,6 +15,18 @@ export async function GET() {
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // ⚠️ SECURITY: Check if user has admin role
+    // This is a sensitive endpoint that should only be accessible to admins
+    const isAdmin = session.user.roleNames?.includes("admin") ||
+                    session.user.roleNames?.includes("super-admin");
+
+    if (!isAdmin) {
+      return NextResponse.json(
+        { error: "Forbidden - Admin access required" },
+        { status: 403 }
+      );
     }
 
     // Get all roles

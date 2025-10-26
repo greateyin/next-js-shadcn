@@ -37,13 +37,9 @@ const mapStatus = (status: UserStatus): AuthStatus => {
   }
 };
 
-// Log AUTH_SECRET info at startup
-console.log('[Auth Config] Initializing with:', {
-  hasAuthSecret: !!process.env.AUTH_SECRET,
-  authSecretLength: process.env.AUTH_SECRET?.length,
-  authSecretPrefix: process.env.AUTH_SECRET?.substring(0, 10),
-  nodeEnv: process.env.NODE_ENV,
-});
+// ⚠️ SECURITY: Do NOT log AUTH_SECRET or any sensitive information
+// Logging secret length/prefix can aid in brute force attacks
+// Use secure audit logging instead if needed
 
 export const authConfig: NextAuthConfig = {
   // ✅ Extend base configuration for consistency
@@ -58,13 +54,17 @@ export const authConfig: NextAuthConfig = {
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      allowDangerousEmailAccountLinking: true,
+      // ⚠️ SECURITY: Disabled dangerous email account linking
+      // Prevents account takeover via unverified email addresses
+      allowDangerousEmailAccountLinking: false,
     }),
-    
+
     GitHub({
       clientId: process.env.GITHUB_CLIENT_ID!,
       clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-      allowDangerousEmailAccountLinking: true,
+      // ⚠️ SECURITY: Disabled dangerous email account linking
+      // Prevents account takeover via unverified email addresses
+      allowDangerousEmailAccountLinking: false,
     }),
     
     // Email/Password provider with database authentication
@@ -119,8 +119,14 @@ export const authConfig: NextAuthConfig = {
           if (!isValid) {
             return null;
           }
-          
-          
+
+          // ⚠️ SECURITY: Check user status before allowing login
+          // Reject suspended, banned, or deleted accounts
+          if (user.status !== 'active' && user.status !== 'pending') {
+            // Do not return user object for inactive accounts
+            return null;
+          }
+
           // Create simplified user object with type safety
           const safeUser = {
             id: user.id,
@@ -139,7 +145,7 @@ export const authConfig: NextAuthConfig = {
             lastLoginAttempt: user.lastLoginAttempt ?? new Date(),
             lastSuccessfulLogin: user.lastSuccessfulLogin ?? new Date()
           } as any;
-          
+
           return safeUser;
         } catch (error) {
           console.error("Authorization error:", error);
@@ -153,11 +159,8 @@ export const authConfig: NextAuthConfig = {
      * Safe redirect callback - only allows redirects to whitelisted domains
      */
     async redirect({ url, baseUrl }) {
-      console.log('[Redirect Callback] Redirect requested:', { url, baseUrl });
-
       // Handle relative URLs (e.g., /dashboard) - these are always safe
       if (url.startsWith("/")) {
-        console.log('[Redirect Callback] Relative URL, returning:', url);
         return url;
       }
 
@@ -181,15 +184,13 @@ export const authConfig: NextAuthConfig = {
           urlObj.hostname.endsWith(process.env.COOKIE_DOMAIN);
 
         if (isAllowedDomain || isSameParentDomain) {
-          console.log('[Redirect Callback] Domain allowed, returning:', urlObj.toString());
           return urlObj.toString();
         }
 
         // If no match, return baseUrl
-        console.warn(`[Redirect Callback] Redirect blocked: ${url} is not in allowed domains`);
         return baseUrl;
       } catch (error) {
-        console.error("[Redirect Callback] Redirect error:", error);
+        // ⚠️ SECURITY: Do NOT log redirect errors as they may contain sensitive URLs
         return baseUrl;
       }
     },
@@ -207,12 +208,17 @@ export const authConfig: NextAuthConfig = {
             include: { userRoles: true }
           });
 
+          // ⚠️ SECURITY: Reject suspended, banned, or deleted accounts
+          if (existingUser && existingUser.status !== 'active' && existingUser.status !== 'pending') {
+            return false;
+          }
+
           // If user was just created via OAuth (no roles assigned)
           if (existingUser && existingUser.userRoles.length === 0) {
             // Set user status to active (OAuth emails are pre-verified)
             await db.user.update({
               where: { id: existingUser.id },
-              data: { 
+              data: {
                 status: "active",
                 emailVerified: new Date() // OAuth emails are verified
               }
@@ -233,11 +239,11 @@ export const authConfig: NextAuthConfig = {
             }
           }
         } catch (error) {
-          console.error("Error in OAuth signIn callback:", error);
+          // ⚠️ SECURITY: Do NOT log error details
           // Continue with sign in even if role assignment fails
         }
       }
-      
+
       return true;
     },
     
@@ -249,12 +255,8 @@ export const authConfig: NextAuthConfig = {
         token.name = user.name ?? null;
         token.picture = user.image ?? null;
 
-        console.log('[JWT Callback] User logged in:', {
-          userId: user.id,
-          email: user.email,
-          nodeEnv: process.env.NODE_ENV,
-          cookieName: process.env.NODE_ENV === "production" ? "__Secure-authjs.session-token" : "authjs.session-token",
-        });
+        // ⚠️ SECURITY: Do NOT log user ID, email, or other PII
+        // These should only be logged through secure audit channels
 
         try {
           // Get user roles and permissions
@@ -271,12 +273,8 @@ export const authConfig: NextAuthConfig = {
             ? 'admin'
             : 'user';
 
-          console.log('[JWT Callback] Token created:', {
-            userId: token.id,
-            roleNames: token.roleNames,
-            permissionNames: Array.isArray(token.permissionNames) ? token.permissionNames.length : 0,
-            applicationPaths: token.applicationPaths
-          });
+          // ⚠️ SECURITY: Do NOT log token data, roles, or permissions
+          // This information should only be logged through secure audit channels
 
         } catch (error) {
           console.error("Error getting user roles:", error);
@@ -305,12 +303,8 @@ export const authConfig: NextAuthConfig = {
         session.user.permissionNames = (token.permissionNames as string[]) || [];
         session.user.applicationPaths = (token.applicationPaths as string[]) || [];
 
-        console.log('[Session Callback] Session updated:', {
-          userId: session.user.id,
-          email: session.user.email,
-          roleNames: session.user.roleNames,
-          applicationPaths: session.user.applicationPaths
-        });
+        // ⚠️ SECURITY: Do NOT log session data, user ID, email, or permissions
+        // These should only be logged through secure audit channels
 
         // For compatibility with existing code
         session.user.roles = session.user.roleNames.map(name => ({ name, id: '', createdAt: new Date(), updatedAt: new Date() }));

@@ -113,13 +113,8 @@ async function middleware(request: NextRequest) {
     const token = (request as any).auth as AuthJWT | null
     const isAuthenticated = !!token
 
-    console.log('[Middleware] Request:', {
-      pathname,
-      isAuthenticated,
-      hasToken: !!token,
-      tokenEmail: token?.email,
-      tokenSub: token?.sub
-    })
+    // ⚠️ SECURITY: Do NOT log token email, sub, or other PII
+    // Middleware logs are often centralized and may be accessible to unauthorized users
 
     // =========================================================================
     // 2. DEFINE ROUTE TYPES
@@ -183,10 +178,8 @@ async function middleware(request: NextRequest) {
 
     return NextResponse.next()
   } catch (error) {
-    console.error('[Middleware] Error:', {
-      message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined
-    })
+    // ⚠️ SECURITY: Do NOT log error details in middleware
+    // Error stacks may contain sensitive information
     // Allow request to proceed even if middleware fails
     return NextResponse.next()
   }
