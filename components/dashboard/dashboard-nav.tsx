@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,7 @@ interface DashboardNavProps {
 export function DashboardNav({ onMenuToggle }: DashboardNavProps) {
   const { data: session, status, update } = useSession();
   const user = session?.user;
+  const hasRefreshedSession = useRef(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -41,12 +42,17 @@ export function DashboardNav({ onMenuToggle }: DashboardNavProps) {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // ✅ Force session update to ensure latest data
+  // ✅ Force session update once per authentication cycle to ensure latest data
   useEffect(() => {
-    if (status === 'authenticated') {
-      update();
+    if (status === "authenticated") {
+      if (!hasRefreshedSession.current) {
+        hasRefreshedSession.current = true;
+        update();
+      }
+    } else {
+      hasRefreshedSession.current = false;
     }
-  }, [user, status, update]);
+  }, [status, update]);
 
   // Search functionality
   useEffect(() => {
