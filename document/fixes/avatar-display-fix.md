@@ -59,7 +59,7 @@ When you refresh the page:
 
 ## ✅ Solution Implemented
 
-### Modified JWT Callback Logic
+### 1️⃣ Modified JWT Callback Logic
 
 **File**: `auth.config.ts` (lines 271-368)
 
@@ -113,6 +113,44 @@ async jwt({ token, user }) {
    - `session.user.name = token.name` (always up-to-date)
    - Avatar displays correct name
 
+### 2️⃣ Added Session Refetch Configuration
+
+**File**: `components/providers/SessionProvider.tsx`
+
+**Key Changes:**
+
+```typescript
+export function SessionProvider({
+    children,
+    session
+}: SessionProviderProps) {
+    return (
+        <NextAuthSessionProvider
+            session={session}
+            // ✅ FIX: Automatically refresh session to ensure latest user data
+            refetchInterval={5 * 60} // Refresh every 5 minutes
+            refetchOnWindowFocus={true} // Refresh when window regains focus
+        >
+            {children}
+        </NextAuthSessionProvider>
+    )
+}
+```
+
+### How It Works
+
+1. **Periodic Refresh**: Every 5 minutes, `useSession()` calls `/api/auth/session`
+   - Fetches latest session data from server
+   - Updates client-side session state
+
+2. **Window Focus Refresh**: When user returns to window
+   - Immediately refreshes session
+   - Ensures data is current after user was away
+
+3. **Real-time Updates**: Avatar always shows latest user data
+   - No manual refresh needed
+   - Works seamlessly across all pages
+
 ## 🧪 Testing
 
 ### Test Case 1: Google OAuth → Password Reset → Email Login
@@ -160,12 +198,17 @@ async jwt({ token, user }) {
 - ❌ Avatar shows "U" after password reset
 - ❌ Requires page refresh to see correct name
 - ❌ User profile data not synchronized
+- ❌ JWT callback doesn't refresh on token update
+- ❌ Client-side session never refreshes
 
 ### After Fix
 - ✅ Avatar always shows correct name
 - ✅ No page refresh needed
 - ✅ User profile data always synchronized
 - ✅ Works across all login methods (OAuth, email/password)
+- ✅ JWT callback refreshes user data on token update
+- ✅ Client-side session auto-refreshes every 5 minutes
+- ✅ Session refreshes when user returns to window
 
 ## 🔐 Security Considerations
 
