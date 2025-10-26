@@ -29,6 +29,8 @@ export function SessionProvider({
             // This fixes the avatar display issue where user data wasn't being updated
             refetchInterval={5 * 60} // Refresh every 5 minutes
             refetchOnWindowFocus={true} // Refresh when window regains focus
+            // ✅ FIX: Ensure basePath matches auth config
+            basePath="/api/auth"
         >
             {children}
         </NextAuthSessionProvider>
