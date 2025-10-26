@@ -224,6 +224,17 @@ export function SessionProvider({
 - `components/admin/AdminHeader.tsx` - Admin avatar display
 - `components/layout/UserNav.tsx` - Header user navigation
 
+## 🔴 CRITICAL BUGS FIXED: Session Serialization & Logout Issues
+
+### Summary of Issues
+
+1. **Email/Password Login Avatar Shows 'U'** - Credentials provider Date serialization
+2. **Google OAuth Login Works Fine** - OAuth doesn't have Date fields
+3. **Logout Doesn't Redirect to Login** - Incorrect redirect configuration
+4. **Multiple Visits to /auth/login Needed** - Session not properly cleared
+
+---
+
 ## 🔴 CRITICAL BUG FIXED: Session Serialization & Configuration Issues
 
 ### Root Cause #1: Date Objects in Session Callback
@@ -285,7 +296,77 @@ session.user.permissions = session.user.permissionNames.map(name => ({
 })) as any;
 ```
 
-### Root Cause #3: Incorrect SessionProvider Configuration
+### Root Cause #3: Credentials Provider Returns Non-Serializable Date Objects
+
+**File**: `auth.config.ts` (Credentials provider authorize function, lines 147-167)
+
+The Credentials provider was returning a user object with Date fields that are **NOT JSON serializable**:
+
+```typescript
+// ❌ Broken - Date objects are NOT serializable
+const safeUser = {
+  // ... other fields ...
+  createdAt: user.createdAt,  // ❌ Date object
+  updatedAt: user.updatedAt,  // ❌ Date object
+  lastLoginAttempt: user.lastLoginAttempt ?? new Date(),  // ❌ Date object
+  lastSuccessfulLogin: user.lastSuccessfulLogin ?? new Date()  // ❌ Date object
+};
+```
+
+**Why This Only Affects Credentials Provider:**
+- OAuth providers (Google, GitHub) don't return these fields
+- So OAuth login works fine, but Credentials login fails
+- This explains why the issue only occurs with email/password login
+
+**After (Fixed):**
+```typescript
+// ✅ Fixed - All Date objects converted to ISO strings
+const safeUser = {
+  // ... other fields ...
+  createdAt: user.createdAt.toISOString(),  // ✅ ISO string
+  updatedAt: user.updatedAt.toISOString(),  // ✅ ISO string
+  lastLoginAttempt: user.lastLoginAttempt ? user.lastLoginAttempt.toISOString() : new Date().toISOString(),  // ✅ ISO string
+  lastSuccessfulLogin: user.lastSuccessfulLogin ? user.lastSuccessfulLogin.toISOString() : new Date().toISOString()  // ✅ ISO string
+};
+```
+
+### Root Cause #4: Incorrect Logout Redirect Configuration
+
+**File 1**: `components/layout/UserNav.tsx` (line 64)
+
+The UserNav was using client-side `signOut` without proper redirect:
+
+```typescript
+// ❌ Broken - Client-side signOut without proper redirect
+onClick={() => signOut({ callbackUrl: "/" })}
+```
+
+**File 2**: `app/auth/logout/page.tsx` (line 30)
+
+The LogoutPage was redirecting to home instead of login:
+
+```typescript
+// ❌ Broken - Redirects to home instead of login
+router.push("/");
+```
+
+**After (Fixed):**
+
+**File 1**: `components/layout/UserNav.tsx`
+```typescript
+// ✅ Fixed - Use LogoutButton with Server Action
+<LogoutButton className="text-red-600 hover:text-red-700 font-medium w-full text-left" redirectTo="/auth/login">
+  Log out
+</LogoutButton>
+```
+
+**File 2**: `app/auth/logout/page.tsx`
+```typescript
+// ✅ Fixed - Redirect to login page
+router.push("/auth/login");
+```
+
+### Root Cause #5: SessionProvider basePath Configuration
 
 **File**: `components/providers/SessionProvider.tsx`
 
@@ -310,22 +391,55 @@ The SessionProvider was configured with `basePath="/api/auth"`. However, accordi
 
 ### Why This Caused the Avatar Issue
 
-1. Session callback creates non-serializable objects (Date, undefined)
-2. Session is serialized to JSON for transmission to client
-3. Non-serializable objects are stripped out during serialization
-4. Session object becomes corrupted/incomplete
-5. SessionProvider receives incomplete session
-6. `useSession()` returns `null` or `undefined`
-7. Avatar component has no user data, displays "U"
+**For Email/Password Login:**
+1. Credentials provider returns user object with Date fields
+2. JWT callback receives user object with Date fields
+3. JWT callback copies Date fields to token
+4. Session callback tries to serialize token to JSON
+5. Date objects are stripped out during serialization
+6. Session object becomes corrupted/incomplete
+7. SessionProvider receives incomplete session
+8. `useSession()` returns `null` or `undefined`
+9. Avatar component has no user data, displays "U"
+
+**For Google OAuth Login:**
+1. OAuth provider doesn't return Date fields
+2. JWT callback receives user object without Date fields
+3. No serialization issues
+4. Session object is complete
+5. Avatar displays correctly
+
+### Why Logout Didn't Work
+
+1. UserNav used client-side `signOut` without proper redirect
+2. LogoutPage redirected to home instead of login
+3. Middleware still saw valid token (not properly cleared)
+4. User was redirected back to dashboard
+5. Multiple visits to /auth/login were needed to clear session
 
 ### Impact of Fixes
 
-- ✅ Session object now completely serializable
-- ✅ SessionProvider correctly configured per Auth.js V5 standards
-- ✅ SessionProvider receives complete session data
-- ✅ `useSession()` returns correct user data
-- ✅ Avatar displays correct name immediately
+- ✅ Credentials provider now returns completely serializable data
+- ✅ Email/password login avatar displays correctly immediately
+- ✅ Logout properly redirects to login page
+- ✅ Session is properly cleared after logout
+- ✅ First visit to /auth/login after logout shows login form
 - ✅ No need for page refresh
+- ✅ Consistent behavior between OAuth and Credentials providers
+
+---
+
+## 🎯 **關鍵修復點總結**
+
+| 修復 | 文件 | 行號 | 影響 | 狀態 |
+|------|------|------|------|------|
+| Credentials Date 序列化 | `auth.config.ts` | 147-167 | 🔴 **CRITICAL** | ✅ 已修復 |
+| Session callback Date 序列化 | `auth.config.ts` | 410 | 🔴 **CRITICAL** | ✅ 已修復 |
+| Session callback Undefined 值 | `auth.config.ts` | 418-437 | 🔴 **CRITICAL** | ✅ 已修復 |
+| UserNav 登出重定向 | `components/layout/UserNav.tsx` | 62-67 | 🔴 **CRITICAL** | ✅ 已修復 |
+| LogoutPage 重定向 | `app/auth/logout/page.tsx` | 30 | 🔴 **CRITICAL** | ✅ 已修復 |
+| SessionProvider basePath | `components/providers/SessionProvider.tsx` | 33 | 🟡 重要 | ✅ 已修復 |
+| Status 字段類型 | `auth.config.ts` | 384 | 🟡 重要 | ✅ 已修復 |
 
 ---
 
@@ -336,4 +450,31 @@ The SessionProvider was configured with `basePath="/api/auth"`. However, accordi
 - Backward compatible with existing sessions
 - Automatic fix on next token refresh
 - **CRITICAL**: Deploy this fix immediately to resolve avatar display issue
+
+---
+
+## ✅ **測試清單**
+
+### Email/Password Login Flow
+- [ ] 使用 email/password 登入
+- [ ] Avatar 立即顯示正確名字（不是 'U'）
+- [ ] 無需 refresh 頁面
+- [ ] 切換標籤頁後返回，avatar 仍然正確
+
+### Google OAuth Login Flow
+- [ ] 使用 Google OAuth 登入
+- [ ] Avatar 顯示正確名字
+- [ ] 設定密碼
+- [ ] 登出
+
+### Logout Flow
+- [ ] 點擊 "Log out" 按鈕
+- [ ] 立即重定向到 /auth/login
+- [ ] 登入表單顯示（不需要多次訪問）
+- [ ] 無法訪問 /dashboard（需要重新登入）
+
+### Session Persistence
+- [ ] 登入後刷新頁面，session 保持
+- [ ] 關閉瀏覽器後重新打開，session 保持（30 天內）
+- [ ] 登出後 session 完全清除
 
