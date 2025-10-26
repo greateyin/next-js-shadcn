@@ -58,11 +58,15 @@ export const registerAction = async (
   }
 
   // Create new user
+  // ⚠️ SECURITY: Do NOT set role field - roles are assigned via UserRole join table
+  // Default role will be assigned after email verification
   await db.user.create({
     data: {
       name,
       email,
       password: hashedPassword,
+      // status defaults to 'pending' - requires email verification
+      // role field does not exist in User model - use UserRole join table instead
     },
   });
 

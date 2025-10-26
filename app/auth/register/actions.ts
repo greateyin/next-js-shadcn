@@ -64,16 +64,18 @@ interface RegisterFormData {
  */
 export async function register(data: RegisterFormData) {
   const hashedPassword = await hashPassword(data.password);
-  
+
+  // ⚠️ SECURITY: Do NOT set role field - roles are assigned via UserRole join table
+  // Default role will be assigned after email verification
   const user = await db.user.create({
     data: {
       email: data.email,
       password: hashedPassword,
       name: data.name,
-      role: "user",
       status: "pending",
+      // role field does not exist in User model - use UserRole join table instead
     }
   });
-  
+
   return user;
 }

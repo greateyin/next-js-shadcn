@@ -140,7 +140,7 @@ export async function GET(request: Request) {
         // First update the user status
         const updatedUser = await db.user.update({
           where: { id: user.id },
-          data: { 
+          data: {
             emailVerified: new Date(),
             status: 'active' as const
           },
@@ -152,37 +152,68 @@ export async function GET(request: Request) {
           }
         });
 
-        console.log("User updated successfully:", { 
+        console.log("User updated successfully:", {
           userId: updatedUser.id,
           email: updatedUser.email,
           newStatus: updatedUser.status,
           emailVerified: updatedUser.emailVerified
         });
-        
+
+        // ⚠️ SECURITY: Assign default 'user' role to newly verified users
+        // This ensures all users have at least one role for RBAC enforcement
+        try {
+          const existingRole = await db.userRole.findFirst({
+            where: { userId: user.id }
+          });
+
+          if (!existingRole) {
+            console.log("Assigning default 'user' role to verified user...");
+            const userRole = await db.role.findUnique({
+              where: { name: "user" }
+            });
+
+            if (userRole) {
+              await db.userRole.create({
+                data: {
+                  userId: user.id,
+                  roleId: userRole.id
+                }
+              });
+              console.log("Default 'user' role assigned successfully");
+            } else {
+              console.warn("Default 'user' role not found in database");
+            }
+          }
+        } catch (roleError) {
+          console.error("Error assigning role to verified user:", roleError);
+          // Don't fail verification if role assignment fails
+          // User can still log in, but will have no roles
+        }
+
         // Then delete the token separately
         console.log("Deleting verification token...");
         await db.verificationToken.delete({
           where: { id: verificationToken.id }
         });
-        
+
         console.log("Verification token deleted successfully");
         logger.info("Email verified successfully", { userId: user.id });
-        
+
         return NextResponse.json({
           success: "Email verified successfully"
         });
       } catch (error) {
-        console.error("Error during verification process:", { 
+        console.error("Error during verification process:", {
           error,
           userId: user.id,
           tokenId: verificationToken.id
         });
-        logger.error("Error during verification process:", { 
+        logger.error("Error during verification process:", {
           error,
           userId: user.id,
           tokenId: verificationToken.id
         });
-        
+
         return NextResponse.json(
           { error: "Failed to update user or delete token" },
           { status: 500 }
