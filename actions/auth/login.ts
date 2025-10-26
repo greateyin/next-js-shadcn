@@ -11,6 +11,7 @@ import { LoginSchema } from "@/schemas";
 import { AuthError } from "next-auth";
 import { DEFAULT_LOGIN_REDIRECT, ADMIN_LOGIN_REDIRECT } from "@/routes";
 import { db } from "@/lib/db";
+import { cookies } from "next/headers";
 
 /**
  * Login Server Action
@@ -314,6 +315,23 @@ export async function loginNoRedirectAction(
  * ```
  */
 export async function logoutAction(redirectTo: string = "/") {
+  const cookieStore = cookies();
+
+  const cookieNames = [
+    "authjs.session-token",
+    "__Secure-authjs.session-token",
+    "authjs.callback-url",
+    "__Secure-authjs.callback-url",
+    "authjs.csrf-token",
+    "__Host-authjs.csrf-token",
+    "next-auth.session-token",
+    "__Secure-next-auth.session-token",
+  ];
+
+  for (const name of cookieNames) {
+    cookieStore.delete(name);
+  }
+
   // ✅ FIX: signOut() throws NEXT_REDIRECT error which is expected behavior
   // This is NOT a real error - it's how Auth.js V5 handles redirects
   // We should NOT catch and log this error
