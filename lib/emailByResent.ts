@@ -5,15 +5,16 @@ import { logger } from './serverLogger';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-const FROM_EMAIL = process.env.EMAIL_FROM || "onboarding@resend.dev";
+// ✅ Use verified Resend domain from environment variables
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
 
 async function sendEmail(to: string, subject: string, html: string): Promise<void> {
     try {
-        logger.info('Sending email', { to, subject });
+        logger.info('[MAIL] Sending email', { from: FROM_EMAIL, to, subject });
         const result = await resend.emails.send({ from: FROM_EMAIL, to, subject, html });
-        logger.info('Email sent', { to, subject, id: result.data?.id });
+        logger.info('[MAIL] Email sent successfully', { to, subject, id: result.data?.id });
     } catch (error) {
-        logger.error('Email send error', { to, subject, error: (error as Error).message });
+        logger.error('[MAIL] Email send error', { to, subject, from: FROM_EMAIL, error: (error as Error).message });
         throw new Error(`Failed to send email: ${subject}`);
     }
 }

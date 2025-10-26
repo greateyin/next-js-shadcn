@@ -6,6 +6,8 @@ const resend = process.env.RESEND_API_KEY
   : null;
 
 const domain = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+// ✅ Use verified Resend domain from environment variables
+const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
 
 export const sendVerificationEmail = async (
   email: string,
@@ -14,15 +16,22 @@ export const sendVerificationEmail = async (
   const confirmLink = `${domain}/auth/email-verification?token=${token}`;
 
   if (resend) {
-    await resend.emails.send({
-      from: "noreply@example.com", // Update with your verified domain
-      to: email,
-      subject: "Verify your email",
-      html: `<p>Click <a href="${confirmLink}">here</a> to verify your email.</p>`
-    });
+    try {
+      await resend.emails.send({
+        from: fromEmail, // ✅ Use verified domain from env
+        to: email,
+        subject: "Verify your email",
+        html: `<p>Click <a href="${confirmLink}">here</a> to verify your email.</p>`
+      });
+      console.log(`[MAIL] Verification email sent to ${email}`);
+    } catch (error) {
+      console.error(`[MAIL] Failed to send verification email to ${email}:`, error);
+      throw error;
+    }
   } else {
     // Log email details to console for development
-    console.log("📧 Verification Email");
+    console.log("📧 Verification Email (Development Mode)");
+    console.log("From:", fromEmail);
     console.log("To:", email);
     console.log("Subject: Verify your email");
     console.log("Verification Link:", confirmLink);
@@ -38,15 +47,22 @@ export const sendPasswordResetEmail = async (
   const resetLink = `${domain}/auth/reset-password?token=${token}`;
 
   if (resend) {
-    await resend.emails.send({
-      from: "noreply@example.com", // Update with your verified domain
-      to: email,
-      subject: "Reset your password",
-      html: `<p>Click <a href="${resetLink}">here</a> to reset your password.</p>`
-    });
+    try {
+      await resend.emails.send({
+        from: fromEmail, // ✅ Use verified domain from env
+        to: email,
+        subject: "Reset your password",
+        html: `<p>Click <a href="${resetLink}">here</a> to reset your password.</p>`
+      });
+      console.log(`[MAIL] Password reset email sent to ${email}`);
+    } catch (error) {
+      console.error(`[MAIL] Failed to send password reset email to ${email}:`, error);
+      throw error;
+    }
   } else {
     // Log email details to console for development
-    console.log("📧 Password Reset Email");
+    console.log("📧 Password Reset Email (Development Mode)");
+    console.log("From:", fromEmail);
     console.log("To:", email);
     console.log("Subject: Reset your password");
     console.log("Reset Link:", resetLink);
@@ -60,15 +76,22 @@ export const sendTwoFactorTokenEmail = async (
   token: string
 ) => {
   if (resend) {
-    await resend.emails.send({
-      from: "noreply@example.com", // Update with your verified domain
-      to: email,
-      subject: "2FA Code",
-      html: `<p>Your 2FA code: ${token}</p>`
-    });
+    try {
+      await resend.emails.send({
+        from: fromEmail, // ✅ Use verified domain from env
+        to: email,
+        subject: "2FA Code",
+        html: `<p>Your 2FA code: ${token}</p>`
+      });
+      console.log(`[MAIL] 2FA email sent to ${email}`);
+    } catch (error) {
+      console.error(`[MAIL] Failed to send 2FA email to ${email}:`, error);
+      throw error;
+    }
   } else {
     // Log email details to console for development
-    console.log("📧 Two-Factor Authentication Email");
+    console.log("📧 Two-Factor Authentication Email (Development Mode)");
+    console.log("From:", fromEmail);
     console.log("To:", email);
     console.log("Subject: 2FA Code");
     console.log("2FA Code:", token);
