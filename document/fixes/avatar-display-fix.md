@@ -224,11 +224,11 @@ export function SessionProvider({
 - `components/admin/AdminHeader.tsx` - Admin avatar display
 - `components/layout/UserNav.tsx` - Header user navigation
 
-## 🔴 CRITICAL BUG FIXED: Session Serialization Issue
+## 🔴 CRITICAL BUG FIXED: Session Serialization & Configuration Issues
 
-### The Real Root Cause
+### Root Cause #1: Date Objects in Session Callback
 
-**File**: `auth.config.ts` (Session callback, lines 407-424)
+**File**: `auth.config.ts` (Session callback, lines 407-437)
 
 The session callback was creating `new Date()` objects for roles, permissions, and applications. These Date objects are **NOT JSON serializable** and were being stripped out when the session was passed from server to client via SessionProvider.
 
@@ -255,19 +255,73 @@ session.user.roles = session.user.roleNames.map(name => ({
 })) as any;
 ```
 
+### Root Cause #2: Undefined Values in Session Callback
+
+**File**: `auth.config.ts` (Session callback, lines 418-437)
+
+The session callback was using `undefined` values for optional fields. Undefined values are **NOT JSON serializable** and were being stripped out during serialization.
+
+**Before (Broken):**
+```typescript
+// ❌ undefined is NOT serializable
+session.user.permissions = session.user.permissionNames.map(name => ({
+  name,
+  id: '',
+  createdAt: now,
+  updatedAt: now,
+  description: undefined  // ❌ NOT serializable!
+})) as any;
+```
+
+**After (Fixed):**
+```typescript
+// ✅ Empty strings are JSON serializable
+session.user.permissions = session.user.permissionNames.map(name => ({
+  name,
+  id: '',
+  createdAt: now,
+  updatedAt: now,
+  description: ''  // ✅ Serializable!
+})) as any;
+```
+
+### Root Cause #3: Incorrect SessionProvider Configuration
+
+**File**: `components/providers/SessionProvider.tsx`
+
+The SessionProvider was configured with `basePath="/api/auth"`. However, according to Auth.js V5 best practices, SessionProvider should **NOT** have basePath configured. Auth.js V5 automatically detects basePath from the auth config.
+
+**Before (Broken):**
+```typescript
+<NextAuthSessionProvider
+    session={session}
+    basePath="/api/auth"  // ❌ Should NOT be set here
+>
+```
+
+**After (Fixed):**
+```typescript
+<NextAuthSessionProvider
+    session={session}
+    // ✅ Auth.js V5 automatically detects basePath
+    // Do NOT set basePath here
+>
+```
+
 ### Why This Caused the Avatar Issue
 
-1. Session callback creates Date objects
+1. Session callback creates non-serializable objects (Date, undefined)
 2. Session is serialized to JSON for transmission to client
-3. Date objects are stripped out during serialization
-4. Session object becomes corrupted
-5. SessionProvider receives incomplete/null session
+3. Non-serializable objects are stripped out during serialization
+4. Session object becomes corrupted/incomplete
+5. SessionProvider receives incomplete session
 6. `useSession()` returns `null` or `undefined`
 7. Avatar component has no user data, displays "U"
 
-### Impact of Fix
+### Impact of Fixes
 
-- ✅ Session object now properly serializes
+- ✅ Session object now completely serializable
+- ✅ SessionProvider correctly configured per Auth.js V5 standards
 - ✅ SessionProvider receives complete session data
 - ✅ `useSession()` returns correct user data
 - ✅ Avatar displays correct name immediately
