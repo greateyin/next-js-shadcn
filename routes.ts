@@ -39,7 +39,9 @@ export const protectedRoutePaths = [
 export const adminRoutePaths = [
     "/admin",
     "/admin/users",
-    "/admin/settings",
+    "/admin/roles",
+    "/admin/applications",
+    "/admin/menu",
 ] as const;
 
 // API authentication routes

@@ -12,9 +12,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { BellIcon, MenuIcon } from "lucide-react";
+import { MenuIcon } from "lucide-react";
 import Link from "next/link";
 import { LogoutButton } from "@/components/auth/logout-button";
+import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 
 interface AdminHeaderProps {
   user: User;
@@ -43,23 +44,7 @@ export function AdminHeader({ user, onMenuToggle }: AdminHeaderProps) {
       <div className="flex flex-1 items-center justify-end gap-3">
         <div className="flex items-center gap-2 md:gap-3">
           <ModeToggle />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full hover:bg-gray-100"
-                aria-label="Notifications"
-              >
-                <BellIcon className="h-5 w-5 text-gray-700" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-72 rounded-2xl border-gray-200/50 shadow-2xl bg-white/95 backdrop-blur-xl p-2" align="end">
-              <DropdownMenuLabel className="px-3 py-2.5 font-semibold text-gray-900">Notifications</DropdownMenuLabel>
-              <DropdownMenuSeparator className="bg-gray-200/50 my-2" />
-              <DropdownMenuItem className="px-3 py-2.5 text-gray-600">No new notifications</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <NotificationDropdown />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button

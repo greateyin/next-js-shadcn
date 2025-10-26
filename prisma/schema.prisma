@@ -48,6 +48,7 @@ model User {
   twoFactorTokens       TwoFactorToken[]
   userRoles             UserRole[]              // User to role associations
   verificationTokens    VerificationToken[]     // Email verification tokens
+  notifications         Notification[]          // User notifications
 }
 
 model Account {
@@ -477,4 +478,52 @@ enum UserStatus {
   banned    // Banned
   deleted   // Deleted
   inactive  // Inactive
+}
+
+/// Notification type enumeration
+enum NotificationType {
+  USER_CREATED      // User created
+  USER_UPDATED      // User updated
+  USER_DELETED      // User deleted
+  ROLE_ASSIGNED     // Role assigned to user
+  ROLE_REMOVED      // Role removed from user
+  PERMISSION_CHANGED // Permission changed
+  APPLICATION_CREATED // Application created
+  APPLICATION_UPDATED // Application updated
+  APPLICATION_DELETED // Application deleted
+  MENU_CREATED      // Menu item created
+  MENU_UPDATED      // Menu item updated
+  MENU_DELETED      // Menu item deleted
+  SYSTEM_ALERT      // System alert
+  SECURITY_ALERT    // Security alert
+  INFO              // General information
+}
+
+/// Notification model for system notifications
+model Notification {
+  /// Notification's unique identifier
+  id        String           @id @default(cuid())
+  /// User who receives the notification
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Notification type
+  type      NotificationType
+  /// Notification title
+  title     String
+  /// Notification message
+  message   String
+  /// Additional data (JSON)
+  data      Json?
+  /// Whether notification has been read
+  isRead    Boolean          @default(false)
+  /// When notification was read
+  readAt    DateTime?
+  /// Creation time
+  createdAt DateTime         @default(now())
+  /// Update time
+  updatedAt DateTime         @updatedAt
+
+  @@index([userId])
+  @@index([userId, isRead])
+  @@index([createdAt])
 }

@@ -4,14 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Application } from "@/types/roles";
 import { cn } from "@/lib/utils";
-import { 
-  UsersIcon, 
-  LayoutDashboardIcon, 
-  ShieldIcon, 
-  LayoutGrid, 
+import {
+  UsersIcon,
+  LayoutDashboardIcon,
+  ShieldIcon,
+  LayoutGrid,
   MenuIcon,
-  SettingsIcon,
-  HelpCircleIcon,
   X
 } from "lucide-react";
 import { useState } from "react";
@@ -144,23 +142,7 @@ export function AdminSidebar({ applications, isOpen = false, onClose }: AdminSid
                 ))}
             </div>
           )}
-          <div className="py-2">
-            <h3 className="mb-2 px-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
-              Settings
-            </h3>
-            <SidebarItem
-              href="/admin/settings"
-              title="Settings"
-              icon={<SettingsIcon className="h-4 w-4" />}
-              active={isActive("/admin/settings")}
-            />
-            <SidebarItem
-              href="/admin/help"
-              title="Help & Support"
-              icon={<HelpCircleIcon className="h-4 w-4" />}
-              active={isActive("/admin/help")}
-            />
-          </div>
+
         </nav>
         
         {/* Footer with Dashboard Link */}
