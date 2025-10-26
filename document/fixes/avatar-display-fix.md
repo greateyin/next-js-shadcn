@@ -224,10 +224,62 @@ export function SessionProvider({
 - `components/admin/AdminHeader.tsx` - Admin avatar display
 - `components/layout/UserNav.tsx` - Header user navigation
 
+## 🔴 CRITICAL BUG FIXED: Session Serialization Issue
+
+### The Real Root Cause
+
+**File**: `auth.config.ts` (Session callback, lines 407-424)
+
+The session callback was creating `new Date()` objects for roles, permissions, and applications. These Date objects are **NOT JSON serializable** and were being stripped out when the session was passed from server to client via SessionProvider.
+
+**Before (Broken):**
+```typescript
+// ❌ Date objects are NOT serializable
+session.user.roles = session.user.roleNames.map(name => ({
+  name,
+  id: '',
+  createdAt: new Date(),  // ❌ NOT serializable!
+  updatedAt: new Date()   // ❌ NOT serializable!
+}));
+```
+
+**After (Fixed):**
+```typescript
+// ✅ ISO 8601 strings are JSON serializable
+const now = new Date().toISOString();
+session.user.roles = session.user.roleNames.map(name => ({
+  name,
+  id: '',
+  createdAt: now,  // ✅ Serializable!
+  updatedAt: now   // ✅ Serializable!
+})) as any;
+```
+
+### Why This Caused the Avatar Issue
+
+1. Session callback creates Date objects
+2. Session is serialized to JSON for transmission to client
+3. Date objects are stripped out during serialization
+4. Session object becomes corrupted
+5. SessionProvider receives incomplete/null session
+6. `useSession()` returns `null` or `undefined`
+7. Avatar component has no user data, displays "U"
+
+### Impact of Fix
+
+- ✅ Session object now properly serializes
+- ✅ SessionProvider receives complete session data
+- ✅ `useSession()` returns correct user data
+- ✅ Avatar displays correct name immediately
+- ✅ No need for page refresh
+
+---
+
 ## 🚀 Deployment Notes
 
 - No database migrations required
 - No environment variable changes needed
 - Backward compatible with existing sessions
 - Automatic fix on next token refresh
+- **CRITICAL**: Deploy this fix immediately to resolve avatar display issue
 
