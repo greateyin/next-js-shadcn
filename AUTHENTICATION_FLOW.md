@@ -213,19 +213,47 @@ This document describes the complete authentication flow for the application, in
 
 ---
 
-## Troubleshooting
+## Error Messages
 
-### User Cannot Login After Email Verification
+### Login Error Messages
+
+The login form now provides specific error messages to guide users:
+
+| Error Message | Cause | Solution |
+|---------------|-------|----------|
+| "User not found. Please register first." | Email doesn't exist in database | Click "Register here" link to create account |
+| "Invalid password. Please try again." | Email exists but password is wrong | Try again or use "Forgot Password?" link |
+| "Invalid credentials format" | Email or password format is invalid | Check email format and try again |
+| "Authentication failed" | Auth.js callback error | Try again or contact support |
+| "Something went wrong" | Unexpected error | Try again or contact support |
+
+### User Not Found Flow
+
+When a user tries to login with a non-existent email:
+
+1. Login form displays: "User not found. Please register first."
+2. A "Register here" link appears below the error message
+3. User can click the link to go to registration page
+4. User creates a new account
+
+### Troubleshooting
+
+#### User Cannot Login After Email Verification
 - Check user status in database (should be `active`)
 - Check if user has at least one role assigned
 - Check if email is verified
 
-### OAuth User Cannot Reset Password
+#### OAuth User Cannot Reset Password
 - This is now allowed! OAuth users can set a password via password reset
 - After setting password, user can login with email/password
 
-### User Has No Roles
+#### User Has No Roles
 - This will prevent login
 - Manually assign a role via admin panel or database
 - Or re-verify email to trigger role assignment
+
+#### User Sees "User not found" Error
+- Email is not registered in the system
+- Click "Register here" to create a new account
+- Or check if you're using the correct email address
 
