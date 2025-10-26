@@ -7,17 +7,21 @@
  * - OAuth provider callbacks
  * - JWT token operations
  * - CSRF protection
+ *
+ * ✅ Auth.js V5 Best Practice:
+ * - handlers includes ALL auth endpoints: /api/auth/signin, /api/auth/signout, /api/auth/session, etc.
+ * - Do NOT create custom /api/auth/session/route.ts
+ * - Let handlers manage all session operations
  */
 
 import { handlers } from "@/auth";
 
-console.log('[AUTH_HANDLERS] Handlers exported from @/auth:', {
-  hasGET: !!handlers.GET,
-  hasPOST: !!handlers.POST,
-});
-
 /**
- * GET handler for Auth.js
- * Handles session validation and OAuth provider callbacks
+ * GET and POST handlers for Auth.js
+ * Handles all authentication operations including:
+ * - Session validation and retrieval
+ * - OAuth provider callbacks
+ * - Sign in/out operations
+ * - CSRF protection
  */
 export const { GET, POST } = handlers;
