@@ -269,7 +269,14 @@ export const authConfig: NextAuthConfig = {
     },
     
     async jwt({ token, user }) {
+      // ✅ FIX: Always refresh user data from database to ensure latest information
+      // This fixes the issue where avatar shows 'U' after password reset
+      // because the token's name field wasn't being updated on subsequent logins
+
+      let userId = user?.id || (token.id as string);
+
       if (user) {
+        // Initial login - user object is provided
         token.id = user.id;
         token.status = user.status;
         token.email = user.email;
@@ -277,60 +284,85 @@ export const authConfig: NextAuthConfig = {
         token.picture = user.image ?? null;
 
         // Debug: Log user data to diagnose avatar fallback issue
-        console.log('[JWT_CALLBACK] User data:', {
+        console.log('[JWT_CALLBACK] Initial login - User data:', {
           id: user.id,
           email: user.email,
           name: user.name,
           image: user.image,
         });
-
-        // ⚠️ SECURITY: Do NOT log user ID, email, or other PII
-        // These should only be logged through secure audit channels
-
+      } else if (token.id) {
+        // ✅ Token refresh - user object is undefined
+        // Refresh user data from database to ensure latest information
         try {
-          // Get user roles and permissions
-          const userRolesAndPermissions = await getUserRolesAndPermissions(user.id);
+          const dbUser = await db.user.findUnique({
+            where: { id: token.id as string }
+          });
 
-          // ⚠️ SECURITY: Enforce that user has at least one active role
-          // This ensures access derives solely from relational RBAC assignments
-          if (!userRolesAndPermissions.roles || userRolesAndPermissions.roles.length === 0) {
-            console.warn(`User has no active roles - denying token issuance`);
-            // Return token with empty RBAC data
-            // This will cause downstream authorization checks to fail
-            token.roleNames = [];
-            token.permissionNames = [];
-            token.applicationPaths = [];
-            token.role = undefined;
-            return token;
+          if (dbUser) {
+            token.status = dbUser.status;
+            token.email = dbUser.email;
+            token.name = dbUser.name ?? null;
+            token.picture = dbUser.image ?? null;
+
+            console.log('[JWT_CALLBACK] Token refresh - Updated user data:', {
+              id: dbUser.id,
+              email: dbUser.email,
+              name: dbUser.name,
+              image: dbUser.image,
+            });
           }
-
-          // Simplify token data to reduce size
-          // Store only role names and permission names instead of full objects
-          token.roleNames = userRolesAndPermissions.roles.map(r => r.name);
-          token.permissionNames = userRolesAndPermissions.permissions.map(p => p.name);
-          token.applicationPaths = userRolesAndPermissions.applications.map(a => a.path);
-
-          // For backward compatibility
-          token.role = userRolesAndPermissions.roles.some(r => r.name === 'admin')
-            ? 'admin'
-            : 'user';
-
-          // ⚠️ SECURITY: Do NOT log token data, roles, or permissions
-          // This information should only be logged through secure audit channels
-
         } catch (error) {
-          // ⚠️ SECURITY: RBAC failure should NOT default to 'user' role
-          // Instead, return empty sets to enforce least privilege
-          // The user will have no roles/permissions until the issue is resolved
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          console.error("Error getting user roles - denying access with empty RBAC:", errorMessage);
+          console.error('[JWT_CALLBACK] Error refreshing user data:', error);
+          // Continue with existing token data if refresh fails
+        }
+      }
+
+      // ⚠️ SECURITY: Do NOT log user ID, email, or other PII
+      // These should only be logged through secure audit channels
+
+      try {
+        // Get user roles and permissions
+        const userRolesAndPermissions = await getUserRolesAndPermissions(userId);
+
+        // ⚠️ SECURITY: Enforce that user has at least one active role
+        // This ensures access derives solely from relational RBAC assignments
+        if (!userRolesAndPermissions.roles || userRolesAndPermissions.roles.length === 0) {
+          console.warn(`User has no active roles - denying token issuance`);
+          // Return token with empty RBAC data
+          // This will cause downstream authorization checks to fail
           token.roleNames = [];
           token.permissionNames = [];
           token.applicationPaths = [];
-          // Do NOT set token.role = 'user' - this breaks least privilege
-          // Leave token.role undefined so downstream checks fail safely
           token.role = undefined;
+          return token;
         }
+
+        // Simplify token data to reduce size
+        // Store only role names and permission names instead of full objects
+        token.roleNames = userRolesAndPermissions.roles.map(r => r.name);
+        token.permissionNames = userRolesAndPermissions.permissions.map(p => p.name);
+        token.applicationPaths = userRolesAndPermissions.applications.map(a => a.path);
+
+        // For backward compatibility
+        token.role = userRolesAndPermissions.roles.some(r => r.name === 'admin')
+          ? 'admin'
+          : 'user';
+
+        // ⚠️ SECURITY: Do NOT log token data, roles, or permissions
+        // This information should only be logged through secure audit channels
+
+      } catch (error) {
+        // ⚠️ SECURITY: RBAC failure should NOT default to 'user' role
+        // Instead, return empty sets to enforce least privilege
+        // The user will have no roles/permissions until the issue is resolved
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error("Error getting user roles - denying access with empty RBAC:", errorMessage);
+        token.roleNames = [];
+        token.permissionNames = [];
+        token.applicationPaths = [];
+        // Do NOT set token.role = 'user' - this breaks least privilege
+        // Leave token.role undefined so downstream checks fail safely
+        token.role = undefined;
       }
       return token;
     },
