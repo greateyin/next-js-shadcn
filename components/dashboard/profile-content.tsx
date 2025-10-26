@@ -195,13 +195,13 @@ export function ProfileContent({ session, accountInfo }: ProfileContentProps) {
             </CardHeader>
             <CardContent className="space-y-2.5">
               <Button asChild className="w-full justify-start border-gray-200 hover:bg-gray-50 text-gray-700" variant="outline">
-                <Link href="/settings">Notification Preferences</Link>
+                <Link href="/dashboard/settings?tab=notifications">Notification Preferences</Link>
               </Button>
               <Button asChild className="w-full justify-start border-gray-200 hover:bg-gray-50 text-gray-700" variant="outline">
-                <Link href="/settings#security">Manage Login Security</Link>
+                <Link href="/dashboard/settings?tab=security">Manage Login Security</Link>
               </Button>
               <Button asChild className="w-full justify-start border-gray-200 hover:bg-gray-50 text-gray-700" variant="outline">
-                <Link href="/settings#privacy">Privacy Settings</Link>
+                <Link href="/dashboard/settings?tab=privacy">Privacy Settings</Link>
               </Button>
             </CardContent>
           </Card>
