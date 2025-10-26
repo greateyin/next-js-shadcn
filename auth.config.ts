@@ -380,7 +380,8 @@ export const authConfig: NextAuthConfig = {
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string;
-        session.user.status = token.status as UserStatus;
+        // ✅ FIX: Ensure status is properly typed (Prisma enum is already a string)
+        session.user.status = (token.status as AuthStatus) || 'inactive';
         session.user.email = token.email as string;
         session.user.name = token.name ?? null;
         session.user.image = token.picture ?? null;
@@ -391,6 +392,7 @@ export const authConfig: NextAuthConfig = {
           email: session.user.email,
           name: session.user.name,
           image: session.user.image,
+          status: session.user.status,
         });
 
         // ⚠️ SECURITY: Do NOT include user.role - it doesn't exist in the database
