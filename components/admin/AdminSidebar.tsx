@@ -135,7 +135,7 @@ export function AdminSidebar({ applications, isOpen = false, onClose }: AdminSid
                 .map(app => (
                   <SidebarItem
                     key={app.id}
-                    href={`/${app.path}`}
+                    href={app.path.startsWith('/') ? app.path : `/${app.path}`}
                     title={app.displayName}
                     icon={<LayoutGrid className="h-4 w-4" />}
                   />
