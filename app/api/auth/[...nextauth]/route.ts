@@ -11,6 +11,11 @@
 
 import { handlers } from "@/auth";
 
+console.log('[AUTH_HANDLERS] Handlers exported from @/auth:', {
+  hasGET: !!handlers.GET,
+  hasPOST: !!handlers.POST,
+});
+
 /**
  * GET handler for Auth.js
  * Handles session validation and OAuth provider callbacks
