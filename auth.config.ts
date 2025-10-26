@@ -145,22 +145,25 @@ export const authConfig: NextAuthConfig = {
           }
 
           // Create simplified user object with type safety
+          // ✅ CRITICAL: Only include JSON-serializable fields
+          // Date objects are NOT serializable and will be stripped during JWT encoding
           const safeUser = {
             id: user.id,
             email: user.email,
             name: user.name ?? null,
-            emailVerified: user.emailVerified ?? null,
+            emailVerified: user.emailVerified ? user.emailVerified.toISOString() : null,
             image: user.image ?? null,
             role: 'user', // Default role, will be populated in JWT callback
             status: mapStatus(user.status),
             password: null, // Don't pass the password back
             isTwoFactorEnabled: user.isTwoFactorEnabled ?? false,
-            createdAt: user.createdAt,
-            updatedAt: user.updatedAt,
+            // ✅ FIX: Convert Date objects to ISO strings for serialization
+            createdAt: user.createdAt.toISOString(),
+            updatedAt: user.updatedAt.toISOString(),
             loginAttempts: user.loginAttempts ?? 0,
-            loginAttemptsResetAt: user.loginAttemptsResetAt ?? null,
-            lastLoginAttempt: user.lastLoginAttempt ?? new Date(),
-            lastSuccessfulLogin: user.lastSuccessfulLogin ?? new Date()
+            loginAttemptsResetAt: user.loginAttemptsResetAt ? user.loginAttemptsResetAt.toISOString() : null,
+            lastLoginAttempt: user.lastLoginAttempt ? user.lastLoginAttempt.toISOString() : new Date().toISOString(),
+            lastSuccessfulLogin: user.lastSuccessfulLogin ? user.lastSuccessfulLogin.toISOString() : new Date().toISOString()
           } as any;
 
           // ✅ Debug: Log user data from Credentials provider

@@ -26,8 +26,11 @@ const LogoutPage = () => {
   useEffect(() => {
     const handleSignOut = async () => {
       try {
+        // ✅ FIX: Use redirect: false and manually redirect to /auth/login
+        // This ensures proper session cleanup before redirect
         await signOut({ redirect: false });
-        router.push("/");
+        // Redirect to login page instead of home
+        router.push("/auth/login");
       } catch (error) {
         console.error("Logout failed:", error);
         router.push("/auth/error?error=LogoutFailed");

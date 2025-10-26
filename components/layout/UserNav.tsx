@@ -12,7 +12,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { signOut, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import { LogoutButton } from "@/components/auth/logout-button";
 
 /**
  * UserNav component provides a user navigation dropdown menu
@@ -59,11 +60,11 @@ export function UserNav() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          className="text-red-600 focus:text-red-600"
-          onClick={() => signOut({ callbackUrl: "/" })}
-        >
-          Log out
+        {/* ✅ FIX: Use LogoutButton with Server Action for proper session cleanup */}
+        <DropdownMenuItem asChild className="rounded-lg cursor-pointer hover:bg-red-50 focus:bg-red-50 px-3 py-2.5">
+          <LogoutButton className="text-red-600 hover:text-red-700 font-medium w-full text-left" redirectTo="/auth/login">
+            Log out
+          </LogoutButton>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
