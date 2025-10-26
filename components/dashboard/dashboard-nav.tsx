@@ -32,8 +32,21 @@ interface DashboardNavProps {
 }
 
 export function DashboardNav({ onMenuToggle }: DashboardNavProps) {
+  // Log immediately on component mount
+  console.log('[DashboardNav] Component mounted');
+
   const { data: session, status } = useSession();
   const user = session?.user;
+
+  // Log session data immediately
+  console.log('[DashboardNav] useSession() returned:', {
+    status,
+    hasSession: !!session,
+    hasUser: !!user,
+    userName: user?.name,
+    userEmail: user?.email,
+  });
+
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
