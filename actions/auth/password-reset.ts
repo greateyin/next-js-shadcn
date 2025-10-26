@@ -84,12 +84,9 @@ export const requestPasswordResetAction = async (
       return { success: "If the email exists, a reset link has been sent!" };
     }
 
-    // Check if user uses password login (OAuth users don't have passwords)
-    if (!existingUser.password) {
-      return {
-        error: "This account uses social login and cannot reset password. Please login with Google or GitHub."
-      };
-    }
+    // ✅ Allow OAuth users to set a password via reset flow
+    // This enables OAuth users to also use email/password login
+    // No error if password is not set - we'll create one
 
     // Generate password reset token and send email
     const passwordResetToken = await generatePasswordResetToken(

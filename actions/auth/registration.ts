@@ -59,8 +59,7 @@ export const registerAction = async (
 
   // Create new user
   // ⚠️ SECURITY: Do NOT set role field - roles are assigned via UserRole join table
-  // Default role will be assigned after email verification
-  await db.user.create({
+  const newUser = await db.user.create({
     data: {
       name,
       email,
@@ -69,6 +68,26 @@ export const registerAction = async (
       // role field does not exist in User model - use UserRole join table instead
     },
   });
+
+  // ✅ Assign default 'user' role immediately upon registration
+  // This ensures all users have at least one role for RBAC enforcement
+  try {
+    const userRole = await db.role.findUnique({
+      where: { name: "user" }
+    });
+
+    if (userRole) {
+      await db.userRole.create({
+        data: {
+          userId: newUser.id,
+          roleId: userRole.id
+        }
+      });
+    }
+  } catch (error) {
+    console.error("Error assigning default role during registration:", error);
+    // Don't fail registration if role assignment fails
+  }
 
   // Generate and send verification token
   const verificationToken = await generateVerificationToken(email);

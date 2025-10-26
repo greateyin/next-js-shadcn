@@ -215,6 +215,10 @@ export const authConfig: NextAuthConfig = {
     /**
      * Called when a user signs in via OAuth provider
      * Handles automatic account creation and role assignment for OAuth users
+     *
+     * ✅ OAuth users are automatically set to 'active' status
+     * ✅ OAuth users are assigned default 'user' role
+     * ✅ OAuth users can also set a password via password reset flow
      */
     async signIn({ user, account }) {
       // For OAuth providers, ensure user has active status and default role
@@ -232,7 +236,7 @@ export const authConfig: NextAuthConfig = {
 
           // If user was just created via OAuth (no roles assigned)
           if (existingUser && existingUser.userRoles.length === 0) {
-            // Set user status to active (OAuth emails are pre-verified)
+            // ✅ Set user status to active (OAuth emails are pre-verified)
             await db.user.update({
               where: { id: existingUser.id },
               data: {
@@ -241,7 +245,7 @@ export const authConfig: NextAuthConfig = {
               }
             });
 
-            // Assign default "user" role
+            // ✅ Assign default "user" role
             const userRole = await db.role.findUnique({
               where: { name: "user" }
             });
