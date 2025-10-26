@@ -272,6 +272,14 @@ export const authConfig: NextAuthConfig = {
         token.name = user.name ?? null;
         token.picture = user.image ?? null;
 
+        // Debug: Log user data to diagnose avatar fallback issue
+        console.log('[JWT_CALLBACK] User data:', {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.image,
+        });
+
         // ⚠️ SECURITY: Do NOT log user ID, email, or other PII
         // These should only be logged through secure audit channels
 
@@ -330,6 +338,14 @@ export const authConfig: NextAuthConfig = {
         session.user.email = token.email as string;
         session.user.name = token.name ?? null;
         session.user.image = token.picture ?? null;
+
+        // Debug: Log session data to diagnose avatar fallback issue
+        console.log('[SESSION_CALLBACK] Session user data:', {
+          id: session.user.id,
+          email: session.user.email,
+          name: session.user.name,
+          image: session.user.image,
+        });
 
         // ⚠️ SECURITY: Do NOT include user.role - it doesn't exist in the database
         // Roles are stored in UserRole join table and returned in roleNames

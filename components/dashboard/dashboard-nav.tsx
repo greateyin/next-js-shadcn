@@ -40,6 +40,20 @@ export function DashboardNav({ onMenuToggle }: DashboardNavProps) {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
+  // Debug: Log user data to diagnose avatar fallback issue
+  useEffect(() => {
+    if (user) {
+      console.log('[DashboardNav] User data:', {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        image: user.image,
+        nameLength: user.name?.length,
+        emailLength: user.email?.length,
+      });
+    }
+  }, [user]);
+
   // Search functionality
   useEffect(() => {
     const timer = setTimeout(async () => {
