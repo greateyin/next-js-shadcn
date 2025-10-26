@@ -163,6 +163,16 @@ export const authConfig: NextAuthConfig = {
             lastSuccessfulLogin: user.lastSuccessfulLogin ?? new Date()
           } as any;
 
+          // ✅ Debug: Log user data from Credentials provider
+          console.log('[CREDENTIALS_AUTHORIZE] User data:', {
+            id: safeUser.id,
+            email: safeUser.email,
+            name: safeUser.name,
+            image: safeUser.image,
+            dbUserName: user.name,
+            dbUserImage: user.image,
+          });
+
           return safeUser;
         } catch (error) {
           console.error("Authorization error:", error);
