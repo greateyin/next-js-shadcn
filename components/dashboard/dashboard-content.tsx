@@ -17,7 +17,7 @@ interface DashboardStats {
     entity: string;
     entityId: string;
     timestamp: string;
-    changes: any;
+    status: string;
   }>;
 }
 
