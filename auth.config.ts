@@ -405,20 +405,23 @@ export const authConfig: NextAuthConfig = {
         // These should only be logged through secure audit channels
 
         // For compatibility with existing code
-        session.user.roles = session.user.roleNames.map(name => ({ name, id: '', createdAt: new Date(), updatedAt: new Date() }));
-        session.user.permissions = session.user.permissionNames.map(name => ({ name, id: '', createdAt: new Date(), updatedAt: new Date(), description: undefined }));
+        // ✅ FIX: Use ISO strings instead of Date objects for serialization
+        // This ensures session can be properly serialized and passed to client
+        const now = new Date().toISOString();
+        session.user.roles = session.user.roleNames.map(name => ({ name, id: '', createdAt: now, updatedAt: now })) as any;
+        session.user.permissions = session.user.permissionNames.map(name => ({ name, id: '', createdAt: now, updatedAt: now, description: undefined })) as any;
         session.user.applications = session.user.applicationPaths.map(path => ({
           path,
           id: '',
           name: '',
           displayName: '',
           isActive: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          createdAt: now,
+          updatedAt: now,
           description: undefined,
           icon: undefined,
           order: 0
-        }));
+        })) as any;
         
       }
       return session;
