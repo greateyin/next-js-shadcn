@@ -10,7 +10,7 @@ import { db } from '@/lib/db'
 export async function GET() {
   try {
     const session = await auth()
-    
+
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -19,34 +19,44 @@ export async function GET() {
     }
 
     // Get user's statistics
-    const [
-      totalUsers,
-      totalRoles,
-      totalApplications,
-      userSessions,
-      userPermissions,
-      recentActivities
-    ] = await Promise.all([
-      // Total users count
-      db.user.count({
+    let totalUsers, totalRoles, totalApplications, userSessions, userPermissions, recentActivities;
+
+    try {
+      totalUsers = await db.user.count({
         where: { status: 'active' }
-      }),
-      
-      // Total roles count
-      db.role.count(),
-      
-      // Total applications count
-      db.application.count({
+      });
+    } catch (error) {
+      console.error('[API_DASHBOARD_STATS] Error counting users:', error);
+      totalUsers = 0;
+    }
+
+    try {
+      totalRoles = await db.role.count();
+    } catch (error) {
+      console.error('[API_DASHBOARD_STATS] Error counting roles:', error);
+      totalRoles = 0;
+    }
+
+    try {
+      totalApplications = await db.application.count({
         where: { isActive: true }
-      }),
-      
-      // User's sessions count
-      db.session.count({
+      });
+    } catch (error) {
+      console.error('[API_DASHBOARD_STATS] Error counting applications:', error);
+      totalApplications = 0;
+    }
+
+    try {
+      userSessions = await db.session.count({
         where: { userId: session.user.id }
-      }),
-      
-      // User's permissions count
-      db.userRole.findMany({
+      });
+    } catch (error) {
+      console.error('[API_DASHBOARD_STATS] Error counting sessions:', error);
+      userSessions = 0;
+    }
+
+    try {
+      userPermissions = await db.userRole.findMany({
         where: { userId: session.user.id },
         include: {
           role: {
@@ -55,10 +65,14 @@ export async function GET() {
             }
           }
         }
-      }),
-      
-      // Recent audit logs for user
-      db.auditLog.findMany({
+      });
+    } catch (error) {
+      console.error('[API_DASHBOARD_STATS] Error fetching user permissions:', error);
+      userPermissions = [];
+    }
+
+    try {
+      recentActivities = await db.auditLog.findMany({
         where: { userId: session.user.id },
         orderBy: { timestamp: 'desc' },
         take: 5,
@@ -70,8 +84,11 @@ export async function GET() {
           timestamp: true,
           status: true
         }
-      })
-    ])
+      });
+    } catch (error) {
+      console.error('[API_DASHBOARD_STATS] Error fetching recent activities:', error);
+      recentActivities = [];
+    }
 
     // Calculate total permissions
     const totalPermissions = new Set(

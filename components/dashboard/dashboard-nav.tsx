@@ -180,7 +180,13 @@ export function DashboardNav({ onMenuToggle }: DashboardNavProps) {
                 <Avatar className="h-9 w-9 ring-2 ring-gray-100">
                   <AvatarImage src={user?.image || ""} alt={user?.name || ""} />
                   <AvatarFallback>
-                    {user?.name?.charAt(0) || "U"}
+                    {user?.name
+                      ? user.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .toUpperCase()
+                      : user?.email?.charAt(0)?.toUpperCase() || "U"}
                   </AvatarFallback>
                 </Avatar>
               </Button>
