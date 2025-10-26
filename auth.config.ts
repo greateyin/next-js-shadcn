@@ -262,6 +262,19 @@ export const authConfig: NextAuthConfig = {
           // Get user roles and permissions
           const userRolesAndPermissions = await getUserRolesAndPermissions(user.id);
 
+          // ⚠️ SECURITY: Enforce that user has at least one active role
+          // This ensures access derives solely from relational RBAC assignments
+          if (!userRolesAndPermissions.roles || userRolesAndPermissions.roles.length === 0) {
+            console.warn(`User ${user.id} has no active roles - denying token issuance`);
+            // Return token with empty RBAC data
+            // This will cause downstream authorization checks to fail
+            token.roleNames = [];
+            token.permissionNames = [];
+            token.applicationPaths = [];
+            token.role = undefined;
+            return token;
+          }
+
           // Simplify token data to reduce size
           // Store only role names and permission names instead of full objects
           token.roleNames = userRolesAndPermissions.roles.map(r => r.name);
@@ -277,11 +290,16 @@ export const authConfig: NextAuthConfig = {
           // This information should only be logged through secure audit channels
 
         } catch (error) {
-          console.error("Error getting user roles:", error);
+          // ⚠️ SECURITY: RBAC failure should NOT default to 'user' role
+          // Instead, return empty sets to enforce least privilege
+          // The user will have no roles/permissions until the issue is resolved
+          console.error("Error getting user roles - denying access with empty RBAC:", error);
           token.roleNames = [];
           token.permissionNames = [];
           token.applicationPaths = [];
-          token.role = 'user'; // Default to user role
+          // Do NOT set token.role = 'user' - this breaks least privilege
+          // Leave token.role undefined so downstream checks fail safely
+          token.role = undefined;
         }
       }
       return token;

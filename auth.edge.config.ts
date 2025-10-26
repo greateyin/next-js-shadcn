@@ -31,17 +31,11 @@ export const edgeAuthConfig: NextAuthConfig = {
       // ⚠️ CRITICAL FIX: Preserve all token data during any trigger
       // The token already contains roleNames, permissionNames, etc. from login
       // DO NOT reset or modify these fields
-      
-      // Debug logging
-      console.log('[Edge JWT Callback]', {
-        trigger,
-        hasUser: !!user,
-        email: token?.email,
-        roleNames: token?.roleNames,
-        permissionNames: Array.isArray(token?.permissionNames) ? token.permissionNames.length : 0,
-        applicationPaths: token?.applicationPaths
-      })
-      
+
+      // ⚠️ SECURITY: Do NOT log sensitive claims (email, roles, permissions, applications)
+      // These are PII and authorization data that should never be exposed in shared logs
+      // Use structured, redacted telemetry if debugging is required
+
       // Simply return token as-is
       // All RBAC data is already in the token from login
       return token
