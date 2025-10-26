@@ -81,6 +81,19 @@ export async function loginAction(formData: FormData) {
   }
 
   try {
+    // ✅ Check if user exists in database BEFORE attempting login
+    const userExists = await db.user.findUnique({
+      where: { email: validatedFields.data.email }
+    });
+
+    if (!userExists) {
+      // ✅ User doesn't exist - suggest registration
+      return {
+        error: "User not found. Please register first.",
+        redirectTo: "/auth/register"
+      };
+    }
+
     // Check user role BEFORE signing in to determine redirect target
     const redirectTarget = await determineRoleBasedRedirect(
       validatedFields.data.email
@@ -99,14 +112,14 @@ export async function loginAction(formData: FormData) {
     if (error instanceof AuthError) {
       switch (error.type) {
         case "CredentialsSignin":
-          return { error: "Invalid credentials" };
+          return { error: "Invalid password. Please try again." };
         case "CallbackRouteError":
           return { error: "Authentication failed" };
         default:
           return { error: "Something went wrong" };
       }
     }
-    
+
     // Re-throw to allow Next.js to handle redirects
     throw error;
   }
@@ -142,9 +155,22 @@ export async function loginWithRedirectAction(
   }
 
   try {
+    // ✅ Check if user exists in database BEFORE attempting login
+    const userExists = await db.user.findUnique({
+      where: { email: validatedFields.data.email }
+    });
+
+    if (!userExists) {
+      // ✅ User doesn't exist - suggest registration
+      return {
+        error: "User not found. Please register first.",
+        redirectTo: "/auth/register"
+      };
+    }
+
     // If no custom redirect, check user role to determine redirect target
     let finalRedirect = customRedirect;
-    
+
     if (!finalRedirect) {
       finalRedirect = await determineRoleBasedRedirect(
         validatedFields.data.email
@@ -160,14 +186,14 @@ export async function loginWithRedirectAction(
     if (error instanceof AuthError) {
       switch (error.type) {
         case "CredentialsSignin":
-          return { error: "Invalid credentials" };
+          return { error: "Invalid password. Please try again." };
         case "CallbackRouteError":
           return { error: "Authentication failed" };
         default:
           return { error: "Something went wrong" };
       }
     }
-    
+
     throw error;
   }
 }
@@ -214,6 +240,19 @@ export async function loginNoRedirectAction(
   }
 
   try {
+    // ✅ Check if user exists in database BEFORE attempting login
+    const userExists = await db.user.findUnique({
+      where: { email: validatedFields.data.email }
+    });
+
+    if (!userExists) {
+      // ✅ User doesn't exist - suggest registration
+      return {
+        error: "User not found. Please register first.",
+        redirectTo: "/auth/register"
+      };
+    }
+
     // Sign in without automatic redirect
     const result = await signIn("credentials", {
       email: validatedFields.data.email,
@@ -223,7 +262,8 @@ export async function loginNoRedirectAction(
 
     // Check if signIn returned an error
     if (result?.error) {
-      return { error: "Invalid credentials" };
+      // ✅ User exists but password is wrong
+      return { error: "Invalid password. Please try again." };
     }
 
     const redirectTo = await determineRoleBasedRedirect(
@@ -235,18 +275,18 @@ export async function loginNoRedirectAction(
     return { success: true, redirectTo };
   } catch (error) {
     console.error("Login error:", error);
-    
+
     if (error instanceof AuthError) {
       switch (error.type) {
         case "CredentialsSignin":
-          return { error: "Invalid credentials" };
+          return { error: "Invalid password. Please try again." };
         case "CallbackRouteError":
           return { error: "Authentication failed" };
         default:
           return { error: "Something went wrong" };
       }
     }
-    
+
     return { error: "Something went wrong" };
   }
 }

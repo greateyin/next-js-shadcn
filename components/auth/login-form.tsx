@@ -38,12 +38,14 @@ function SubmitButton() {
  * - Client-side redirect after login to ensure cookie is set
  * - Better security (credentials never exposed to client)
  * - Fixes cookie timing issue with middleware
- * 
+ * - ✅ Displays error messages from URL params
+ * - ✅ Shows registration link when user not found
+ *
  * @example
  * ```tsx
  * // Basic usage
  * <LoginForm />
- * 
+ *
  * // Within auth layout
  * <AuthLayout>
  *   <AuthHeader label="Welcome back" />
@@ -58,11 +60,17 @@ function SubmitButton() {
 export function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl");
+  const errorParam = searchParams.get("error");
 
   return (
     <div className="space-y-6">
+      {/* ✅ Display error message if present */}
+      {errorParam && (
+        <FormError message={decodeURIComponent(errorParam)} />
+      )}
+
       <SocialButtons />
-      
+
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t border-gray-200" />
@@ -110,6 +118,19 @@ export function LoginForm() {
 
         <SubmitButton />
       </form>
+
+      {/* ✅ Show registration link when user not found */}
+      {errorParam?.includes("User not found") && (
+        <div className="text-center text-sm text-gray-600">
+          Don't have an account?{" "}
+          <a
+            href="/auth/register"
+            className="text-blue-600 hover:text-blue-800 hover:underline transition-colors font-medium"
+          >
+            Register here
+          </a>
+        </div>
+      )}
     </div>
   );
 }
