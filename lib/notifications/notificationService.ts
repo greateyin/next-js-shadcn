@@ -73,6 +73,22 @@ export async function getUserNotifications(
       unreadCount,
     }
   } catch (error) {
+    // Check if error is due to missing table
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isTableMissing = errorMessage.includes('does not exist') ||
+                          errorMessage.includes('P2021');
+
+    if (isTableMissing) {
+      console.warn('[getUserNotifications] Notification table does not exist. Run: npx prisma migrate dev');
+      // Return empty notifications gracefully instead of error
+      return {
+        success: true,
+        notifications: [],
+        total: 0,
+        unreadCount: 0,
+      }
+    }
+
     console.error('[getUserNotifications] Error:', error)
     return {
       success: false,
@@ -193,6 +209,19 @@ export async function getUnreadNotificationCount(userId: string) {
       count,
     }
   } catch (error) {
+    // Check if error is due to missing table
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isTableMissing = errorMessage.includes('does not exist') ||
+                          errorMessage.includes('P2021');
+
+    if (isTableMissing) {
+      // Return 0 gracefully if table doesn't exist
+      return {
+        success: true,
+        count: 0,
+      }
+    }
+
     console.error('[getUnreadNotificationCount] Error:', error)
     return {
       success: false,
