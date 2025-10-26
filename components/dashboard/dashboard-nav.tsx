@@ -32,7 +32,7 @@ interface DashboardNavProps {
 }
 
 export function DashboardNav({ onMenuToggle }: DashboardNavProps) {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const user = session?.user;
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -42,17 +42,32 @@ export function DashboardNav({ onMenuToggle }: DashboardNavProps) {
 
   // Debug: Log user data to diagnose avatar fallback issue
   useEffect(() => {
+    console.log('[DashboardNav] Session status:', status, 'User:', {
+      id: user?.id,
+      email: user?.email,
+      name: user?.name,
+      image: user?.image,
+      nameLength: user?.name?.length,
+      emailLength: user?.email?.length,
+    });
+
+    // Log avatar fallback calculation
     if (user) {
-      console.log('[DashboardNav] User data:', {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        image: user.image,
-        nameLength: user.name?.length,
-        emailLength: user.email?.length,
+      const avatarText = user?.name
+        ? user.name
+            .split(" ")
+            .map((n) => n[0])
+            .join("")
+            .toUpperCase()
+        : user?.email?.charAt(0)?.toUpperCase() || "U";
+      console.log('[DashboardNav] Avatar fallback:', avatarText, {
+        hasName: !!user?.name,
+        hasEmail: !!user?.email,
+        nameValue: user?.name,
+        emailValue: user?.email,
       });
     }
-  }, [user]);
+  }, [user, status]);
 
   // Search functionality
   useEffect(() => {
