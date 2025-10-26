@@ -50,17 +50,6 @@ export default async function RootLayout({
 }) {
   const session = await auth();
 
-  // ✅ Debug: Log session data to ensure it's being passed correctly
-  if (session?.user) {
-    console.log('[RootLayout] Session passed to SessionProvider:', {
-      id: session.user.id,
-      email: session.user.email,
-      name: session.user.name,
-      image: session.user.image,
-      status: session.user.status,
-    });
-  }
-
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <body className="min-h-screen bg-background font-sans antialiased" suppressHydrationWarning>

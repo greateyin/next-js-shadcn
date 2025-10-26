@@ -314,10 +314,8 @@ export async function loginNoRedirectAction(
  * ```
  */
 export async function logoutAction(redirectTo: string = "/") {
-  try {
-    await signOut({ redirectTo });
-  } catch (error) {
-    console.error("Logout error:", error);
-    throw error;
-  }
+  // ✅ FIX: signOut() throws NEXT_REDIRECT error which is expected behavior
+  // This is NOT a real error - it's how Auth.js V5 handles redirects
+  // We should NOT catch and log this error
+  await signOut({ redirectTo });
 }

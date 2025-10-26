@@ -11,17 +11,6 @@ export function SessionProvider({
     children,
     session
 }: SessionProviderProps) {
-    // ✅ Debug: Log session being passed from server
-    console.log('[SessionProvider] Received session from server:', {
-        hasSession: !!session,
-        hasUser: !!session?.user,
-        userName: session?.user?.name,
-        userEmail: session?.user?.email,
-        sessionKeys: session ? Object.keys(session) : [],
-        userKeys: session?.user ? Object.keys(session.user) : [],
-        fullSession: JSON.stringify(session),
-    });
-
     return (
         <NextAuthSessionProvider
             session={session}

@@ -32,21 +32,8 @@ interface DashboardNavProps {
 }
 
 export function DashboardNav({ onMenuToggle }: DashboardNavProps) {
-  // Log immediately on component mount
-  console.log('[DashboardNav] Component mounted');
-
   const { data: session, status, update } = useSession();
   const user = session?.user;
-
-  // Log session data immediately
-  console.log('[DashboardNav] useSession() returned:', {
-    status,
-    hasSession: !!session,
-    hasUser: !!user,
-    userName: user?.name,
-    userEmail: user?.email,
-    fullSession: JSON.stringify(session, null, 2),
-  });
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -54,37 +41,9 @@ export function DashboardNav({ onMenuToggle }: DashboardNavProps) {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Debug: Log user data to diagnose avatar fallback issue
+  // ✅ Force session update to ensure latest data
   useEffect(() => {
-    console.log('[DashboardNav] Session status:', status, 'User:', {
-      id: user?.id,
-      email: user?.email,
-      name: user?.name,
-      image: user?.image,
-      nameLength: user?.name?.length,
-      emailLength: user?.email?.length,
-    });
-
-    // Log avatar fallback calculation
-    if (user) {
-      const avatarText = user?.name
-        ? user.name
-            .split(" ")
-            .map((n) => n[0])
-            .join("")
-            .toUpperCase()
-        : user?.email?.charAt(0)?.toUpperCase() || "U";
-      console.log('[DashboardNav] Avatar fallback:', avatarText, {
-        hasName: !!user?.name,
-        hasEmail: !!user?.email,
-        nameValue: user?.name,
-        emailValue: user?.email,
-      });
-    }
-
-    // ✅ Force session update to ensure latest data
     if (status === 'authenticated') {
-      console.log('[DashboardNav] Forcing session update...');
       update();
     }
   }, [user, status, update]);

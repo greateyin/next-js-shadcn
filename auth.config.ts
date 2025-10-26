@@ -166,16 +166,6 @@ export const authConfig: NextAuthConfig = {
             lastSuccessfulLogin: user.lastSuccessfulLogin ? user.lastSuccessfulLogin.toISOString() : new Date().toISOString()
           } as any;
 
-          // ✅ Debug: Log user data from Credentials provider
-          console.log('[CREDENTIALS_AUTHORIZE] User data:', {
-            id: safeUser.id,
-            email: safeUser.email,
-            name: safeUser.name,
-            image: safeUser.image,
-            dbUserName: user.name,
-            dbUserImage: user.image,
-          });
-
           return safeUser;
         } catch (error) {
           console.error("Authorization error:", error);
@@ -295,14 +285,6 @@ export const authConfig: NextAuthConfig = {
         token.email = user.email;
         token.name = user.name ?? null;
         token.picture = user.image ?? null;
-
-        // Debug: Log user data to diagnose avatar fallback issue
-        console.log('[JWT_CALLBACK] Initial login - User data:', {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
-        });
       } else if (token.id) {
         // ✅ Token refresh - user object is undefined
         // Refresh user data from database to ensure latest information
@@ -316,16 +298,8 @@ export const authConfig: NextAuthConfig = {
             token.email = dbUser.email;
             token.name = dbUser.name ?? null;
             token.picture = dbUser.image ?? null;
-
-            console.log('[JWT_CALLBACK] Token refresh - Updated user data:', {
-              id: dbUser.id,
-              email: dbUser.email,
-              name: dbUser.name,
-              image: dbUser.image,
-            });
           }
         } catch (error) {
-          console.error('[JWT_CALLBACK] Error refreshing user data:', error);
           // Continue with existing token data if refresh fails
         }
       }
@@ -388,15 +362,6 @@ export const authConfig: NextAuthConfig = {
         session.user.email = token.email as string;
         session.user.name = token.name ?? null;
         session.user.image = token.picture ?? null;
-
-        // Debug: Log session data to diagnose avatar fallback issue
-        console.log('[SESSION_CALLBACK] Session user data:', {
-          id: session.user.id,
-          email: session.user.email,
-          name: session.user.name,
-          image: session.user.image,
-          status: session.user.status,
-        });
 
         // ⚠️ SECURITY: Do NOT include user.role - it doesn't exist in the database
         // Roles are stored in UserRole join table and returned in roleNames
