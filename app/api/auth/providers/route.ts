@@ -5,8 +5,8 @@
  * providers and their configurations
  */
 
-import { headers } from "next/headers";
 import { NextResponse } from "next/server";
+import { oauthProviders } from "@/auth.base.config";
 
 /**
  * Force dynamic route handling to ensure provider info is always current
@@ -67,22 +67,16 @@ type OAuthProvider = {
  */
 export async function GET() {
   try {
-    const providers: Record<string, OAuthProvider> = {
-      google: {
-        id: "google",
-        name: "Google",
-        type: "oauth",
-        signinUrl: "/api/auth/signin/google",
-        callbackUrl: "/api/auth/callback/google"
-      },
-      github: {
-        id: "github",
-        name: "GitHub",
-        type: "oauth",
-        signinUrl: "/api/auth/signin/github",
-        callbackUrl: "/api/auth/callback/github"
+    const providers = oauthProviders.reduce<Record<string, OAuthProvider>>((acc, provider) => {
+      acc[provider.id] = {
+        id: provider.id,
+        name: provider.name ?? provider.id,
+        type: provider.type,
+        signinUrl: `/api/auth/signin/${provider.id}`,
+        callbackUrl: `/api/auth/callback/${provider.id}`
       }
-    };
+      return acc
+    }, {})
 
     return NextResponse.json(providers);
   } catch (error) {

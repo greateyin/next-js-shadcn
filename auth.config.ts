@@ -6,10 +6,8 @@
 
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import Google from "next-auth/providers/google";
-import GitHub from "next-auth/providers/github";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { baseAuthConfig } from "./auth.base.config";
+import { baseAuthConfig, oauthProviders } from "./auth.base.config";
 import { LoginSchema } from "./schemas";
 import { db } from "@/lib/db";
 import { verifyPassword } from "@/lib/crypto";
@@ -51,22 +49,8 @@ export const authConfig: NextAuthConfig = {
   // ⚠️ Override providers to add database-backed Credentials auth
   providers: [
     // Inherit OAuth providers from base but ensure exact match
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      // ⚠️ SECURITY: Disabled dangerous email account linking
-      // Prevents account takeover via unverified email addresses
-      allowDangerousEmailAccountLinking: false,
-    }),
+    ...oauthProviders,
 
-    GitHub({
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-      // ⚠️ SECURITY: Disabled dangerous email account linking
-      // Prevents account takeover via unverified email addresses
-      allowDangerousEmailAccountLinking: false,
-    }),
-    
     // Email/Password provider with database authentication
     Credentials({
       id: "credentials",
@@ -225,7 +209,7 @@ export const authConfig: NextAuthConfig = {
      */
     async signIn({ user, account }) {
       // For OAuth providers, ensure user has active status and default role
-      if (account?.provider !== "credentials") {
+      if (account?.provider && account.provider !== "credentials") {
         try {
           const existingUser = await db.user.findUnique({
             where: { email: user.email! },
@@ -261,6 +245,23 @@ export const authConfig: NextAuthConfig = {
                 }
               });
             }
+          }
+
+          const loginUserId = existingUser?.id ?? user.id
+          if (loginUserId) {
+            await db.loginMethod.upsert({
+              where: {
+                userId_method: {
+                  userId: loginUserId,
+                  method: account.provider,
+                },
+              },
+              update: {},
+              create: {
+                userId: loginUserId,
+                method: account.provider,
+              },
+            });
           }
         } catch (error) {
           // ⚠️ SECURITY: Do NOT log error details
