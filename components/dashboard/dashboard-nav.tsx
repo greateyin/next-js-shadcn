@@ -35,7 +35,7 @@ export function DashboardNav({ onMenuToggle }: DashboardNavProps) {
   // Log immediately on component mount
   console.log('[DashboardNav] Component mounted');
 
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const user = session?.user;
 
   // Log session data immediately
@@ -45,6 +45,7 @@ export function DashboardNav({ onMenuToggle }: DashboardNavProps) {
     hasUser: !!user,
     userName: user?.name,
     userEmail: user?.email,
+    fullSession: JSON.stringify(session, null, 2),
   });
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -80,7 +81,13 @@ export function DashboardNav({ onMenuToggle }: DashboardNavProps) {
         emailValue: user?.email,
       });
     }
-  }, [user, status]);
+
+    // ✅ Force session update to ensure latest data
+    if (status === 'authenticated') {
+      console.log('[DashboardNav] Forcing session update...');
+      update();
+    }
+  }, [user, status, update]);
 
   // Search functionality
   useEffect(() => {
