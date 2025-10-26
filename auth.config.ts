@@ -127,6 +127,23 @@ export const authConfig: NextAuthConfig = {
             return null;
           }
 
+          // ⚠️ SECURITY: Check if user has at least one role
+          // This ensures only users with explicit role assignments can log in
+          try {
+            const userRoles = await db.userRole.findFirst({
+              where: { userId: user.id }
+            });
+
+            if (!userRoles) {
+              console.warn("User has no roles assigned - login denied");
+              return null;
+            }
+          } catch (error) {
+            console.error("Error checking user roles during login:", error);
+            // Fail securely - deny login if we can't verify roles
+            return null;
+          }
+
           // Create simplified user object with type safety
           const safeUser = {
             id: user.id,
@@ -265,7 +282,7 @@ export const authConfig: NextAuthConfig = {
           // ⚠️ SECURITY: Enforce that user has at least one active role
           // This ensures access derives solely from relational RBAC assignments
           if (!userRolesAndPermissions.roles || userRolesAndPermissions.roles.length === 0) {
-            console.warn(`User ${user.id} has no active roles - denying token issuance`);
+            console.warn(`User has no active roles - denying token issuance`);
             // Return token with empty RBAC data
             // This will cause downstream authorization checks to fail
             token.roleNames = [];
@@ -293,7 +310,8 @@ export const authConfig: NextAuthConfig = {
           // ⚠️ SECURITY: RBAC failure should NOT default to 'user' role
           // Instead, return empty sets to enforce least privilege
           // The user will have no roles/permissions until the issue is resolved
-          console.error("Error getting user roles - denying access with empty RBAC:", error);
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          console.error("Error getting user roles - denying access with empty RBAC:", errorMessage);
           token.roleNames = [];
           token.permissionNames = [];
           token.applicationPaths = [];
