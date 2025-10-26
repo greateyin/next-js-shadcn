@@ -60,15 +60,15 @@ export async function GET() {
       // Recent audit logs for user
       db.auditLog.findMany({
         where: { userId: session.user.id },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { timestamp: 'desc' },
         take: 5,
         select: {
           id: true,
           action: true,
-          entity: true,
-          entityId: true,
-          createdAt: true,
-          changes: true
+          resourceType: true,
+          resourceId: true,
+          timestamp: true,
+          status: true
         }
       })
     ])
@@ -110,10 +110,10 @@ export async function GET() {
       recentActivities: recentActivities.map(activity => ({
         id: activity.id,
         action: activity.action,
-        entity: activity.entity,
-        entityId: activity.entityId,
-        timestamp: activity.createdAt.toISOString(),
-        changes: activity.changes
+        entity: activity.resourceType || 'Unknown',
+        entityId: activity.resourceId || '',
+        timestamp: activity.timestamp.toISOString(),
+        status: activity.status
       }))
     }
 

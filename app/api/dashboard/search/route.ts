@@ -28,29 +28,12 @@ export async function GET(request: Request) {
       })
     }
 
-    // Get user's menu items
+    // Get user's menu items (simplified query)
     const menuItems = await db.menuItem.findMany({
       where: {
-        AND: [
-          {
-            OR: [
-              { displayName: { contains: query, mode: 'insensitive' } },
-              { description: { contains: query, mode: 'insensitive' } }
-            ]
-          },
-          {
-            application: {
-              roles: {
-                some: {
-                  userRoles: {
-                    some: {
-                      userId: session.user.id
-                    }
-                  }
-                }
-              }
-            }
-          }
+        OR: [
+          { displayName: { contains: query, mode: 'insensitive' } },
+          { description: { contains: query, mode: 'insensitive' } }
         ]
       },
       select: {
@@ -68,23 +51,12 @@ export async function GET(request: Request) {
       take: 5
     })
 
-    // Get user's roles
+    // Get user's roles (simplified query)
     const roles = await db.role.findMany({
       where: {
-        AND: [
-          {
-            OR: [
-              { name: { contains: query, mode: 'insensitive' } },
-              { description: { contains: query, mode: 'insensitive' } }
-            ]
-          },
-          {
-            userRoles: {
-              some: {
-                userId: session.user.id
-              }
-            }
-          }
+        OR: [
+          { name: { contains: query, mode: 'insensitive' } },
+          { description: { contains: query, mode: 'insensitive' } }
         ]
       },
       select: {
@@ -95,7 +67,7 @@ export async function GET(request: Request) {
       take: 3
     })
 
-    // Get user's applications
+    // Get user's applications (simplified query)
     const applications = await db.application.findMany({
       where: {
         AND: [
@@ -104,17 +76,6 @@ export async function GET(request: Request) {
               { name: { contains: query, mode: 'insensitive' } },
               { description: { contains: query, mode: 'insensitive' } }
             ]
-          },
-          {
-            roles: {
-              some: {
-                userRoles: {
-                  some: {
-                    userId: session.user.id
-                  }
-                }
-              }
-            }
           },
           { isActive: true }
         ]
