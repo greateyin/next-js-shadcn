@@ -9,7 +9,7 @@ import { hashPassword } from "@/lib/crypto"
  */
 export async function GET() {
   try {
-    const { error, session } = await checkAdminAuth()
+    const { error } = await checkAdminAuth()
     if (error) return error
 
     const users = await db.user.findMany({
@@ -18,7 +18,8 @@ export async function GET() {
           include: {
             role: true
           }
-        }
+        },
+        loginMethods: true
       },
       orderBy: {
         createdAt: "desc"
@@ -38,11 +39,24 @@ export async function GET() {
  */
 export async function POST(req: Request) {
   try {
-    const { error, session } = await checkAdminAuth()
+    const { error } = await checkAdminAuth()
     if (error) return error
 
     const body = await req.json()
-    const { name, email, password, status } = body
+    const {
+      name,
+      email,
+      password,
+      status,
+      phoneNumber,
+      isTwoFactorEnabled,
+      emailVerified,
+      loginMethods,
+    } = body
+
+    if (!name || !email || !password) {
+      return NextResponse.json({ error: "Name, email, and password are required" }, { status: 400 })
+    }
 
     // Check if email already exists
     const existingUser = await db.user.findUnique({
@@ -56,25 +70,51 @@ export async function POST(req: Request) {
     // Hash password
     const hashedPassword = await hashPassword(password)
 
-    // Create user
-    const user = await db.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-        status: status || "pending",
-        emailVerified: status === "active" ? new Date() : null
-      },
-      include: {
-        userRoles: {
-          include: {
-            role: true
-          }
-        }
+    const normalizedLoginMethods: string[] = Array.isArray(loginMethods)
+      ? Array.from(new Set(loginMethods.map((method: string) => method.trim()).filter(Boolean)))
+      : []
+
+    if (password && !normalizedLoginMethods.includes("password")) {
+      normalizedLoginMethods.push("password")
+    }
+
+    const createdUser = await db.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          name,
+          email,
+          password: hashedPassword,
+          status: status || "pending",
+          phoneNumber: phoneNumber || null,
+          isTwoFactorEnabled: !!isTwoFactorEnabled,
+          emailVerified: emailVerified ? new Date() : null,
+        },
+      })
+
+      if (normalizedLoginMethods.length) {
+        await tx.loginMethod.createMany({
+          data: normalizedLoginMethods.map((method) => ({
+            userId: user.id,
+            method,
+          })),
+          skipDuplicates: true,
+        })
       }
+
+      return tx.user.findUnique({
+        where: { id: user.id },
+        include: {
+          userRoles: {
+            include: {
+              role: true,
+            },
+          },
+          loginMethods: true,
+        },
+      })
     })
 
-    return NextResponse.json({ user }, { status: 201 })
+    return NextResponse.json({ user: createdUser }, { status: 201 })
   } catch (error) {
     console.error("[USERS_POST]", error)
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })

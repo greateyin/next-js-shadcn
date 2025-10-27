@@ -45,10 +45,54 @@ interface User {
   status: string
   roles: string
   createdAt: string
+  image?: string
+  isTwoFactorEnabled?: boolean
+  emailVerified?: string | null
+  loginAttempts?: number
+  phoneNumber?: string
+  loginMethods?: string[]
 }
 
 interface UsersTableProps {
   users: User[]
+}
+
+const normalizeLoginMethods = (methods: unknown): string[] => {
+  if (!Array.isArray(methods)) {
+    return []
+  }
+
+  return methods
+    .map((method) => {
+      if (typeof method === 'string') {
+        return method
+      }
+
+      if (method && typeof method === 'object' && 'method' in method) {
+        const value = (method as { method?: unknown }).method
+        return typeof value === 'string' ? value : null
+      }
+
+      return null
+    })
+    .filter((value): value is string => Boolean(value))
+}
+
+const extractRoleNames = (roles: unknown): string[] => {
+  if (!Array.isArray(roles)) {
+    return []
+  }
+
+  return roles
+    .map((roleRelation) => {
+      if (roleRelation && typeof roleRelation === 'object' && 'role' in roleRelation) {
+        const role = (roleRelation as { role?: { name?: unknown } }).role
+        return typeof role?.name === 'string' ? role.name : null
+      }
+
+      return null
+    })
+    .filter((value): value is string => Boolean(value))
 }
 
 export function UsersTable({ users: initialUsers }: UsersTableProps) {
@@ -56,20 +100,20 @@ export function UsersTable({ users: initialUsers }: UsersTableProps) {
   const [users, setUsers] = useState(initialUsers)
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  
+
   // Update users when initialUsers changes
   useEffect(() => {
     setUsers(initialUsers)
   }, [initialUsers])
-  
+
   // Dialog states
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [addDialogOpen, setAddDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
-  
+
   // API handlers
-  const handleEdit = async (userId: string, data: { 
+  const handleEdit = async (userId: string, data: {
     name: string
     email: string
     status: string
@@ -77,6 +121,8 @@ export function UsersTable({ users: initialUsers }: UsersTableProps) {
     isTwoFactorEnabled: boolean
     emailVerified: boolean
     loginAttempts: number
+    phoneNumber?: string
+    loginMethods: string[]
   }) => {
     try {
       const res = await fetch(`/api/admin/users/${userId}`, {
@@ -84,67 +130,135 @@ export function UsersTable({ users: initialUsers }: UsersTableProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
       })
-      
+
       if (!res.ok) throw new Error("Failed to update user")
-      
-      // Update user in the list
-      setUsers(users.map(u => 
-        u.id === userId 
-          ? { ...u, name: data.name, email: data.email, status: data.status }
-          : u
-      ))
-      
-      toast.success("User updated successfully")
+
+      const response = await res.json() as { user?: {
+        id: string
+        name?: string | null
+        email: string
+        status?: string | null
+        phoneNumber?: string | null
+        image?: string | null
+        isTwoFactorEnabled?: boolean | null
+        emailVerified?: string | null
+        loginAttempts?: number | null
+        loginMethods?: unknown
+      } }
+
+      const updatedUser = response.user
+      if (!updatedUser) {
+        throw new Error('Missing user in update response')
+      }
+
+      const normalizedMethods = normalizeLoginMethods(updatedUser.loginMethods)
+
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === userId
+            ? {
+                ...u,
+                name: updatedUser.name || data.name,
+                email: updatedUser.email || data.email,
+                status: updatedUser.status || data.status,
+                phoneNumber: updatedUser.phoneNumber || data.phoneNumber || '',
+                isTwoFactorEnabled: updatedUser.isTwoFactorEnabled ?? data.isTwoFactorEnabled,
+                emailVerified: updatedUser.emailVerified,
+                loginAttempts: updatedUser.loginAttempts ?? data.loginAttempts,
+                loginMethods: normalizedMethods.length ? normalizedMethods : data.loginMethods,
+              }
+            : u
+        )
+      )
+
+      toast.success('User updated successfully')
       router.refresh()
-    } catch (error) {
-      toast.error("Failed to update user")
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to update user'
+      toast.error(message)
     }
   }
-  
-  const handleAdd = async (data: { name: string; email: string; password: string; status: string }) => {
+
+  const handleAdd = async (data: {
+    name: string
+    email: string
+    password: string
+    status: string
+    phoneNumber?: string
+    isTwoFactorEnabled: boolean
+    emailVerified: boolean
+    loginMethods: string[]
+  }) => {
     try {
-      const res = await fetch("/api/admin/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       })
-      
+
       if (!res.ok) {
         const error = await res.json()
-        throw new Error(error.message || "Failed to create user")
+        throw new Error(error.message || error.error || 'Failed to create user')
       }
-      
-      const { user } = await res.json()
-      
-      // Add new user to the list
-      const formattedUser = {
-        id: user.id,
-        name: user.name || '',
-        email: user.email,
-        status: user.status,
-        roles: user.userRoles?.map((ur: any) => ur.role.name).join(', ') || 'No roles',
-        createdAt: new Date(user.createdAt).toISOString()
+
+      const response = await res.json() as { user?: {
+        id: string
+        name?: string | null
+        email: string
+        status: string
+        createdAt: string | Date
+        image?: string | null
+        isTwoFactorEnabled?: boolean | null
+        emailVerified?: string | null
+        loginAttempts?: number | null
+        phoneNumber?: string | null
+        userRoles?: unknown
+        loginMethods?: unknown
+      } }
+
+      const createdUser = response.user
+      if (!createdUser) {
+        throw new Error('Missing user in create response')
       }
-      
-      setUsers([formattedUser, ...users])
-      toast.success("User created successfully")
+
+      const roleNames = extractRoleNames(createdUser.userRoles)
+      const loginMethods = normalizeLoginMethods(createdUser.loginMethods)
+
+      const formattedUser: User = {
+        id: createdUser.id,
+        name: createdUser.name || data.name,
+        email: createdUser.email,
+        status: createdUser.status,
+        roles: roleNames.length ? roleNames.join(', ') : 'No roles',
+        createdAt: new Date(createdUser.createdAt).toISOString(),
+        image: createdUser.image || undefined,
+        isTwoFactorEnabled: createdUser.isTwoFactorEnabled ?? false,
+        emailVerified: createdUser.emailVerified || null,
+        loginAttempts: createdUser.loginAttempts ?? 0,
+        phoneNumber: createdUser.phoneNumber || '',
+        loginMethods: loginMethods.length ? loginMethods : data.loginMethods,
+      }
+
+      setUsers((prev) => [formattedUser, ...prev])
+      toast.success('User created successfully')
       router.refresh()
-    } catch (error: any) {
-      toast.error(error.message || "Failed to create user")
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to create user'
+      toast.error(message)
     }
   }
-  
+
   const handleDelete = async (userId: string) => {
     try {
       const res = await fetch(`/api/admin/users/${userId}`, {
         method: "DELETE"
       })
-      
+
       if (!res.ok) throw new Error("Failed to delete user")
-      
+
       // Remove user from the list
-      setUsers(users.filter(u => u.id !== userId))
-      
+      setUsers((prev) => prev.filter((u) => u.id !== userId))
+
       toast.success("User deleted successfully")
       router.refresh()
     } catch (error) {
@@ -164,15 +278,27 @@ export function UsersTable({ users: initialUsers }: UsersTableProps) {
       cell: ({ row }) => <div>{row.getValue("email")}</div>,
     },
     {
+      accessorKey: "phoneNumber",
+      header: "Phone",
+      cell: ({ row }) => {
+        const phone = row.original.phoneNumber
+        return phone ? (
+          <span>{phone}</span>
+        ) : (
+          <span className="text-gray-500">Not set</span>
+        )
+      },
+    },
+    {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => {
         const status = row.getValue("status") as string
-        
+
         // Apple-style status colors
         let badgeClass = ""
         let variant: "default" | "secondary" | "destructive" | "outline" = "default"
-        
+
         switch(status.toLowerCase()) {
           case "active":
             badgeClass = "bg-green-500 hover:bg-green-600 text-white border-0"
@@ -198,7 +324,7 @@ export function UsersTable({ users: initialUsers }: UsersTableProps) {
             badgeClass = "bg-gray-500 hover:bg-gray-600 text-white border-0"
             variant = "secondary"
         }
-        
+
         return (
           <Badge variant={variant} className={badgeClass}>
             {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -207,9 +333,56 @@ export function UsersTable({ users: initialUsers }: UsersTableProps) {
       },
     },
     {
+      accessorKey: "isTwoFactorEnabled",
+      header: "2FA",
+      cell: ({ row }) => {
+        const enabled = row.original.isTwoFactorEnabled
+        return (
+          <Badge
+            variant="secondary"
+            className={enabled ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-600"}
+          >
+            {enabled ? "Enabled" : "Disabled"}
+          </Badge>
+        )
+      },
+    },
+    {
+      accessorKey: "loginMethods",
+      header: "Login Methods",
+      cell: ({ row }) => {
+        const methods = row.original.loginMethods ?? []
+        if (!methods.length) {
+          return <span className="text-gray-500">None</span>
+        }
+
+        return (
+          <div className="flex flex-wrap gap-1">
+            {methods.map((method) => (
+              <Badge
+                key={`${row.original.id}-${method}`}
+                variant="secondary"
+                className="bg-gray-100 text-gray-700"
+              >
+                {method}
+              </Badge>
+            ))}
+          </div>
+        )
+      },
+    },
+    {
       accessorKey: "roles",
       header: "Roles",
       cell: ({ row }) => <div>{row.getValue("roles")}</div>,
+    },
+    {
+      accessorKey: "loginAttempts",
+      header: "Login Attempts",
+      cell: ({ row }) => {
+        const attempts = row.original.loginAttempts ?? 0
+        return attempts > 0 ? attempts : <span className="text-gray-500">0</span>
+      },
     },
     {
       accessorKey: "createdAt",
@@ -235,7 +408,7 @@ export function UsersTable({ users: initialUsers }: UsersTableProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48 rounded-xl border-gray-200/50 shadow-xl bg-white/95 backdrop-blur-xl p-2">
               <DropdownMenuLabel className="px-3 py-2 font-semibold text-gray-900">Actions</DropdownMenuLabel>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 className="rounded-lg cursor-pointer hover:bg-gray-100 focus:bg-gray-100 px-3 py-2"
                 onClick={() => {
                   setSelectedUser(user)
@@ -287,7 +460,7 @@ export function UsersTable({ users: initialUsers }: UsersTableProps) {
           }
           className="max-w-sm border-gray-300 focus:border-blue-500"
         />
-        <Button 
+        <Button
           onClick={() => setAddDialogOpen(true)}
           className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-sm"
         >
@@ -365,7 +538,7 @@ export function UsersTable({ users: initialUsers }: UsersTableProps) {
           </Button>
         </div>
       </div>
-      
+
       {/* Dialogs */}
       <EditUserDialog
         user={selectedUser}
@@ -373,13 +546,13 @@ export function UsersTable({ users: initialUsers }: UsersTableProps) {
         onOpenChange={setEditDialogOpen}
         onSave={handleEdit}
       />
-      
+
       <AddUserDialog
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
         onAdd={handleAdd}
       />
-      
+
       <DeleteUserDialog
         user={selectedUser}
         open={deleteDialogOpen}

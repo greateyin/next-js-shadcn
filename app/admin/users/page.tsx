@@ -13,12 +13,21 @@ export const metadata: Metadata = {
 };
 
 export default async function UsersPage() {
-  // Get all users with their roles
+  // Get all users with their roles and authentication context
   const users = await db.user.findMany({
     include: {
       userRoles: {
         include: {
           role: true,
+        },
+      },
+      loginMethods: {
+        select: {
+          id: true,
+          method: true,
+        },
+        orderBy: {
+          method: "asc",
         },
       },
     },
@@ -30,12 +39,16 @@ export default async function UsersPage() {
     name: user.name || "N/A",
     email: user.email,
     status: user.status,
-    roles: user.userRoles.map((userRole) => userRole.role.name).join(", ") || "No roles",
+    roles:
+      user.userRoles.map((userRole) => userRole.role.name).join(", ") ||
+      "No roles",
     createdAt: user.createdAt.toISOString(),
     image: user.image,
     isTwoFactorEnabled: user.isTwoFactorEnabled,
     emailVerified: user.emailVerified?.toISOString() || null,
     loginAttempts: user.loginAttempts,
+    phoneNumber: user.phoneNumber || "",
+    loginMethods: user.loginMethods.map((method) => method.method),
   }));
 
   return (

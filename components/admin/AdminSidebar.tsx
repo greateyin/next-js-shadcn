@@ -10,9 +10,10 @@ import {
   ShieldIcon,
   LayoutGrid,
   MenuIcon,
+  KeyRound,
+  Bell,
   X
 } from "lucide-react";
-import { useState } from "react";
 
 interface AdminSidebarProps {
   applications: Application[];
@@ -113,6 +114,12 @@ export function AdminSidebar({ applications, isOpen = false, onClose }: AdminSid
               active={isActive("/admin/roles")}
             />
             <SidebarItem
+              href="/admin/permissions"
+              title="Permissions"
+              icon={<KeyRound className="h-4 w-4" />}
+              active={isActive("/admin/permissions")}
+            />
+            <SidebarItem
               href="/admin/applications"
               title="Applications"
               icon={<LayoutGrid className="h-4 w-4" />}
@@ -125,6 +132,18 @@ export function AdminSidebar({ applications, isOpen = false, onClose }: AdminSid
               active={isActive("/admin/menu")}
             />
           </div>
+          <div className="py-2">
+            <h3 className="mb-2 px-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+              Communications
+            </h3>
+            <SidebarItem
+              href="/admin/notifications"
+              title="Notifications"
+              icon={<Bell className="h-4 w-4" />}
+              active={isActive("/admin/notifications")}
+            />
+          </div>
+
           {applications.length > 0 && (
             <div className="py-2">
               <h3 className="mb-2 px-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
