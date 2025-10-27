@@ -28,6 +28,13 @@ export default async function DashboardPage() {
     redirect("/auth/login?callbackUrl=/dashboard");
   }
 
+  const roleNames = session.user.roleNames ?? [];
+  const isAdmin = roleNames.includes("admin") || roleNames.includes("super-admin");
+
+  if (!isAdmin) {
+    redirect("/no-access");
+  }
+
   // Get dashboard application ID
   const dashboardApp = await db.application.findUnique({
     where: { name: 'dashboard' }
