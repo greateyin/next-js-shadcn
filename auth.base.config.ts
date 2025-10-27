@@ -125,7 +125,7 @@ export const baseAuthConfig = {
         : "authjs.session-token",
       options: {
         httpOnly: true,
-        sameSite: "lax" as const,
+        sameSite: "none" as const,
         path: "/",
         secure: process.env.NODE_ENV === "production",
         domain: process.env.COOKIE_DOMAIN || undefined,

@@ -428,8 +428,8 @@ export const authConfig: NextAuthConfig = {
         : "authjs.session-token",
       options: {
         httpOnly: true,
-        // Use "strict" for better security, but "lax" for better compatibility
-        sameSite: "lax" as const,
+        // Auth.js 官方在跨來源情境下建議使用 SameSite=None 以搭配 credentials: "include"
+        sameSite: "none" as const,
         path: "/",
         secure: process.env.NODE_ENV === "production",
         // 👇 Key: Share cookies across subdomains
