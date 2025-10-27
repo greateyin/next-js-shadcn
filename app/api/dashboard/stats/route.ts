@@ -18,6 +18,16 @@ export async function GET() {
       )
     }
 
+    const roleNames = session.user.roleNames ?? []
+    const isAdmin = roleNames.includes('admin') || roleNames.includes('super-admin')
+
+    if (!isAdmin) {
+      return NextResponse.json(
+        { error: 'Forbidden' },
+        { status: 403 }
+      )
+    }
+
     // Get user's statistics
     let totalUsers, totalRoles, totalApplications, userSessions, userPermissions, recentActivities;
 
