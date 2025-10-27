@@ -50,7 +50,7 @@ export class SessionManager {
             cookieStore.set(SESSION_COOKIE, sessionId, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
+                sameSite: 'none',
                 path: '/',
                 maxAge: SESSION_DURATION / 1000,
             });

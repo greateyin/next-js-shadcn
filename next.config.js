@@ -9,6 +9,14 @@ const nextConfig = {
 
   // CORS 配置（用於跨子域 API 訪問）
   async headers() {
+    const rawAllowedOrigins = process.env.ALLOWED_ORIGINS || process.env.ALLOWED_DOMAINS || "";
+    const fallbackOrigin = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const allowedOrigin =
+      rawAllowedOrigins
+        .split(",")
+        .map((origin) => origin.trim())
+        .filter((origin) => origin && origin !== "*")[0] || fallbackOrigin;
+
     return [
       {
         // API 路由的 CORS 配置
@@ -20,8 +28,8 @@ const nextConfig = {
           },
           {
             key: "Access-Control-Allow-Origin",
-            // 從環境變量讀取允許的域名
-            value: process.env.ALLOWED_ORIGINS || process.env.ALLOWED_DOMAINS || "*"
+            // 僅允許明確的來源以符合瀏覽器對 credentials 模式的要求
+            value: allowedOrigin
           },
           {
             key: "Access-Control-Allow-Methods",
