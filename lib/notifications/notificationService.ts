@@ -4,7 +4,7 @@
  */
 
 import { db } from '@/lib/db'
-import { CreateNotificationInput, NotificationType } from '@/types/notifications'
+import { CreateNotificationInput } from '@/types/notifications'
 
 /**
  * Create a new notification
@@ -31,6 +31,35 @@ export async function createNotification(input: CreateNotificationInput) {
       success: false,
       error: 'Failed to create notification',
     }
+  }
+}
+
+/**
+ * Create the same notification for multiple users
+ */
+export async function notifyUsers(
+  userIds: string[],
+  notification: Omit<CreateNotificationInput, "userId">
+) {
+  const results = await Promise.all(
+    userIds.map(async userId => ({
+      userId,
+      ...(await createNotification({ ...notification, userId }))
+    }))
+  )
+
+  const failures = results.filter(result => !result.success)
+  if (failures.length > 0) {
+    console.warn(
+      `[notifyUsers] Failed to deliver notification to users: ${failures
+        .map(result => result.userId)
+        .join(", ")}`
+    )
+  }
+
+  return {
+    success: failures.length === 0,
+    results
   }
 }
 

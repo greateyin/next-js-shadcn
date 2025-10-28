@@ -1,5 +1,7 @@
+import type { DefaultRole as PrismaDefaultRole } from "@prisma/client";
+
 // Default roles still available for backward compatibility
-export type DefaultRole = "user" | "admin";
+export type DefaultRole = PrismaDefaultRole;
 
 // For the enhanced role system
 export interface Role {
