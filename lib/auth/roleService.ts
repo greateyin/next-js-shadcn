@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { UserWithRoles } from "@/types/roles";
 import { permissionCache } from "@/lib/auth/permissionCache";
+import { DefaultRole } from "@prisma/client";
 
 /**
  * Gets all roles and permissions for a user (with caching)
@@ -168,19 +169,19 @@ export async function invalidateRolePermissionCache(roleId: string): Promise<voi
 export async function createDefaultRolesAndPermissions() {
   // Create default roles if they don't exist
   const adminRole = await db.role.upsert({
-    where: { name: 'admin' },
+    where: { name: DefaultRole.admin },
     update: {},
     create: {
-      name: 'admin',
+      name: DefaultRole.admin,
       description: 'Administrator with full access'
     }
   });
 
   const userRole = await db.role.upsert({
-    where: { name: 'user' },
+    where: { name: DefaultRole.user },
     update: {},
     create: {
-      name: 'user',
+      name: DefaultRole.user,
       description: 'Regular user with limited access'
     }
   });

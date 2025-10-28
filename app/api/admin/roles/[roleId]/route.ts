@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server"
 import { checkAdminAuth } from "@/lib/auth/admin-check"
 import { db } from "@/lib/db"
+import { DefaultRole } from "@prisma/client"
+
+const SYSTEM_ROLES = new Set<string>(Object.values(DefaultRole))
 
 /**
  * PATCH /api/admin/roles/[roleId]
@@ -84,7 +87,7 @@ export async function DELETE(
       select: { name: true }
     })
 
-    if (role && ['admin', 'user'].includes(role.name)) {
+    if (role && SYSTEM_ROLES.has(role.name)) {
       return NextResponse.json({ error: "Cannot delete system role" }, { status: 400 })
     }
 

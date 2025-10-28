@@ -8,11 +8,10 @@
 import "next-auth";
 import type { User as PrismaUser } from "@prisma/client";
 import type { DefaultUser } from "next-auth";
-import type { 
-  Role, 
-  Permission, 
-  Application, 
-  DefaultRole 
+import type {
+  Role,
+  Permission,
+  Application
 } from "@/types/roles";
 
 /**
